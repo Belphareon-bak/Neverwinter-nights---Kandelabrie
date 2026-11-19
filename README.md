@@ -2,6 +2,8 @@
 
 Repozitář pro tvorbu dungeonů a dalších rozšíření světa Kandelábrie pro **Neverwinter Nights: Enhanced Edition**.
 
+[Pravidla worldbuildingu pro Kandelábrii](AGENTS.md)
+
 ## Dungeony
 
 | Dungeon | Doporučené úrovně | Stav |
