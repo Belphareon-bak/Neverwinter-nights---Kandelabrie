@@ -71,6 +71,41 @@ void HVD_Jump(object player, string marker)
     AssignCommand(player, ActionJumpToLocation(GetLocation(point)));
 }
 
+void HVD_RefreshThresholds(string flag = "")
+{
+    object module = HVD_Module();
+    int index = 0;
+    object marker = GetObjectByTag("hvd_route", index);
+    while (GetIsObjectValid(marker))
+    {
+        string required = GetLocalString(marker, "required");
+        if (required != "" && (flag == "" || required == flag))
+        {
+            int open = GetLocalInt(module, required);
+            object sill = GetLocalObject(marker, "hvd_sill");
+            if (open && !GetIsObjectValid(sill))
+            {
+                sill = CreateObject(OBJECT_TYPE_PLACEABLE, GetLocalString(marker, "resource"), GetLocation(marker));
+                SetLocalObject(marker, "hvd_sill", sill);
+            }
+            if (!open && GetIsObjectValid(sill))
+            {
+                DestroyObject(sill);
+                DeleteLocalObject(marker, "hvd_sill");
+            }
+            SetMapPinEnabled(marker, open);
+        }
+        marker = GetObjectByTag("hvd_route", ++index);
+    }
+}
+
+void HVD_OpenPassage(string flag)
+{
+    if (GetLocalInt(HVD_Module(), flag)) return;
+    SetLocalInt(HVD_Module(), flag, TRUE);
+    HVD_RefreshThresholds(flag);
+}
+
 void HVD_PlacePart(string part, string resource, string anchor, float heading)
 {
     object mount = GetObjectByTag(anchor);
@@ -602,6 +637,7 @@ void HVD_NewRun()
     HVD_ResetGate();
     HVD_TurnOptics();
     HVD_ResetHidden();
+    HVD_RefreshThresholds();
     HVD_ResetBoss();
     HVD_ResetStores();
     HVD_PlaceBooks();

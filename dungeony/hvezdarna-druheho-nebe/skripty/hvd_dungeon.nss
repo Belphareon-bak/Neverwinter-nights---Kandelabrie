@@ -99,7 +99,7 @@ void HVD_ResolveGate(int run, int attempt, int seals, int lenses)
     }
     HVD_Reveal("hvd_final_gate");
     if (!GetIsObjectValid(GetLocalObject(module,"hvd_final_gate"))) return;
-    SetLocalInt(module,"hvd_gate_open",TRUE);
+    HVD_OpenPassage("hvd_gate_open");
     HVD_AreaMessage(area,"Tři paprsky se spojily. Brána na schodech se otevřela.");
 }
 
@@ -186,7 +186,7 @@ void HVD_Optics(object player)
     SendMessageToPC(player, "Stupnice objektivu – západ " + IntToString(left) + ", východ " + IntToString(right) + ".");
     if (left == 2 && right == 3)
     {
-        SetLocalInt(module, "hvd_aligned", TRUE);
+        HVD_OpenPassage("hvd_aligned");
         HVD_AreaMessage(GetArea(player), "Ve skle se potkaly obě oblohy. Schody do nebe jsou průchodné.");
         HVD_MarkLine(GetArea(player), GetPosition(GetObjectByTag("hvd_refractor")),
                      GetPosition(GetWaypointByTag("hvd_optic_gate")), VFX_IMP_PULSE_COLD);

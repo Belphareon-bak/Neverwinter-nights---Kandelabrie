@@ -74,6 +74,18 @@ FOOTPRINTS = {
     "hvd_arc_cabinet": (rectangle(0,-.03,4.92,.54),),
     "hvd_lab_source": (ring(.78),),
     "hvd_gong": (rectangle(0,.14,2.24,.79),),
+    "hvd_workroof": (rectangle(0,1.78,6.9,.48), *arch_feet(3.18,1.03,1.08,-.70),
+                     *arch_feet(3.18,.44,1.15,1.32)),
+    "hvd_grinder": (rectangle(0,0,2.60,1.21),),
+    "hvd_smithbench": (rectangle(0,0,2.76,1.16),),
+    "hvd_capstan": (rectangle(0,0,2.04,1.46),),
+    "hvd_writedesk": (rectangle(0,0,2.68,1.16),),
+    "hvd_logstand": (rectangle(0,-.03,2.79,1.20),),
+    "hvd_register": (rectangle(0,.04,3.31,1.77),),
+    "hvd_spearrack": (rectangle(0,.12,2.55,.68),),
+    "hvd_wicktable": (rectangle(0,0,2.36,1.18),),
+    "hvd_raybaffle": (rectangle(0,0,1.60,.89),),
+    "hvd_headhouse": (*arch_feet(2.64,.69,2.78,.65),),
 }
 
 USE_POINTS = {

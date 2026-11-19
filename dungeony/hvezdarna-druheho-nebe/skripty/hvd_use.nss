@@ -72,7 +72,7 @@ void main()
     {
         if (!GetLocalInt(module,"hvd_study_open"))
         {
-            SetLocalInt(module,"hvd_study_open",TRUE);
+            HVD_OpenPassage("hvd_study_open");
             HVD_Extinguish("hvd_study_cover");
             HVD_AreaMessage(GetArea(player),"Povolila západka. V bočním výklenku zajela skříň do zdiva.");
         }
@@ -82,7 +82,7 @@ void main()
     {
         if (!GetLocalInt(module,"hvd_study_link"))
         {
-            SetLocalInt(module,"hvd_study_link",TRUE);
+            HVD_OpenPassage("hvd_study_link");
             HVD_Extinguish("hvd_comm_cover");
             HVD_Extinguish("hvd_dome_cover");
             HVD_AreaMessage(GetArea(player),"Převod stáhl obě zadní clony. Z průchodu je vidět slabé světlo refraktoru.");
@@ -93,7 +93,7 @@ void main()
     {
         if (!GetLocalInt(module,"hvd_eave_open"))
         {
-            SetLocalInt(module,"hvd_eave_open",TRUE);
+            HVD_OpenPassage("hvd_eave_open");
             HVD_Extinguish("hvd_eave_cover");
             HVD_Extinguish("hvd_eavetop_cover");
             HVD_AreaMessage(GetArea(player),"Protizávaží vyzdvihlo západní kryt. Pod schody se ukázal servisní průlez.");

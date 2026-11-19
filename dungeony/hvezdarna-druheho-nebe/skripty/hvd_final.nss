@@ -146,7 +146,7 @@ void HVD_CloseShutter(object player)
         SendMessageToPC(player, "Ithren drží clonu. Překonej jeho obranu a vyčkej na doznění výbojů.");
         return;
     }
-    SetLocalInt(module, "hvd_won", TRUE);
+    HVD_OpenPassage("hvd_won");
     DeleteLocalInt(module, "hvd_shutter");
     object boss = GetLocalObject(module, "hvd_boss");
     if (GetIsObjectValid(boss))

@@ -2,11 +2,13 @@
 
 Samostatný modul pro **Neverwinter Nights: Enhanced Edition** a postavy na **35.–40. úrovni**. Cesta vede od noclehu pod zasněženou kopulí přes dílny až na nebeské předbraní, kde hlídka stále odpovídá na odraz návratové lucerny. [Návrh a příběh](../README.md)
 
-Verze 9 má nově postavené Chodby clon, kopuli a skrytou pracovnu. Pracovna má předsíň, souvislé stěny a zadní servisní průlez. V dolní dílně je pouzdro se zrcadlem přístupné od zkušebního stolu mimo zpáteční přechod. [Pracovna ve hře](../podklady/pracovna-v9.jpg)
+Ve verzi 10 jsou směrové přechody vyznačené kamennou hranou a jménem cíle v dlažbě i v mapě. Po odjištění zkratek se stejný znak objeví v jejich průchodu. Pracovnu určuje písařský stůl a výkresy clon, dílny mají vlastní náčiní a na ochozech se liší výbava kopiníků a světlonoše. [Přechod k Předbraní](../podklady/predbrani-prah-v10.jpg) · [Pracovna](../podklady/pracovna-v10.jpg)
 
-Bránu rozsvěcí bránu soustava tří optických sloupů a závora se čtvrtou pečetí. Každá výprava má vlastní sestavu pečetí a clon. [Brána tří paprsků v klientu](../podklady/brana-tri-paprsku.jpg)
+Pracovna má předsíň, souvislé stěny a zadní servisní průlez. V dolní dílně je pouzdro se zrcadlem přístupné od zkušebního stolu mimo zpáteční přechod. [Pracovna ve hře](../podklady/pracovna-v9.jpg)
 
-Schody do nebe stoupají po třech širokých ramenech s převýšením 15 metrů. Klenuté dílny, servisní kupole, měřicí podesty, visuté ochozy se signální věží a dvůr před branou patří k jednomu provozu. V chodbách a kopuli jsou čočky, mapy a lampy zasazené do stěn. Při průzkumu lze najít dvě vedlejší trasy, vlastní klapky a menší zásoby. [Prohlídka oblastí z v7](../podklady/nahledy.jpg)
+Bránu rozsvěcí soustava tří optických sloupů a závora se čtvrtou pečetí. Každá výprava má vlastní sestavu pečetí a clon. [Brána tří paprsků v klientu](../podklady/brana-tri-paprsku.jpg)
+
+Schody do nebe stoupají po třech širokých ramenech s převýšením 15 metrů. Kryté dílny, servisní kupole, měřicí podesty, visuté ochozy se signální věží a dvůr před branou patří k jednomu provozu. V chodbách a kopuli jsou čočky, mapy a lampy zasazené do stěn. Při průzkumu lze najít dvě vedlejší trasy, vlastní klapky a menší zásoby. [Prohlídka oblastí z v7](../podklady/nahledy.jpg)
 
 ## Spuštění
 
@@ -41,7 +43,7 @@ V dolní dílně hledej příruční schránku s klíčem u pracovního stolu. K
 
 ## Úpravy a sestavení
 
-Půdorysy, přechody a interaktivní objekty jsou v [layout.py](../zdroje/layout.py). Výzdobu jednotlivých lokací určuje [dressing.py](../zdroje/dressing.py). Vlastní modely, textury a oblohu sestavují [art.py](../zdroje/art.py), [architecture.py](../zdroje/architecture.py) a [skies.py](../zdroje/skies.py). Schodiště, pochozí povrch a jejich kolize sestavuje [flights.py](../zdroje/flights.py). Tvary kolizí a body použití pro vlastní architekturu jsou v [collision.py](../zdroje/collision.py). Pečetě, jejich ikony, clony a paprsky sestavuje [gateart.py](../zdroje/gateart.py). Stavební dlaždice interiérů sestavuje [interiors.py](../zdroje/interiors.py). Modely zkušební optiky, nástěnných vysílačů a ozvučnice vznikají v [workart.py](../zdroje/workart.py). Texty knih, předměty a stvůry jsou v [content.py](../zdroje/content.py). [NWScriptové zdroje](../skripty/) jsou také uvnitř modulu. Čeština používá `cp1250`.
+Půdorysy, přechody a interaktivní objekty jsou v [layout.py](../zdroje/layout.py). Výzdobu jednotlivých lokací určuje [dressing.py](../zdroje/dressing.py). Vlastní modely, textury a oblohu sestavují [art.py](../zdroje/art.py), [architecture.py](../zdroje/architecture.py) a [skies.py](../zdroje/skies.py). Schodiště, pochozí povrch a jejich kolize sestavuje [flights.py](../zdroje/flights.py). Tvary kolizí a body použití pro vlastní architekturu jsou v [collision.py](../zdroje/collision.py). Pečetě, jejich ikony, clony a paprsky sestavuje [gateart.py](../zdroje/gateart.py). Stavební dlaždice interiérů sestavuje [interiors.py](../zdroje/interiors.py). Modely zkušební optiky, nástěnných vysílačů a ozvučnice vznikají v [workart.py](../zdroje/workart.py). Polohu a vzhled prahů určuje [routes.py](../zdroje/routes.py). Modely knih a vybavení jednotlivých provozů sestavuje [furnishings.py](../zdroje/furnishings.py). Texty knih, předměty a stvůry jsou v [content.py](../zdroje/content.py). [NWScriptové zdroje](../skripty/) jsou také uvnitř modulu. Čeština používá `cp1250`.
 
 ```bash
 python3 ../zdroje/build.py --game "/cesta/k/Neverwinter Nights/game" \
@@ -56,6 +58,8 @@ Sestavení čte dlaždice, přechody a statické herní zdroje ze základní ins
 Přepínač `--test-guide` při sestavení přidá schránku **TEST · Pouzdro s řešením brány**. Stojí vlevo po příchodu do předbraní, kousek před pultem pro výměnu pečetí. Zkušební list se bere do inventáře a čte přes **Prohlédnout** (**Examine**). Obsahuje přesnou sestavu právě rozehrané výpravy. Každá nová výprava doplní nový list. Běžné sestavení vzniká bez tohoto přepínače a navazuje na stejný HAK.
 
 ## Ověření ve hře
+
+V klientu NWN:EE prošla postava všemi 29 směrovými přechody až po vstupu na označený práh. Ověřil jsem polohu před prahem i místo příchodu. Deset podmíněných průchodů získalo značku po otevření a nová výprava je opět skryla.
 
 Ve verzi 9 prošla postava v klientu NWN:EE všemi 10 oblastmi a 29 směrovými přechody. Obchůzka zahrnula 150 kontrolních míst, vždy s pohledem vlevo a vpravo.
 

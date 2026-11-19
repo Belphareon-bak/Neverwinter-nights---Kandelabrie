@@ -3,6 +3,7 @@
 from math import cos, radians, sin
 
 from aurora import bite, flt, integer
+from furnishings import SCENERY as ROOM_FURNISHINGS
 from world import color
 
 
@@ -45,6 +46,7 @@ NAMES = {
     "hvd_eavearch": "Klenutá opěra servisní lávky",
     "hvd_beactower": "Signální věž visutých ochozů",
 }
+NAMES.update((model, name) for model, (name, _) in ROOM_FURNISHINGS.items())
 
 STUDY = (
     (97, "Stůl k měření", 0, 0, 0, 0),
@@ -151,8 +153,8 @@ class Dress:
         for side in (-1, 1):
             self.lamp(x + side*2.79, y - .72, 2.63, tint, base)
 
-    def bay(self, x, y, tint, direction=0, base=None):
-        self.put('hvd_skybay', x, y, direction=direction, base=base)
+    def bay(self, x, y, tint, direction=0, base=None, *, model='hvd_skybay'):
+        self.put(model, x, y, direction=direction, base=base)
         self.set(x, y, (('hvd_sconce', None, -2.61, 1.38, 2.00, 0),
                         ('hvd_sconce', None, 2.61, 1.38, 2.00, 0)), direction, base)
         a = radians(direction)
@@ -245,9 +247,9 @@ def halls(s):
     s.wall(12.83,55.50,0,'rack','amber',built=True)
     s.put('hvd_shelf',17.06,55.20)
     s.wall(20.65,54.8,0,None,'blue',built=True)
-    s.put('hvd_armillary',10.18,53.55)
-    s.lamp(10.18,53.55,2.04,'blue')
-    s.set(23.49,46.1,REPAIR,270)
+    s.put('hvd_shelf',9.28,53.99,direction=90,name='Evidence uložených clon')
+    s.put(56,22.93,46.42,direction=270,name='Svazek oprav clon')
+    s.put('hvd_crate',23.70,46.46,direction=270,name='Příjem použitých filtrů')
     s.put('hvd_pave_n',14.25,47.8)
 
     # Each side of the long east wing has its own role. Aisles and doorways remain open.
@@ -265,18 +267,18 @@ def halls(s):
 def workshops(s):
     s.area.lighting.update(FogClipDist=flt(104.0), MoonAmbientColor=color(104,112,141),
                            MoonDiffuseColor=color(196,191,210))
+    s.put('hvd_headhouse',25,9.52,direction=180,base=5)
     # Two windbreaks close the work yards on opposite sides of the service axis.
-    s.bay(16.13, 17.43, 'amber')
-    s.bay(34.05, 13.28, 'blue', 180)
+    s.bay(16.13, 17.43, 'amber', model='hvd_workroof')
+    s.bay(34.05, 13.28, 'amber', 180, model='hvd_workroof')
     s.put('hvd_tools', 17.03, 16.13, lift=.89, direction=80)
     s.put('hvd_oillamp', 17.02, 16.86, lift=1.07)
     s.lamp(17.02, 16.86, 1.30, 'amber')
     s.put('hvd_lensrack', 13.98, 18.98)
     s.put('hvd_hoist', 38.05, 17.28, direction=180)
     # The forge, anvil and bench each have their own usable space under the eastern roof.
-    s.set(35.32, 14.77, REPAIR[:5], 180)
-    s.set(36.11, 11.82, SUPPLIES[:6], 180)
-    s.put('hvd_shelf',34.13,11.65,direction=180)
+    s.put('hvd_smithbench',35.32,14.77,direction=180)
+    s.put('hvd_crate',36.11,11.90,direction=180,name='Bedna s uhlím a tukem')
     s.sky(25, 23.85, 'amber')
     s.sky(25, 49.8, 'blue')
     s.bridge(25, 'amber')
@@ -289,14 +291,13 @@ def workshops(s):
 
     s.put('hvd_octagon',25,64.21,name='Kupole na horní servisní podestě')
     s.lamp(25,60.12,2.61,'violet')
-    s.bay(15.45, 62.5, 'blue')
-    s.bay(36.5, 62.0, 'amber')
-    s.set(15.2, 62.92, SUPPLIES, 0)
-    s.set(36.25, 62.39, REPAIR, 0)
+    s.bay(15.45, 62.5, 'blue', model='hvd_workroof')
+    s.bay(36.5, 62.0, 'amber', model='hvd_workroof')
+    s.put('hvd_grinder',15.2,62.91)
+    s.put('hvd_capstan',36.25,62.38)
+    s.put(361,37.79,62.94,direction=47,name='Rezervní lano k bubnu')
     s.rail(14.5, 50.44, 2, 4.90, 0, 0, 5)
     s.rail(31.1, 50.44, 3, 4.90, 0, 0, 5)
-    s.put('hvd_armillary', 44.0, 57.9)
-    s.lamp(44.0, 57.9, 1.95, 'blue')
     for x,y,z,angle in ((8,14,-1.0,70),(42,17,-1.7,130),(9,55,-2.0,18),(51.2,66.6,-2.6,3)):
         s.put('hvd_crag', x, y, base=z, direction=angle)
     s.clouds([(8,36,-10,14),(36,41,-11,133)], [(7,36,-13,38),(42,42,-11,52)])
@@ -306,20 +307,17 @@ def dome(s):
     s.area.lighting.update(FogClipDist=flt(61.0),MoonAmbientColor=color(92,103,142),
                            MoonDiffuseColor=color(189,191,223))
     for x,y,angle,item,light in (
-        (22.85,17.10,180,'chart','amber'),(35.3,17.12,180,'rack','blue'),
-        (13.30,33.65,90,'rack','blue'),(13.30,39.2,90,'chart','blue'),
-        (20.78,45.90,0,'rack','amber'),(24.83,45.90,0,None,'blue'),
-        (36.44,45.90,0,'chart','blue'),(39.96,45.90,0,None,'amber'),
-        (46.70,34.10,270,'rack','blue'),(46.70,40.0,270,'chart','amber'),
+        (21.25,21.90,180,'chart','amber'),(35.3,17.12,180,None,'blue'),
+        (13.30,33.65,90,None,'blue'),(13.30,39.2,90,None,'blue'),
+        (23.01,45.90,0,None,'blue'),(36.44,45.90,0,'chart','blue'),
+        (46.70,34.10,270,None,'blue'),(46.70,40.0,270,None,'amber'),
         (41.45,12.35,180,None,'blue'),
     ):
         s.wall(x,y,angle,item,light,built=True)
-    s.put('hvd_oillamp',23.99,18.94,lift=1.07)
-    s.lamp(23.99,18.94,1.32,'amber')
-    s.put('hvd_openbook',22.73,18.78,lift=.88,direction=12)
-    s.put('hvd_tools',23.51,19.03,lift=.89,direction=30)
-    s.set(45.00,35.52,REPAIR[:8],270)
-    s.set(15.03,37.61,STUDY,90)
+    s.put(383,20.02,22.46,lift=.88,name='Svíce u pozorovacího deníku')
+    s.put(287,45.86,35.52,direction=270,name='Lavice při pozorovacím sále')
+    s.put('hvd_lectern',15.34,36.45,direction=90,name='Pult měření polohy hvězd')
+    s.put('hvd_openbook',15.29,36.45,direction=90,lift=1.14,name='Rozložený hvězdný katalog')
     s.put('hvd_armillary',36.87,44.26)
     s.lamp(36.87,44.26,1.99,'amber')
     s.put('hvd_mounttrim',30,31)
@@ -373,6 +371,7 @@ def steps(s):
 def walks(s):
     s.area.lighting.update(FogClipDist=flt(119.0), MoonAmbientColor=color(94,111,156),
                            MoonDiffuseColor=color(194,212,246))
+    s.put('hvd_headhouse',40,10.20,direction=180,base=5)
     for x,tint in ((25,'blue'),(55,'amber')):
         s.sky(x,22.55,tint)
         s.sky(x,49.55,tint)
@@ -391,8 +390,9 @@ def walks(s):
     s.put('hvd_beactower',63.0,67.7)
     s.lamp(63.0,67.7,7.7,'amber')
     s.bay(47.05,18.55,'blue',180)
-    s.set(12.98,62.3,SUPPLIES,90)
-    s.set(60.18,63.34,STATION,0)
+    s.put('hvd_spearrack',12.72,61.8,direction=90)
+    s.put(178,15.18,59.84,direction=90,name='Lavice pro údržbu zbroje')
+    s.put('hvd_wicktable',61.21,63.42)
     s.put('hvd_skyrail',68.0,59.63,direction=90)
     s.sky(40,68,'amber')
     s.put('hvd_skywalk',40,64.7)
@@ -415,10 +415,8 @@ def gate(s):
     s.bay(20,24.6,'blue',90,5)
     s.bay(54.0,16.9,'amber',270,5)
     s.set(16.18,26.4,GUARD,90,5)
-    s.put('hvd_oillamp',44.86,20.99,lift=1.05,base=5)
-    s.put('hvd_openbook',43.52,20.88,lift=.88,base=5)
-    s.lamp(44.86,20.99,1.28,'amber',5)
-    s.wall(44.04,21.39,0,'chart','amber',5)
+    s.put(383,42.79,20.99,lift=.88,base=5,name='Písařova svíce')
+    s.lamp(42.79,20.99,1.13,'amber',5)
     s.rail(15.1,33.35,2,0,4.90,90,5)
     s.rail(56.2,27.4,2,0,4.90,90,5)
     s.rail(18.6,50.74,3,4.90,0,0,10)
@@ -427,9 +425,6 @@ def gate(s):
     for x in (25,45):
         s.bay(x,54.6,'amber',base=10)
         s.put('hvd_goldbann',x,55.82,lift=.7,base=10)
-    for x in (18.0,52.0):
-        s.put('hvd_orrery',x,56.0,base=10)
-        s.lamp(x,55.7,3.25,'violet',10)
     s.clouds([(10,51,-8,38),(52,60,-10,109),(56,12,-9,52)],
              [(8,49,-12,23),(65,30,-12,78)])
 
@@ -450,7 +445,6 @@ def summit(s):
         s.bay(x,49.4,shade,angle,10)
     for x in (21,49):
         s.bay(x,55.9,'amber',base=10)
-        s.put('hvd_orrery',x,60.7,base=10)
         s.put('hvd_hangpier',x,58.85,base=10)
     for y in (16.04,33.7,38.6,43.5,48.4,53.3):
         z=5 if y<20 else 10
@@ -465,22 +459,20 @@ def summit(s):
 def study(s):
     s.area.lighting.update(FogClipDist=flt(48.0),MoonAmbientColor=color(98,89,112),
                            MoonDiffuseColor=color(188,174,208))
-    # This compact room has one writing desk, a west filing bay and a separate optics bench.
-    s.wall(3.25,12.85,90,'chart','amber',built=True)
-    s.wall(7.22,20.90,0,'rack','amber',built=True)
-    s.wall(11.73,20.90,0,'chart','blue',built=True)
-    s.wall(15.0,12.85,270,'rack','blue',built=True)
+    # The keeper compares the shutter drawings here and files the maintenance records.
+    s.wall(3.25,12.85,90,None,'amber',built=True)
+    s.wall(7.22,20.90,0,None,'amber',built=True)
+    s.wall(11.73,20.90,0,None,'blue',built=True)
+    s.wall(15.0,12.85,270,None,'blue',built=True)
     s.wall(12.56,8.30,180,None,'amber',built=True)
-    s.put('hvd_oillamp',5.09,13.24,lift=1.07)
-    s.lamp(5.09,13.24,1.31,'amber')
-    s.put('hvd_openbook',4.97,12.38,lift=.88,direction=90)
-    s.put('hvd_tools',5.29,12.91,lift=.89,direction=80)
+    s.put('hvd_planrail',11.73,20.83)
+    s.put(383,5.17,13.82,lift=.88,name='Svíce nad rozepsaným záznamem')
+    s.lamp(5.17,13.82,1.15,'amber')
     s.put(178,6.40,12.66,direction=90,name='Lavice u zápisů')
-    s.put('hvd_shelf',3.60,16.37,direction=90)
-    s.put('hvd_armillary',13.02,14.33,direction=270)
-    s.lamp(13.02,14.33,1.96,'blue')
-    s.set(12.64,11.9,REPAIR[:5],270)
-    s.put('hvd_pave_n',9.42,14.98)
+    s.put('hvd_shelf',3.60,16.37,direction=90,name='Police vyřízených oprav')
+    s.put('hvd_lectern',13.67,13.39,direction=270,name='Stojan na rozpisy směn')
+    s.put('hvd_openbook',13.66,13.39,direction=270,lift=1.14,name='Rozepsaný rozpis hlídky')
+    s.put('hvd_pave_w',9.42,14.98)
     s.put('hvd_sconce',19.11,20.86,direction=270,lift=1.55)
     s.lamp(18.80,20.86,1.98,'blue')
 

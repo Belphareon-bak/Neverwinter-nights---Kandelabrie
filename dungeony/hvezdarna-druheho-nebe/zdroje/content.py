@@ -1,6 +1,7 @@
 """Original creatures, items, factions, and a ready-to-play local character."""
 
 from aurora import SHORT, Record, bite, dword, flt, integer, loc, lst, ref, string, word
+from furnishings import BOOK_MODELS
 from gateart import SEAL_MODELS
 from world import variables
 from workart import MIRROR_MODEL
@@ -88,7 +89,7 @@ BOOKS = {
 def items(*, test_guide=False):
     result = {}
     for key, (name, model, description) in BOOKS.items():
-        result[key] = item(key, 74, name, description, model=model, plot=1)
+        result[key] = item(key, 74, name, description, model=BOOK_MODELS[model], plot=1)
     for ident, (name, model) in enumerate(zip(("Kotvy", "Křídla", "Kopí", "Lucerny"), SEAL_MODELS), 1):
         key = f"hvd_seal{ident}"
         result[key] = item(key, 24, f"Pečeť {name}", "Osmiboká mosazná raznice se znakem nebeské hlídky. "

@@ -18,6 +18,6 @@ void main()
         return;
     }
     string flag = GetLocalString(OBJECT_SELF, "flag");
-    if (flag != "") SetLocalInt(module, flag, TRUE);
+    if (flag != "") HVD_OpenPassage(flag);
     HVD_Jump(player, GetLocalString(OBJECT_SELF, "target"));
 }

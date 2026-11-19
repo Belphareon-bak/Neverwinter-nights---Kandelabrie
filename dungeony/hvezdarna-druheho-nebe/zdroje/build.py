@@ -17,6 +17,8 @@ from content import creatures, factions, hero, items
 from dressing import NAMES, dress_areas
 from flights import tile_assets
 from gateart import gate_models, seal_assets
+from furnishings import SCENERY as FURNISHINGS, book_assets
+from routes import route_assets
 from interiors import tileset as interior_tiles
 from layout import areas
 from skies import sky_assets
@@ -46,7 +48,7 @@ def metadata(zones, test_guide):
     start = next(marker for marker in zones[0].waypoints if marker.value("Tag") == "hvd_start")
     info = Record(
         Mod_ID=(VOID, uuid.uuid5(uuid.NAMESPACE_URL, "local:nwn/hvezdarna-druheho-nebe").bytes),
-        Mod_Creator_ID=integer(0), Mod_Version=dword(9), Expansion_Pack=word(3),
+        Mod_Creator_ID=integer(0), Mod_Version=dword(10), Expansion_Pack=word(3),
         Mod_Name=loc("Hvězdárna druhého nebe"),
         Mod_Tag=string("HVEZDARNA"), Mod_Hak=string(""),
         Mod_HakList=lst([Record(8, Mod_Hak=string(HAK_NAME))]), Mod_CustomTlk=string(""),
@@ -107,12 +109,15 @@ def build(game_path, compiler, directory, scripts, *, test_guide=False):
     resources = {}
     prototypes = items(test_guide=test_guide)
     gate_scenery, gate_visuals = gate_models()
+    sills, inscriptions = route_assets()
     additions = {name: (NAMES[name], mesh) for name, mesh in SKY_MODELS.items()}
-    additions.update(gate_scenery | gate_visuals | WORKSHOP_SCENERY | WORKSHOP_VISUALS)
+    additions.update(gate_scenery | gate_visuals | WORKSHOP_SCENERY | WORKSHOP_VISUALS | sills | FURNISHINGS)
     appearances, art = assets(game, {name: (NAMES[name], mesh) for name, mesh in ARCHITECTURE.items()},
                               additions)
     art.update(seal_assets())
     art.update(portable_mirror_assets())
+    art.update(book_assets())
+    art.update(inscriptions)
     art.update({f"{name}.pwk": walkmesh(name) for name in FOOTPRINTS})
     art.update(architecture_textures())
     sky_ids, skies = sky_assets(game)
@@ -156,7 +161,7 @@ def build(game_path, compiler, directory, scripts, *, test_guide=False):
         ("hvd_mirror_set","Zrcadlo zasazené v patici"),
         ("hvd_bookpanel","Zadní police archivu"),
         ("hvd_stonepanel","Kamenný kryt"),
-    ) + tuple((key, label) for key, (label, _) in (gate_visuals | WORKSHOP_VISUALS).items())
+    ) + tuple((key, label) for key, (label, _) in (gate_visuals | WORKSHOP_VISUALS | sills).items())
     for key, label in visual_labels:
         appearance = appearances["hvd_refractor" if key == "hvd_tube" else key]
         resources[f"{key}.utp"] = gff_encode("UTP",visual_blueprint(key,label,appearance),TEXT_ENCODING)
