@@ -9,10 +9,13 @@ import subprocess
 from tempfile import TemporaryDirectory
 import uuid
 
+from architecture import MODELS as ARCHITECTURE, architecture_textures
 from art import assets
 from aurora import GameResources, Record, VOID, bite, dword, erf_encode, gff_encode, integer, loc, lst, ref, string, word
 from content import creatures, factions, hero, items
+from dressing import NAMES, dress_areas
 from layout import areas
+from skies import sky_assets
 from world import Tileset, object_fields
 
 
@@ -37,7 +40,7 @@ def metadata(zones):
     start = next(marker for marker in zones[0].waypoints if marker.value("Tag") == "hvd_start")
     return Record(
         Mod_ID=(VOID, uuid.uuid5(uuid.NAMESPACE_URL, "local:nwn/hvezdarna-druheho-nebe").bytes),
-        Mod_Creator_ID=integer(0), Mod_Version=dword(4), Expansion_Pack=word(3),
+        Mod_Creator_ID=integer(0), Mod_Version=dword(5), Expansion_Pack=word(3),
         Mod_Name=loc("Hvězdárna druhého nebe"),
         Mod_Tag=string("HVEZDARNA"), Mod_Hak=string(""),
         Mod_HakList=lst([Record(8, Mod_Hak=string(HAK_NAME))]), Mod_CustomTlk=string(""),
@@ -94,8 +97,15 @@ def build(game_path, compiler, directory, scripts):
     game = GameResources(game_path)
     resources = {}
     prototypes = items()
-    appearances, art = assets(game)
+    appearances, art = assets(game, {name: (NAMES[name], mesh) for name, mesh in ARCHITECTURE.items()})
+    art.update(architecture_textures())
+    sky_ids, skies = sky_assets(game)
+    art.update(skies)
     zones = areas(appearances)
+    dress_areas(zones)
+    for zone in zones:
+        if zone.lighting["SkyBox"][1]:
+            zone.lighting["SkyBox"] = bite(sky_ids["upper" if zone.tileset == "tcm02" else "rim"])
     tiles = {key: Tileset(game, key) for key in {area.tileset for area in zones}}
     for name, creature in creatures().items():
         resources[f"{name}.utc"] = gff_encode("UTC", creature, TEXT_ENCODING)

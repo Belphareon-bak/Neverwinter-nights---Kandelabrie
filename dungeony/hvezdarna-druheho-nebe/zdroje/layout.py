@@ -1,6 +1,6 @@
 """Eight compact, connected observatory locations."""
 
-from aurora import bite, integer
+from aurora import bite, flt, integer
 from world import Area, color
 
 
@@ -10,8 +10,10 @@ def scene(art, key, title, tileset, size, rooms, purpose, *,
                 rises=rises, stair_columns=stair_columns or {})
     area.art = art
     area.lighting.update(IsNight=bite(1), SkyBox=bite(sky), MoonFogAmount=bite(fog),
+                         FogClipDist=flt(98.0 if sky else 48.0),
+                         Grass_Density=flt(0.0),
                          MoonAmbientColor=color(*ambient), MoonDiffuseColor=color(*diffuse),
-                         MoonFogColor=color(*(115, 127, 167) if sky else (29, 36, 61)),
+                         MoonFogColor=color(*(30, 40, 83) if sky else (19, 24, 42)),
                          ShadowOpacity=bite(38),
                          ChanceSnow=integer(48 if key == "hvd_rim" else 0))
     area.soundscape.update(MusicNight=integer(music), MusicDay=integer(music),

@@ -426,12 +426,12 @@ def texture(name, size, base, seed, *, slabs=False):
     return struct.pack("<BBBHHBHHHHBB", 0, 0, 2, 0, 0, 0, 0, 0, size, size, depth, 8 if depth == 32 else 0) + pixels
 
 
-def assets(game):
+def assets(game, scenery):
     table = game.read("placeables", "2da").decode("cp1252").rstrip()
     first = int(table.splitlines()[-1].split()[0]) + 1
     appearances, resources = {}, {}
     rows = []
-    for appearance, (name, (_, build_mesh)) in enumerate(MODELS.items(), first):
+    for appearance, (name, (_, build_mesh)) in enumerate((MODELS | scenery).items(), first):
         appearances[name] = appearance
         rows.append(f"{appearance} {name} 8932 {name} **** **** **** **** 0 1 0 **** **** 1")
         resources[f"{name}.mdl"] = build_mesh().mdl(name)
@@ -455,7 +455,9 @@ def assets(game):
         ("cliff02", (101, 115, 146), 151, False),
     ):
         resources[f"tcm02_{stem}.tga"] = texture(stem, 128, base, seed, slabs=slabs)
-    invisible = struct.pack("<BBBHHBHHHHBB", 0, 0, 2, 0, 0, 0, 0, 0, 4, 4, 32, 8) + bytes(64)
-    for stem in ("pt_grass01", "leaf01", "fern", "fern01", "treefol03", "treefol04", "bush01", "plants"):
-        resources[f"tcm02_{stem}.tga"] = invisible
+    # A single transparent DXT3 block removes the modeled vegetation from the cloud terraces.
+    invisible = struct.pack("<4If", 4, 4, 4, 16, 0) + bytes(16)
+    for stem in ("pt_grass01", "leaf01", "fern", "fern01", "treefol03", "treefol04", "bush01",
+                 "plants", "bark01", "bark02"):
+        resources[f"tcm02_{stem}.dds"] = invisible
     return appearances, resources
