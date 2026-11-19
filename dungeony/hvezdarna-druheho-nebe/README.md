@@ -1,6 +1,6 @@
 # Hvězdárna druhého nebe
 
-> **Stav:** rozpracovaný návrh nového endgame dungeonu pro **Neverwinter Nights: Enhanced Edition / Kandelábrii**. Tento dokument popisuje zamýšlený obsah, nikoli již implementovaný herní modul.
+> Návrh dungeonu pro **Neverwinter Nights: Enhanced Edition / Kandelábrii**. Hratelná samostatná verze a návod ke spuštění jsou v [adresáři modulů](moduly/README.md).
 >
 > **Doporučené úrovně:** 35–40 (spodní část 35–38, horní část 38–40). **Typ:** průzkumný a bojový dungeon s příběhem, prostředím, logickou hádankou a závěrečným bossem.
 >

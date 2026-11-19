@@ -6,7 +6,7 @@ Repozitář pro tvorbu dungeonů a dalších rozšíření světa Kandelábrie p
 
 | Dungeon | Doporučené úrovně | Stav |
 | --- | --- | --- |
-| [Hvězdárna druhého nebe](dungeony/hvezdarna-druheho-nebe/README.md) | 35–38 a 38–40 | Rozpracovaný námět |
+| [Hvězdárna druhého nebe](dungeony/hvezdarna-druheho-nebe/README.md) | 35–38 a 38–40 | Samostatný modul NWN:EE |
 
 ## Struktura repozitáře
 
@@ -16,3 +16,7 @@ Repozitář pro tvorbu dungeonů a dalších rozšíření světa Kandelábrie p
 - Podklady používané ve více dungeonech mají místo ve [společné složce](spolecne/README.md).
 
 Nový námět stačí založit jako `dungeony/nazev-dungeonu/README.md` a přidat ho do přehledu výše.
+
+## Nástroje
+
+[Zkušebna dobrodruhů](nastroje/xp-maker/README.md) obsahuje XP maker, zbrojnici, bestiář a deset postav na 40. úrovni.
