@@ -1,10 +1,9 @@
-# Hvězdárna druhého nebe — návrh V2
+# Hvězdárna druhého nebe
 
 > **Stav:** rozpracovaný návrh nového endgame dungeonu pro **Neverwinter Nights: Enhanced Edition / Kandelábrii**. Tento dokument popisuje zamýšlený obsah, nikoli již implementovaný herní modul.
 >
 > **Doporučené úrovně:** 35–40 (spodní část 35–38, horní část 38–40). **Typ:** průzkumný a bojový dungeon s příběhem, prostředím, logickou hádankou a závěrečným bossem.
 >
-> **Záměr V2:** zachovat základ původního návrhu a vysvětlit jej v pořadí **co hráč objeví → proč to místo existuje → co se tam stalo → jak dungeon funguje → co je třeba naprogramovat**.
 
 ## 1. Obecný popis a autorský záměr
 
@@ -44,11 +43,11 @@ Ve skutečnosti se **správkyně clon bezpečně vrátila dolů služební stezk
 
 V roce **1358 DR**, během **Času potíží (Time of Troubles)**, byli bohové vyhnáni ze svých sídel. Helm zůstal se svými božskými schopnostmi strážit **Nebeské schodiště (Celestial Stairway)**. Když se Mystra pokusila projít, Helm ji zastavil a zničil její tehdejší vtělení. Tato událost patří do známé historie Forgotten Realms.
 
-**Důležité vymezení:** Schody do nebe v Kandelábrii **nejsou ono původní Nebeské schodiště** a Ithren **není Helmovým náhradníkem**. Místní hvězdárna je původní příběh vytvořený pro server. Události roku 1358 DR slouží jako historická inspirace pro představu, že lze za mimořádných okolností vytvořit a střežit přechod mezi světy. Případná konkrétní vazba Ithrena na některé božstvo není stanovena.
+**Důležité vymezení:** Schody do nebe v Kandelábrii **nejsou ono původní Nebeské schodiště** a Ithren **není Helmovým náhradníkem**. Příběh místní hvězdárny je vytvořený pro Kandelábrii. Události roku 1358 DR slouží jako historická inspirace pro představu, že lze za mimořádných okolností vytvořit a střežit přechod mezi světy. Případná konkrétní vazba Ithrena na některé božstvo není stanovena.
 
-**Zdroje k převzatému lore:** [Čas potíží](https://forgottenrealms.fandom.com/wiki/Time_of_Troubles) · [Helm a Nebeské schodiště](https://forgottenrealms.fandom.com/wiki/Helm) · [FRE1 Shadowdale (odkaz z původního návrhu)](https://housegriffon.com/RPG/Games/DnD/add2/ForgottenRealms/FRE1%20-%20Shadowdale.pdf).
+**Zdroje k převzatému lore:** [Čas potíží](https://forgottenrealms.fandom.com/wiki/Time_of_Troubles) · [Helm a Nebeské schodiště](https://forgottenrealms.fandom.com/wiki/Helm) · [FRE1 Shadowdale](https://housegriffon.com/RPG/Games/DnD/add2/ForgottenRealms/FRE1%20-%20Shadowdale.pdf).
 
-### 2.2 Vznik hvězdárny (původní lore Kandelábrie)
+### 2.2 Vznik hvězdárny (lore Kandelábrie)
 
 Místní hvězdáři se pokusili využít znalosti o nebeských průchodech k vybudování **malého, kontrolovaného spojení s předbraním v Horních sférách**. Ithren se stal jeho strážcem. Průchod nebyl určen jako veřejná cesta pro dobrodruhy; sloužil poslům, strážím, kontrole prostoru za branou a nouzovému návratu.
 
@@ -279,7 +278,7 @@ V každé výpravě hra určí **jednu pečeť mimo službu** a **pořadí zbýv
 
 **Řešení od spodní patice:** `Lucerna → Křídlo → Kopí`.
 
-V dalším průchodu může být řešení jiné. Ze čtyř symbolů a tří patic vzniká **24 možných pořadí** (4 možnosti vynechané pečeti × 6 pořadí zbývajících). Původní návrh uvádí čtyři varianty indicií pro každé pořadí, tedy **96 sad stop**. Před zapojením generátoru do hry je nutné v jeho testech ověřit, že **každá** sada skutečně vede k jedinému řešení.
+V dalším průchodu může být řešení jiné. Ze čtyř symbolů a tří patic vzniká **24 možných pořadí** (4 možnosti vynechané pečeti × 6 pořadí zbývajících). Pro každé pořadí se počítá se čtyřmi variantami indicií, tedy **96 sadami stop**. Před zapojením generátoru do hry je nutné v jeho testech ověřit, že **každá** sada skutečně vede k jedinému řešení.
 
 **Pravidla pro hráče:**
 
@@ -325,7 +324,7 @@ Clona přeruší odraz prasklého objektivu. Signalizace utichne a Ithren poprv�
 
 **Rozuzlení:** Ithren přijme, že jeho hlídka skončila, pomůže uzavřít horní bránu a ukáže bezpečnou cestu zpět. Hráči získají finální odměnu. Příběh končí **napravením omylu**, ne zbytečným zničením solara.
 
-**Volitelné rozšíření V2 (není součástí základního návrhu):** pokud by Kandelábrie chtěla podporovat i neútočné vyřešení, návratový zápis by mohl zpřístupnit zvláštní dialog nebo zkrátit poslední fázi. Pro první implementaci je však vhodnější dokončit a otestovat jednu spolehlivou cestu: *boj → přístup k cloně → uzavření signálu*.
+**Volitelné rozšíření (mimo základní rozsah):** pokud by Kandelábrie chtěla podporovat i neútočné vyřešení, návratový zápis by mohl zpřístupnit zvláštní dialog nebo zkrátit poslední fázi. Pro první implementaci je však vhodnější dokončit a otestovat jednu spolehlivou cestu: *boj → přístup k cloně → uzavření signálu*.
 
 ---
 
@@ -403,7 +402,7 @@ Tato část je **vývojová**, nikoliv součást hráčské anotace. Záměrně 
 | Jde o instanci nebo sdílenou oblast? | Přizpůsobit skutečnému režimu K1 | Kopie modulu a infrastruktura serveru |
 | Jak se nastaví obtížnost? | Dvě výškové části, bez tvrdého požadavku na konkrétní class build | Testy reálných postav 35–40 |
 | Jak vypadají odrazy hlídek? | Nebeské siluety, nikoli další skuteční solarové | Dostupné modely / efektové možnosti NWN:EE |
-| Je možné Ithrena přesvědčit bez boje? | Základní verze ne; jen neletální uzavření po mechanickém střetu | Rozhodnutí o rozsahu V2 |
+| Je možné Ithrena přesvědčit bez boje? | V základním rozsahu ne; jen neletální uzavření po mechanickém střetu | Rozhodnutí o případném rozšíření |
 
 ---
 
@@ -413,4 +412,4 @@ Tato část je **vývojová**, nikoliv součást hráčské anotace. Záměrně 
 
 ---
 
-**Související podklady:** [Historie úprav README](https://github.com/Belphareon-bak/Neverwinter-nights---Kandelabrie/commits/main/dungeony/hvezdarna-druheho-nebe/README.md) · [Adresář modulů](moduly/README.md) · [Přehled dungeonů](../../README.md#dungeony).
+**Související podklady:** [Adresář modulů](moduly/README.md) · [Přehled dungeonů](../../README.md#dungeony).
