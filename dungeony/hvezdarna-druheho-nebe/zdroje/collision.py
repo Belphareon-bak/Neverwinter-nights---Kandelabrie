@@ -71,6 +71,9 @@ FOOTPRINTS = {
     "hvd_gate_pod": (ring(.91),),
     "hvd_clamp_pod": (ring(.91),),
     "hvd_gatepull": (ring(.73),),
+    "hvd_arc_cabinet": (rectangle(0,-.03,4.92,.54),),
+    "hvd_lab_source": (ring(.78),),
+    "hvd_gong": (rectangle(0,.14,2.24,.79),),
 }
 
 USE_POINTS = {
@@ -83,6 +86,8 @@ USE_POINTS = {
     "hvd_gate_pod": ((0,-1.45),(1.34,.04)),
     "hvd_clamp_pod": ((0,-1.43),(1.40,.05)),
     "hvd_gatepull": ((0,-1.22),),
+    "hvd_lab_source": ((0,-1.24),(1.20,0)),
+    "hvd_gong": ((0,-1.12),(0,1.08)),
 }
 
 

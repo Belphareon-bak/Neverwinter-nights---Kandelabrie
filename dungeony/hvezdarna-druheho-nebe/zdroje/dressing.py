@@ -136,8 +136,9 @@ class Dress:
         self.put(head, x, y, direction=direction, base=base)
         self.lamp(x, y, 2.09, shade, base)
 
-    def wall(self, x, y, direction, fixture=None, tint='blue', base=None, *, pier=False):
-        self.put('hvd_apsewall' if pier else 'hvd_lining', x, y, direction=direction, base=base)
+    def wall(self, x, y, direction, fixture=None, tint='blue', base=None, *, built=False):
+        if not built:
+            self.put('hvd_lining', x, y, direction=direction, base=base)
         if fixture:
             model = {'chart': 'hvd_wallchart', 'rack': 'hvd_lensrack'}[fixture]
             self.put(model, x, y, direction=direction, base=base)
@@ -225,39 +226,40 @@ def mountain(s):
 
 
 def halls(s):
-    s.area.lighting.update(MoonAmbientColor=color(76,88,118), MoonDiffuseColor=color(168,180,210))
-    # The mounted fittings follow the stock alcoves and share their space with a matching work surface.
-    s.wall(2.0, 14.15, 90, 'chart', 'amber')
-    s.wall(2.02, 18.86, 90, 'rack', 'blue')
-    s.wall(5.15, 1.99, 180)
-    s.put('hvd_openbook', 3.77, 14.58, lift=.88, direction=90)
-    s.put('hvd_oillamp', 3.70, 13.56, lift=1.07)
-    s.lamp(3.70, 13.56, 1.31, 'amber')
-    s.set(5.24,2.84,SUPPLIES,180)
-    # The narrow passages retain their stock stone sides and a clear center.
-    s.put('hvd_runner', 15, 31.2)
-    for x in (27.5,35,42.5):
-        s.put('hvd_runner',x,15,direction=90)
+    s.area.lighting.update(MoonAmbientColor=color(78,89,119), MoonDiffuseColor=color(171,183,211))
+    s.wall(8.10,14.4,90,'chart','amber',built=True)
+    s.wall(8.10,19.4,90,'rack','blue',built=True)
+    s.wall(22.15,9.10,180,None,'amber',built=True)
+    s.put('hvd_openbook',9.12,14.67,lift=.88,direction=81)
+    s.put('hvd_oillamp',9.13,13.52,lift=1.07)
+    s.lamp(9.13,13.52,1.3,'amber')
+    s.set(10.0,10.7,SUPPLIES,180)
+    s.put('hvd_runner',15.4,28.0)
+    s.put('hvd_runner',15.4,34.8)
+    s.wall(13.08,27.8,90,None,'blue',built=True)
+    s.wall(17.72,35.10,270,None,'blue',built=True)
 
-    # An archive at the end of the north hall. The back piece joins the existing access bay.
-    for x, prop in ((5.17, 'chart'), (10.10, 'rack'), (19.95, None), (24.88, 'rack')):
-        s.wall(x,57.49,0,prop,'amber')
-    s.wall(2.03,48.9,90,'rack','blue')
-    s.wall(27.93,45.10,270,'chart','amber')
-    s.set(26.2,50.13,REPAIR,270)
-    s.put('hvd_armillary',6.63,55.22,direction=180)
-    s.lamp(6.63,55.22,2.06,'blue')
-    s.put('hvd_pave_n',12.7,51.19)
-    s.put('hvd_pave_n',17.69,51.19)
+    # Working archive. The ordinary cabinet at the back of the side bay matches the nearby shelving.
+    s.wall(7.10,51.7,90,'rack','blue',built=True)
+    s.wall(25.41,44.0,270,'chart','amber',built=True)
+    s.wall(12.83,55.50,0,'rack','amber',built=True)
+    s.put('hvd_shelf',17.06,55.20)
+    s.wall(20.65,54.8,0,None,'blue',built=True)
+    s.put('hvd_armillary',10.18,53.55)
+    s.lamp(10.18,53.55,2.04,'blue')
+    s.set(23.49,46.1,REPAIR,270)
+    s.put('hvd_pave_n',14.25,47.8)
 
-    # Opticians use the east alcoves and read their notices against the west wall.
-    for y, prop in ((12.33,'rack'),(22.34,'chart'),(32.35,'chart'),(42.33,'rack')):
-        s.wall(67.93,y,270,prop,'amber')
-    for y, prop in ((23.5,'rack'),(33.53,'chart'),(43.51,'rack')):
-        s.wall(41.91,y,90,prop,'blue')
-    s.set(66.31,32.32,STUDY,270)
-    s.set(66.45,10.3,SUPPLIES,270)
-    s.put('hvd_runner',55.25,34.7)
+    # Each side of the long east wing has its own role. Aisles and doorways remain open.
+    for y,kind in ((14.4,'rack'),(23.9,'chart'),(33.8,'rack')):
+        s.wall(64.10,y,270,kind,'amber',built=True)
+    for y,kind in ((22.9,'rack'),(31.2,'chart')):
+        s.wall(48.10,y,90,kind,'blue',built=True)
+    s.wall(55.2,10.60,180,'chart','blue',built=True)
+    s.wall(60.45,10.60,180,'rack','amber',built=True)
+    s.set(62.56,23.95,STUDY,270)
+    s.wall(50.52,38.6,0,None,'blue',built=True)
+    s.put('hvd_runner',55.55,35.0)
 
 
 def workshops(s):
@@ -269,10 +271,12 @@ def workshops(s):
     s.put('hvd_tools', 17.03, 16.13, lift=.89, direction=80)
     s.put('hvd_oillamp', 17.02, 16.86, lift=1.07)
     s.lamp(17.02, 16.86, 1.30, 'amber')
-    s.put('hvd_lensrack', 14.22, 18.64)
+    s.put('hvd_lensrack', 13.98, 18.98)
     s.put('hvd_hoist', 38.05, 17.28, direction=180)
-    s.set(35.3, 15.35, REPAIR, 180)
-    s.set(30.84, 11.68, SUPPLIES, 180)
+    # The forge, anvil and bench each have their own usable space under the eastern roof.
+    s.set(35.32, 14.77, REPAIR[:5], 180)
+    s.set(36.11, 11.82, SUPPLIES[:6], 180)
+    s.put('hvd_shelf',34.13,11.65,direction=180)
     s.sky(25, 23.85, 'amber')
     s.sky(25, 49.8, 'blue')
     s.bridge(25, 'amber')
@@ -293,39 +297,31 @@ def workshops(s):
     s.rail(31.1, 50.44, 3, 4.90, 0, 0, 5)
     s.put('hvd_armillary', 44.0, 57.9)
     s.lamp(44.0, 57.9, 1.95, 'blue')
-    for x,y,z,angle in ((8,14,-1.0,70),(42,17,-1.7,130),(9,55,-2.0,18),(38,64,-1.6,3)):
+    for x,y,z,angle in ((8,14,-1.0,70),(42,17,-1.7,130),(9,55,-2.0,18),(51.2,66.6,-2.6,3)):
         s.put('hvd_crag', x, y, base=z, direction=angle)
     s.clouds([(8,36,-10,14),(36,41,-11,133)], [(7,36,-13,38),(42,42,-11,52)])
 
 
 def dome(s):
-    s.area.lighting.update(FogClipDist=flt(69.0), MoonAmbientColor=color(89,100,136),
-                           MoonDiffuseColor=color(184,188,222))
-    # Finish the side bays along the actual shell and recess the concealed door into the east apse.
+    s.area.lighting.update(FogClipDist=flt(61.0),MoonAmbientColor=color(92,103,142),
+                           MoonDiffuseColor=color(189,191,223))
     for x,y,angle,item,light in (
-        (2.1,33.3,90,'chart','blue'), (2.1,38.29,90,'rack','blue'),
-        (6.2,47.02,0,'rack','blue'), (11.22,47.02,0,'chart','blue'),
-        (21.65,57.85,0,'rack','amber'),(26.66,57.85,0,'chart','blue'),
-        (33.36,57.85,0,'chart','blue'),(38.35,57.85,0,'rack','amber'),
-        (57.89,28.61,270,'rack','blue'), (57.89,33.62,270,'chart','amber'),
-        (57.89,38.48,270,'rack','blue'),
-        (53.17,13.62,270,'rack','violet'), (53.17,23.45,270,'chart','violet'),
+        (22.85,17.10,180,'chart','amber'),(35.3,17.12,180,'rack','blue'),
+        (13.30,33.65,90,'rack','blue'),(13.30,39.2,90,'chart','blue'),
+        (20.78,45.90,0,'rack','amber'),(24.83,45.90,0,None,'blue'),
+        (36.44,45.90,0,'chart','blue'),(39.96,45.90,0,None,'amber'),
+        (46.70,34.10,270,'rack','blue'),(46.70,40.0,270,'chart','amber'),
+        (41.45,12.35,180,None,'blue'),
     ):
-        s.wall(x,y,angle,item,light)
-    # The lower portico stands between two joined masonry wings that contain desks and instruments.
-    for x in (19.24,24.25,35.75,40.76):
-        s.wall(x,15.36,180,'chart' if x in (19.24,40.76) else None,'amber',pier=True)
-    s.service_niche(53.03,18.55,False,0)
-    for x,y,angle in ((12.1,38.6,90),(47.6,38.5,270),(16.42,16.28,180),(43.58,16.28,180)):
-        s.put('hvd_cupolarib',x,y,direction=angle)
-    s.put('hvd_oillamp',24.62,22.12,lift=1.06)
-    s.lamp(24.62,22.12,1.30,'amber')
-    s.put('hvd_openbook',23.47,21.99,lift=.88,direction=12)
-    s.put('hvd_tools',24.10,22.22,lift=.89,direction=30)
-    s.set(56.21,34.1,REPAIR,270)
-    s.set(3.9,38.32,STUDY,90)
-    s.put('hvd_armillary',36.32,55.82)
-    s.lamp(36.32,55.82,1.93,'amber')
+        s.wall(x,y,angle,item,light,built=True)
+    s.put('hvd_oillamp',23.99,18.94,lift=1.07)
+    s.lamp(23.99,18.94,1.32,'amber')
+    s.put('hvd_openbook',22.73,18.78,lift=.88,direction=12)
+    s.put('hvd_tools',23.51,19.03,lift=.89,direction=30)
+    s.set(45.00,35.52,REPAIR[:8],270)
+    s.set(15.03,37.61,STUDY,90)
+    s.put('hvd_armillary',36.87,44.26)
+    s.lamp(36.87,44.26,1.99,'amber')
     s.put('hvd_mounttrim',30,31)
     s.put('hvd_guide',24.7,29.65)
     s.put('hvd_guide',35.38,29.65)
@@ -467,20 +463,26 @@ def summit(s):
 
 
 def study(s):
-    s.area.lighting.update(FogClipDist=flt(38.0), MoonAmbientColor=color(89,82,109),
-                           MoonDiffuseColor=color(177,168,206))
-    for x,y,d,item in ((10.91,13.97,90,'rack'),(10.91,18.97,90,'chart'),(10.91,23.97,90,None),
-                        (10.91,28.97,90,None),(28.95,13.97,270,None),(28.95,18.97,270,'rack'),
-                        (28.95,23.97,270,'chart'),(28.95,28.97,270,'rack'),
-                        (14.77,30.46,0,'rack'),(24.72,30.46,0,'chart'),
-                        (14.77,10.48,180,'chart'),(24.72,10.48,180,None)):
-        s.wall(x,y,d,item,'amber',pier=True)
-    s.put('hvd_tools',13.18,20.16,lift=.88,direction=75)
-    s.put('hvd_oillamp',13.12,21.16,lift=1.08)
-    s.lamp(13.12,21.16,1.32,'amber')
-    s.put('hvd_openbook',12.75,20.04,lift=.88,direction=90)
-    s.set(27.53,19.45,REPAIR,270)
-    s.put('hvd_pave_n',19.75,21.0)
+    s.area.lighting.update(FogClipDist=flt(48.0),MoonAmbientColor=color(98,89,112),
+                           MoonDiffuseColor=color(188,174,208))
+    # This compact room has one writing desk, a west filing bay and a separate optics bench.
+    s.wall(3.25,12.85,90,'chart','amber',built=True)
+    s.wall(7.22,20.90,0,'rack','amber',built=True)
+    s.wall(11.73,20.90,0,'chart','blue',built=True)
+    s.wall(15.0,12.85,270,'rack','blue',built=True)
+    s.wall(12.56,8.30,180,None,'amber',built=True)
+    s.put('hvd_oillamp',5.09,13.24,lift=1.07)
+    s.lamp(5.09,13.24,1.31,'amber')
+    s.put('hvd_openbook',4.97,12.38,lift=.88,direction=90)
+    s.put('hvd_tools',5.29,12.91,lift=.89,direction=80)
+    s.put(178,6.40,12.66,direction=90,name='Lavice u zápisů')
+    s.put('hvd_shelf',3.60,16.37,direction=90)
+    s.put('hvd_armillary',13.02,14.33,direction=270)
+    s.lamp(13.02,14.33,1.96,'blue')
+    s.set(12.64,11.9,REPAIR[:5],270)
+    s.put('hvd_pave_n',9.42,14.98)
+    s.put('hvd_sconce',19.11,20.86,direction=270,lift=1.55)
+    s.lamp(18.80,20.86,1.98,'blue')
 
 
 def eave(s):

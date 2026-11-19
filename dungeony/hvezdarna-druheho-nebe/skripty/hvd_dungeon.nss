@@ -228,9 +228,27 @@ void HVD_Chime(object player, object chime)
         return;
     }
     SetLocalInt(chime, "hvd_chimed", GetLocalInt(area, "hvd_wave"));
+    AssignCommand(chime, PlaySound("as_cv_gongring1"));
     HVD_MarkLine(area, GetPosition(chime), GetPosition(nearest), VFX_IMP_SONIC);
     ApplyEffectToObject(DURATION_TYPE_INSTANT, EffectDamage(64, DAMAGE_TYPE_SONIC), nearest);
     HVD_AreaMessage(area, "Ozvučnice vyslala zvukový výboj. Větrné tělo se rozkmitalo.");
+}
+
+void HVD_EndLabTrial(int run, int trial)
+{
+    if (HVD_Run() == run && GetLocalInt(HVD_Module(),"hvd_lab_trial") == trial)
+        HVD_Extinguish("hvd_lab_light");
+}
+
+void HVD_TestOptics(object player)
+{
+    object module = HVD_Module();
+    int trial = GetLocalInt(module,"hvd_lab_trial") + 1;
+    SetLocalInt(module,"hvd_lab_trial",trial);
+    HVD_PlacePart("hvd_lab_light","hvd_lab_trace","hvd_lab_switch",0.0);
+    DelayCommand(5.0,HVD_EndLabTrial(HVD_Run(),trial));
+    SendMessageToPC(player,"Odraz rozsvítil levou rysku II a pravou III. V kopuli nastav západní clonu na II a východní na III. "
+                   +"Záložní zrcadlo pro Poslední stupeň je v pouzdře u pracovního stolu.");
 }
 
 object HVD_FindMirror()

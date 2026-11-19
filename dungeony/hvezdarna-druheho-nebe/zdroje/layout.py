@@ -2,6 +2,8 @@
 
 from aurora import bite, flt, integer, ref
 from gateart import GATE, SHUTTER, SOCKETS
+from interiors import TILESET, tile_assignments
+from workart import LAB_MIRROR, LAB_SCREEN, LAB_SOURCE
 from world import Area, color, variables
 
 
@@ -100,47 +102,41 @@ def mountain(art):
 
 
 def halls(art):
-    a = scene(art, "hvd_halls", "Chodby clon", "tni02", (7, 7),
-              [(1, 1, 2, 2), (1, 4, 2, 5), (5, 1, 6, 4)],
-              "Příjmová síň s rozcestím, zděná chodba s filtry a dvě oddělené obslužné místnosti.",
-              ambient=(79, 88, 118), diffuse=(148, 158, 200), fog=0, music=50, wind=67,
-              tiles={(2, 1): (86, 0), (3, 1): (1, 1), (4, 1): (86, 2),
-                     (1, 2): (86, 1), (1, 3): (86, 3), (1, 5): (86, 1), (1, 6): (4, 2)})
-    a.point("hvd_halls_in", 17.8, 12.9, 90)
-    a.point("hvd_study_secret",15,58.34,90)
-    a.point("hvd_halls_study",15,54.0,270)
-    a.transition("Do komory správkyně","hvt_halls_study",(12.8,59.05,17.2,60.85),"hvd_study_in",
+    a = scene(art, "hvd_halls", "Chodby clon", TILESET, (7, 7), [(0,0,7,7)],
+              "Příjmová síň, úzká paprsková chodba a archiv při severní obslužné trase.",
+              ambient=(79,88,118), diffuse=(148,158,200), fog=0, music=50, wind=67,
+              tiles=tile_assignments("hvd_halls"))
+    a.point("hvd_halls_in",17.8,13.55,90)
+    a.point("hvd_study_secret",22.9,57.35,90)
+    a.point("hvd_halls_study",21.0,53.15,260)
+    a.transition("Za zadní stěnu archivu","hvt_halls_study",(20.85,58.10,24.9,59.65),"hvd_study_in",
                  require="hvd_study_open")
-    feature(a,"hvd_wallring","Zapadlý mosazný čep",19.05,57.47,action="study_pin",tag="hvd_study_pin",
-            text="Mezi měřicími tabulkami vystupuje mosazný čep. Tenká táhlice míří za zadní polici.")
-    a.point("hvd_halls_works", 16.5, 44.6, 0, "Služební cesta k dílnám")
-    a.point("hvd_halls_dome", 55.5, 37.0, 270, "Výstup do kopule")
-    a.transition("Ven na římsu", "hvt_halls_rim", (15.6, 8.8, 20.1, 10.9), "hvd_rim_halls")
-    a.transition("K dílnám", "hvt_halls_works", (8.4, 42.7, 11.4, 47), "hvd_works_in")
-    a.transition("Do kopule", "hvt_halls_dome", (53.1, 40.0, 58.0, 42.7), "hvd_dome_in")
-    for x, y, angle in ((17.85, 9.9, 0), (9.5, 44.85, 90), (55.55, 41, 0)):
-        feature(a, "hvd_cloister", "Kamenné ostění", x, y, bearing=angle)
-    for i, x in enumerate((28, 35, 42), 1):
-        feature(a, "hvd_beamstrip", "Meze světelného pole", x + .3, 15)
-        a.trap("Pole clony " + str(i), f"hvd_hallray{i}", (x - 1, 13, x + 2, 17),
-               hazard=2, flag="hvd_hall_off", axis=1)
-        light(a, x, 16.6, 15107, 1.45)
-    feature(a, "hvd_dial", "Pojistka paprskové chodby", 20.8, 19.05, action="disarm",
-            tag="hvd_ray_lock", flag="hvd_hall_off", skill=15,
-            text="Mosazná západka je ohnutá. Postup ukazuje sešit v dolní servisní dílně.")
-    a.find("hvd_book_halls", 4.16, 13.93, height=.88, bearing=78)
-    fixture(a, [
-        (97, "Stůl výpravčího", 3.73, 14.1, 90),
-
-        (447, "Odložený filtr v mosazi", 26.3, 47.6, 270),
-        (287, "Lavice pod výstupem do kopule", 66.81, 35.69, 90),
-    ])
-    for x, y in ((21.5, 11.6), (20.15, 45.7), (48.6, 18.45), (59.2, 40.2)):
-        lantern(a, x, y)
-    cover(a, [(20.1, 48.2), (48.1, 23.0), (60.4, 26.8), (51.0, 34.9)], 337)
-    for creature, x, y in (("hvd_strhavac", 31, 15), ("hvd_vrhac", 46, 15),
-                           ("hvd_spradac", 54, 26), ("hvd_strhavac", 57, 34), ("hvd_vrhac", 16, 42.4)):
-        a.mob(creature, x, y)
+    feature(a,"hvd_wallring","Mosazná zarážka police",19.65,55.45,action="study_pin",tag="hvd_study_pin",
+            text="U spodní hrany kalibračních tabulek je zasazený mosazný čep. Když ho nadzvedneš, povolí táhlo u zadní stěny.")
+    a.point("hvd_halls_works",12.65,44.95,0,"Služební cesta k dílnám")
+    a.point("hvd_halls_dome",55.5,36.65,270,"Výstup do kopule")
+    a.transition("Ven na římsu","hvt_halls_rim",(15.65,7.12,19.95,8.53),"hvd_rim_halls")
+    a.transition("K dílnám","hvt_halls_works",(3.8,43.1,5.35,46.65),"hvd_works_in")
+    a.transition("Do kopule","hvt_halls_dome",(53.48,41.45,57.6,43.0),"hvd_dome_in")
+    for i,x in enumerate((28,35,42),1):
+        a.point(f"hvd_hall_eye{i}",x,15,90)
+        feature(a,"hvd_ray_case","Nástěnné vysílače clony",x,15)
+        a.trap("Pole clony " + str(i),f"hvd_hallray{i}",(x-1.20,12.62,x+1.20,17.38),
+               hazard=2,flag="hvd_hall_off",axis=1)
+        light(a,x,16.92,15107,1.54)
+    feature(a,"hvd_dial","Pojistka paprskové chodby",21.83,18.77,action="disarm",
+            tag="hvd_ray_lock",flag="hvd_hall_off",skill=15,
+            text="Uzavírá clony všech tří nástěnných vysílačů v paprskové chodbě. Rozebranou pojistku lze seřídit podle sešitu v dolní dílně nebo zneškodňováním pastí 15.")
+    a.find("hvd_book_halls",9.50,13.9,height=.88,bearing=78)
+    fixture(a,[(97,"Stůl výpravčího",9.08,14.16,90),
+               (287,"Lavice u skříní s filtry",62.70,32.8,90)])
+    for x,y in ((20.65,11.6),(19.8,45.1),(51.2,19.4),(59.7,35.9)):
+        lantern(a,x,y)
+    for x,y in ((20.9,48.3),(49.5,23.0),(61.35,26.8),(50.45,34.9)):
+        feature(a,"hvd_crate","Bedna s výměnnými filtry",x,y,cover=1)
+    for creature,x,y in (("hvd_strhavac",31,15),("hvd_vrhac",46,15),
+                          ("hvd_spradac",54,26),("hvd_strhavac",57,34),("hvd_vrhac",16,42.4)):
+        a.mob(creature,x,y)
     return a
 
 
@@ -154,7 +150,9 @@ def workshops(art):
     a.point("hvd_work_lab", 17.1, 14.7, 90, "Dolní dílna · zkušebna s klíčem a zrcadlem")
     a.point("hvd_works_hp", 25, 55.4, 270, "Horní lávka ke kopuli")
     a.point("hvd_works_rim", 36, 15.5, 180, "Sestup ke starému noclehu")
-    a.transition("Do chodeb clon", "hvt_works_halls", (23, 10, 29, 13), "hvd_halls_works")
+    a.transition("Do chodeb clon", "hvt_works_halls", (22.75,9.9,27.25,11.9), "hvd_halls_works")
+    for x in (22.0,28.0):
+        feature(a,"hvd_bluepost","Mezník návratu do chodeb",x,10.9)
     a.transition("Pod kopulí do hvězdárny", "hvt_works_dome", (23.0,60.55,27.0,62.30), "hvd_dome_works")
     a.transition("Starý servisní sestup", "hvt_works_rim", (37, 11, 40, 19), "hvd_rim_works",
                  flag="hvd_work_link")
@@ -162,8 +160,8 @@ def workshops(art):
     cloudbed(a, 29, 34)
     fixture(a, [
         (97, "Zkušební stůl", 17, 16, 90), (456, "Výpočty odrazů", 16.3, 16.7, 0),
-        (108, "Zbytky prken", 13, 18.4, 90), (48, "Kovadlina na rámy", 32.2, 17.9, 90),
-        (63, "Vyhaslá výheň", 33, 12.6, 0),
+        (108, "Odložené díly rámů", 12.15, 17.9, 90), (48, "Kovadlina na rámy", 31.95, 15.88, 90),
+        (63, "Vyhaslá výheň", 32.55, 12.9, 0),
         (336, "Odložená patka", 16, 56.7, 0),
         (294, "Stará nebeská sféra", 43, 57, 0),
     ])
@@ -171,15 +169,18 @@ def workshops(art):
     a.find("hvd_book_optic", 17.37, 15.55, height=.88, bearing=97)
     a.stash(7, "Schránka na klíč správkyně", 15.14, 15.3, "hvd_keycase",
             text="Vedle pracovního stolu v ní správkyně nechala klíč od zamčeného pouzdra.")
-    a.prop(447, "Pevné zrcadlo zkušebny", 18.47, 18.28, bearing=130, tag="hvd_lab_mirror")
-    a.stash(8, "Pouzdro s přenosným zrcadlem", 22.0, 13.6, "hvd_mirror_case",
-            text="Záložní zrcadlo do patice na Posledním stupni. Sešit na stole vysvětluje jeho použití.")
-    feature(a, "hvd_dial", "Spoušť zkušební optiky", 22.7, 17.8, action="testbeam")
+    a.prop(447,"Pevné zrcadlo zkušebny",*LAB_MIRROR,bearing=130,tag="hvd_lab_mirror")
+    feature(a,"hvd_lab_screen","Měřicí stupnice zkušebny",*LAB_SCREEN)
+    a.stash(8, "Pouzdro s přenosným zrcadlem", 15.24, 17.65, "hvd_mirror_case", bearing=180,
+            text="Pod západní stříškou u zkušebního stolu leží záložní zrcadlo do patice na Posledním stupni. Sešit na stole vysvětluje jeho použití.")
+    feature(a,"hvd_lab_source","Spoušť zkušební optiky",*LAB_SOURCE,action="testbeam",tag="hvd_lab_switch",
+            text="Vyšle vzorek světla přes pevné zrcadlo na měřicí stupnici. Rozsvítí správné rysky pro dvě clony v kopuli.")
     a.stash(7, "Pouzdro správkyně", 13.2, 15.55, "hvd_work_cache", key="hvd_workkey",
             text="Dolní dílna u západního okraje podesty. Klíč je ve schránce u pracovního stolu.")
-    feature(a, "hvd_beacon", "Ozvučnice servisní lávky", 29.05, 18.95, action="chime", tag="hvd_work_chime")
+    feature(a,"hvd_gong","Ozvučnice servisní lávky",27.85,52.9,action="chime",tag="hvd_work_chime",
+            text="Ozvučnice udeří nejbližšího viditelného větrného elementála do 18 metrů. Na každou vlnu nepřátel má jeden úder.")
     feature(a, "hvd_sealstand", "Schránka údržby · Kotva", 18, 57, action="seal", seal=1, tag="hvd_anchor_seal")
-    for x, y in ((24, 19.2), (28, 49), (12.5, 54), (46.2, 58.2)):
+    for x, y in ((22.4, 19.2), (28, 49), (12.5, 54), (46.2, 58.2)):
         lantern(a, x, y)
     cover(a, [(22, 52.8), (37.0, 56.5)], 337)
     for creature, x, y in (("hvd_spradac", 20.5, 54), ("hvd_strhavac", 29.5, 56), ("hvd_vrhac", 39, 54)):
@@ -188,42 +189,36 @@ def workshops(art):
 
 
 def dome(art):
-    a = scene(art, "hvd_dome", "Kopule druhého nebe", "tni02", (6, 6),
-              [(1, 2, 4, 4), (2, 1, 4, 5), (4, 2, 5, 3), (3, 4, 4, 5)],
-              "Kruhový měřicí sál, poškozený refraktor a výstupní oblouk mezi světy.",
-              ambient=(92, 103, 137), diffuse=(178, 184, 217), fog=0, music=27, wind=68)
-    a.point("hvd_dome_in", 30, 19.6, 90)
-    a.point("hvd_dome_works", 16, 26, 0, "Servisní vchod")
-    a.point("hvd_dome_steps", 30, 41, 270, "Otevření schodů")
-    a.point("hvd_dome_short", 41, 26, 180, "Zkratka z předbraní")
-    a.point("hvd_dome_study", 48.3, 18.55, 180)
-    a.point("hvd_dome_secret", 53.03, 18.55, 0)
-    a.transition("Zpět do komory správkyně","hvt_dome_study",(53.45,16.85,55.5,20.25),"hvd_study_dome",
+    a = scene(art,"hvd_dome","Kopule druhého nebe",TILESET,(6,6),[(0,0,6,6)],
+              "Měřicí sál, obslužné výklenky a průchody v nosném zdivu kopule.",
+              ambient=(92,103,137),diffuse=(178,184,217),fog=0,music=27,wind=68,
+              tiles=tile_assignments("hvd_dome"))
+    a.point("hvd_dome_in",30,19.65,90)
+    a.point("hvd_dome_works",16.65,26,0,"Servisní vchod")
+    a.point("hvd_dome_steps",30,43.15,270,"Otevření schodů")
+    a.point("hvd_dome_short",43.35,26,180,"Zkratka z předbraní")
+    a.point("hvd_dome_study",43.0,14.64,180)
+    a.point("hvd_dome_secret",46.82,14.625,0)
+    a.transition("Zpět do komory správkyně","hvt_dome_study",(47.4,12.82,49.5,16.49),"hvd_study_dome",
                  require="hvd_study_link")
-    a.point("hvd_optic_gate", 30, 46.2, 90)
-    a.transition("Do chodeb clon", "hvt_dome_halls", (27.4, 14.3, 32.6, 16.3), "hvd_halls_dome")
-    a.transition("Na lávku do dílny", "hvt_dome_works", (10, 23, 13, 29), "hvd_works_hp")
-    a.transition("Schody do nebe", "hvt_dome_steps", (27, 45, 33, 49), "hvd_steps_in", require="hvd_aligned")
-    a.transition("Zkratka do předbraní", "hvt_dome_short", (46, 23, 50, 29), "hvd_gate_short", require="hvd_shortcut")
-    for x, y, angle in ((30, 15.35, 0), (11, 26, 90), (48, 26, 90), (30, 45.8, 0)):
-        feature(a, "hvd_columnade", "Oblouk v plášti kopule", x, y, bearing=angle)
-    feature(a, "hvd_starmap", "Mosazná mapa dvojí oblohy", 30, 31)
-    feature(a, "hvd_plinth", "Prasklý refraktor", 30, 31, tag="hvd_refractor", action="optics",
-            text="V objektivu visí cizí hvězdy. Mosazné rysky u jihozápadního a jihovýchodního ovladače jsou II a III.")
-    feature(a, "hvd_console", "Západní clona · cílová ryska II", 21, 29, action="dial", dial=1, tag="hvd_dial_w")
-    feature(a, "hvd_console", "Východní clona · cílová ryska III", 39, 29, action="dial", dial=2, tag="hvd_dial_e")
-    feature(a, "hvd_sector2", "Cílová ryska II", 21, 27.4)
-    feature(a, "hvd_sector3", "Cílová ryska III", 39, 27.4)
-    fixture(a, [
-        (97, "Hlavní stolec hvězdáře", 24.05, 22.05, 0),
-        (447, "Pevné zrcadlo u severní štěrbiny", 28.0, 42.5, 0),
-        (311, "Skříň s filtry", 36.4, 16.2, 0),
-    ])
-    a.find("hvd_book_dome", 24.32, 21.68, height=.88, bearing=8)
-    for x, y in ((22.4, 40.95), (38.8, 39.45), (15.9, 22.75), (44.0, 23.4)):
-        lantern(a, x, y)
-    light(a, 30, 32.8, 15110, 3.2)
-    a.trap("Zpětný výboj refraktoru", "hvd_domeray", (26, 28, 34, 35), hazard=0)
+    a.point("hvd_optic_gate",30,46.15,90)
+    a.transition("Do chodeb clon","hvt_dome_halls",(27.42,13.45,32.58,15.33),"hvd_halls_dome")
+    a.transition("Na lávku do dílny","hvt_dome_works",(9.2,23.58,10.85,28.50),"hvd_works_hp")
+    a.transition("Schody do nebe","hvt_dome_steps",(27.5,46.92,32.5,49.27),"hvd_steps_in",require="hvd_aligned")
+    a.transition("Zkratka do předbraní","hvt_dome_short",(50.20,23.63,52.05,28.54),"hvd_gate_short",
+                 require="hvd_shortcut")
+    feature(a,"hvd_starmap","Mosazná mapa dvojí oblohy",30,31)
+    feature(a,"hvd_plinth","Prasklý refraktor",30,31,tag="hvd_refractor",action="optics",
+            text="Mosazné rysky u západního a východního ovladače jsou II a III. Potvrď obě polohy u refraktoru.")
+    feature(a,"hvd_console","Západní clona · cílová ryska II",21,29,action="dial",dial=1,tag="hvd_dial_w")
+    feature(a,"hvd_console","Východní clona · cílová ryska III",39,29,action="dial",dial=2,tag="hvd_dial_e")
+    feature(a,"hvd_sector2","Cílová ryska II",21,27.4)
+    feature(a,"hvd_sector3","Cílová ryska III",39,27.4)
+    fixture(a,[(97,"Hlavní stolec hvězdáře",23.35,18.75,0),
+               (447,"Pevné zrcadlo u severní štěrbiny",25.3,44.72,180)])
+    a.find("hvd_book_dome",23.70,18.37,height=.88,bearing=8)
+    light(a,30,32.8,15110,3.2)
+    a.trap("Zpětný výboj refraktoru","hvd_domeray",(26,28,34,35),hazard=0)
     return a
 
 
@@ -248,9 +243,10 @@ def steps(art, flight):
                  require="hvd_eave_open")
     feature(a,"hvd_wallring","Západka protizávaží",19.46,19.62,action="eave_pin",tag="hvd_eave_pin",
             text="Od táhla u opěry vede řetěz dolů za západní balustrádu. Západku brzdí napnutá pojistka.")
-    feature(a,"hvd_starmap","Rozeta bouřné komory",35,54.85)
+    feature(a,"hvd_storm_inlay","Rozeta bouřné komory",35,54.85)
     feature(a,"hvd_sealstand","Hnízdo Pečeti křídla",45.1,56.5,action="seal",seal=2,tag="hvd_wing_seal")
-    feature(a,"hvd_beacon","Ozvučnice bouřné podesty",24.75,55.3,action="chime",tag="hvd_steps_chime")
+    feature(a,"hvd_gong","Ozvučnice bouřné podesty",24.75,55.3,action="chime",tag="hvd_steps_chime",
+            text="Rozkmitá nejbližší viditelné větrné tělo do 18 metrů. Pro každou vlnu vydrží jeden úder.")
     a.point("hvd_storm_center",35,54.85)
     a.find("hvd_book_steps",27.35,15.48,height=.88,clue=2)
     a.prop(97,"Stolek obsluhy prvního schodu",27.01,15.5,bearing=90)
@@ -263,21 +259,20 @@ def steps(art, flight):
 
 
 def study(art):
-    a = scene(art,"hvd_study","Skrytá komora správkyně","tni02",(4,4),[(1,1,3,3)],
-              "Pracovna s čočkami a zadní kalibrační chodbou do kopule.",
-              ambient=(85,78,98),diffuse=(174,165,198),fog=0,music=50,wind=68)
-    a.point("hvd_study_in",19.75,13.55,90)
-    a.point("hvd_study_dome",19.75,26.52,270)
-    a.point("hvd_comm_secret",19.75,30.42,90)
-    a.transition("Zpět ke skladům clon","hvt_study_halls",(17.25,9.7,22.4,11.6),"hvd_halls_study")
-    a.transition("Za zadní clonou do kopule","hvt_study_dome",(17.45,30.95,22.02,32.1),"hvd_dome_study",
+    a = scene(art,"hvd_study","Skrytá komora správkyně",TILESET,(2,3),[(0,0,2,3)],
+              "Samostatná kalibrační pracovna, malá předsíň a zalomený průlez do kopule.",
+              ambient=(85,78,98),diffuse=(174,165,198),fog=0,music=50,wind=68,
+              tiles=tile_assignments("hvd_study"))
+    a.point("hvd_study_in",8.46,6.25,90)
+    a.point("hvd_study_dome",17.25,21.45,230)
+    a.point("hvd_comm_secret",15.26,18.55,0)
+    a.transition("Zpět ke skladům clon","hvt_study_halls",(6.95,3.74,9.98,4.85),"hvd_halls_study")
+    a.transition("Za zadní clonou do kopule","hvt_study_dome",(15.65,23.10,18.86,24.43),"hvd_dome_study",
                  require="hvd_study_link")
-    feature(a,"hvd_cloister","Ostění za policí",19.75,10.75)
-    feature(a,"hvd_cloister","Ostění kalibrační chodby",19.75,30.4)
-    feature(a,"hvd_wallring","Uzávěr zadní clony",24.38,29.45,action="study_turn",tag="hvd_study_turn",
-            text="Na stupnici je značka kopule. Mosazný převod odtud stahuje obě zadní clony.")
-    a.stash(7,"Kufřík na vyřazené čočky",12.3,26.5,"hvd_study_cache")
-    a.prop(97,"Stůl správkyně s nákresem obou clon",13.1,20.5,bearing=90)
+    feature(a,"hvd_wallring","Uzávěr zadní clony",13.15,20.73,action="study_turn",tag="hvd_study_turn",
+            text="Táhlo u severní stěny zdvihne uzávěr krátké servisní chodby do kopule.")
+    a.stash(7,"Kufřík na vyřazené čočky",4.44,18.96,"hvd_study_cache",bearing=90)
+    a.prop(97,"Stůl správkyně s nákresem obou clon",5.05,12.66,bearing=90)
     return a
 
 

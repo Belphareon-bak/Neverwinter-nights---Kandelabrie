@@ -127,11 +127,22 @@ void HVD_ResetHidden()
     DeleteLocalInt(module,"hvd_study_link");
     DeleteLocalInt(module,"hvd_eave_open");
     DeleteLocalInt(module,"hvd_eave_safe");
-    HVD_PlacePart("hvd_study_cover","hvd_bookpanel","hvd_study_secret",0.0);
+    HVD_PlacePart("hvd_study_cover","hvd_arc_cabinet","hvd_study_secret",0.0);
     HVD_PlacePart("hvd_comm_cover","hvd_stonepanel","hvd_comm_secret",0.0);
     HVD_PlacePart("hvd_dome_cover","hvd_stonepanel","hvd_dome_secret",0.0);
     HVD_PlacePart("hvd_eave_cover","hvd_stonepanel","hvd_eave_secret",0.0);
     HVD_PlacePart("hvd_eavetop_cover","hvd_stonepanel","hvd_eavetop_door",0.0);
+}
+
+void HVD_UpdateHallLights()
+{
+    string resource = GetLocalInt(HVD_Module(),"hvd_hall_off") ? "hvd_ray_cut" : "hvd_ray_ready";
+    int index;
+    for (index = 1; index <= 3; ++index)
+    {
+        string number = IntToString(index);
+        HVD_PlacePart("hvd_hall_light"+number,resource,"hvd_hall_eye"+number,0.0);
+    }
 }
 
 int HVD_Digit(int code, int slot)
@@ -569,6 +580,7 @@ void HVD_NewRun()
     DeleteLocalInt(module, "hvd_shortcut");
     DeleteLocalInt(module, "hvd_work_link");
     DeleteLocalInt(module, "hvd_hall_off");
+    DeleteLocalInt(module, "hvd_lab_trial");
     DeleteLocalInt(module, "hvd_chest_off");
     DeleteLocalInt(module, "hvd_notes");
     DeleteLocalInt(module, "hvd_mounted");
@@ -585,6 +597,8 @@ void HVD_NewRun()
     HVD_Extinguish("hvd_final_gate");
     HVD_Extinguish("hvd_summit_exit");
     HVD_Extinguish("hvd_socket_mirror");
+    HVD_Extinguish("hvd_lab_light");
+    HVD_UpdateHallLights();
     HVD_ResetGate();
     HVD_TurnOptics();
     HVD_ResetHidden();

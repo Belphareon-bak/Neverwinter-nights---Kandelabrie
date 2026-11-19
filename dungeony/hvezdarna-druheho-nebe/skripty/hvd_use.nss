@@ -74,7 +74,7 @@ void main()
         {
             SetLocalInt(module,"hvd_study_open",TRUE);
             HVD_Extinguish("hvd_study_cover");
-            HVD_AreaMessage(GetArea(player),"Čep povolil a zadní police zajela za obezdívku.");
+            HVD_AreaMessage(GetArea(player),"Povolila západka. V bočním výklenku zajela skříň do zdiva.");
         }
         return;
     }
@@ -112,28 +112,34 @@ void main()
     }
     if (operation == "testbeam")
     {
-        vector mirror = GetPosition(GetObjectByTag("hvd_lab_mirror"));
-        HVD_MarkLine(GetArea(player), GetPosition(target), mirror, VFX_IMP_SONIC);
-        HVD_MarkLine(GetArea(player), mirror, mirror + Vector(0.0, 6.0, 0.0), VFX_IMP_PULSE_COLD);
-        SendMessageToPC(player, "Paprsek se odrazil. Přenosné zrcadlo leží v pouzdru vedle zkušebního stolu. Sešit popisuje jeho použití pod schody na Posledním stupni.");
+        HVD_TestOptics(player);
         return;
     }
     if (operation == "disarm")
     {
+        string flag = GetLocalString(target, "flag");
+        if (flag == "hvd_hall_off" && GetLocalInt(module,flag))
+        {
+            SendMessageToPC(player,"Vysílače jsou odpojené. Čočky na obou stěnách zakrývají zavřené clony.");
+            return;
+        }
         if (GetSkillRank(SKILL_DISABLE_TRAP, player) >= GetLocalInt(target, "skill") ||
             GetLocalInt(module, "hvd_notes") || GetTag(GetArea(player)) == "hvd_gate")
         {
-            string flag = GetLocalString(target, "flag");
             if (flag == "hvd_chest_off" && !GetLocalInt(module, flag))
             {
                 HVD_Stock(GetObjectByTag("hvd_guard_cache"), "hvd_glass");
                 SendMessageToPC(player, "Pojistka odsunula falešné dno ve schránce strážnice.");
             }
             SetLocalInt(module, flag, TRUE);
-            SendMessageToPC(player, "Clona přerušila zdroj výboje.");
+            if (flag == "hvd_hall_off")
+            {
+                HVD_UpdateHallLights();
+                HVD_AreaMessage(GetArea(player),"Pojistka zavřela všechny tři clony. Paprsková chodba je bezpečná.");
+            }
+            else SendMessageToPC(player, "Clona přerušila zdroj výboje.");
         }
-        else SendMessageToPC(player, "K ovládání pomůže zneškodňování pastí nebo nález v dílnách. " +
-            "Servisní chodba vede mimo výboj.");
+        else SendMessageToPC(player,"Západku seřiď se zneškodňováním pastí 15 nebo podle sešitu ze zkušebního stolu v dolní dílně.");
         return;
     }
     if (operation == "reset")

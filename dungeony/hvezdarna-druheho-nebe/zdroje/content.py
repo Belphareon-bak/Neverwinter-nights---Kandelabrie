@@ -3,6 +3,7 @@
 from aurora import SHORT, Record, bite, dword, flt, integer, loc, lst, ref, string, word
 from gateart import SEAL_MODELS
 from world import variables
+from workart import MIRROR_MODEL
 
 
 def prop(kind, sub=0, table=0, value=0):
@@ -49,12 +50,12 @@ BOOKS = {
         "Při zkoušce filtru se od stěny ke stěně rozbíhá světlý pruh. Jakmile je na kameni vidět, "
         "ustup za mosaznou rysku a počkej na doznění výboje. Pojistka visí u vstupu do paprskové chodby "
         "v dolní příjmové síni. Poškozenou západku pomůže uvolnit návod uložený v dolní dílně.\n\n"
-        "Správkyně zaznamenala drhnutí táhla za severní policí údržby. Hlava čepu vyčnívá vedle "
-        "poslední měřicí tabulky. Pokud v archivu ucítíte průvan, zkontrolujte nejdřív tu spáru."),
+        "Z kalibračních tabulek se v archivu zvedá prach i ve dnech bez větru. Správkyně v posledním hlášení "
+        "prosila, aby hlídka nepodkládala mosaznou zarážku pod jejich rámem."),
     "hvd_book_study": ("Zápis z kalibrační komory", 9,
         "Zkusila jsem na severní stěně srovnat obě štěrbiny. Mezi komorou a kopulí jsou dvě clony "
         "na jediném převodu. Mosazný uzávěr u skříně je stáhne zároveň. Do kopule se pak vracím "
-        "za východním pracovním stolem a nemusím zpátky přes paprskovou chodbu.\n\n"
+        "úzkým průlezem v pravém rohu. Po zalomení průlezu narazím na zadní stěnu kopule.\n\n"
         "Při kontrole prvního schodu jsem se vyhnula hlídce po spodním můstku. Za západní opěrou "
         "visí protizávaží krytu. Před přechodem lávky vždy zajisti malou větrnou klapku. "
         "Pod obloukem se proud stáčí do prostoru, kde člověk nemá kam uhnout."),
@@ -63,11 +64,12 @@ BOOKS = {
         "směn minuli. Doufám, že Ithren zahlédne můj zápis dřív, než začne hledat příčinu opakovaných záblesků. "
         "Lucernu jsem při odchodu nechala na posledním stupni.\n\n"
         "Klíč jsem uložila do schránky u pracovního stolu v dolní dílně. Otevírá moje zamčené pouzdro "
-        "pod toutéž stříškou, při západním okraji podesty."),
+        "pod toutéž stříškou, při západním okraji podesty. Ruční pojistka v Chodbách clon se při zaseknutí "
+        "odlehčí stlačením ramene. Pak zavře všechny tři vysílače."),
     "hvd_book_optic": ("Sešit o clonách a zrcadle", 8,
         "Objektiv po opravě stále táhne na východ. Při příštím měření nastav na západním podstavci "
         "rysku II a na východním rysku III. Pak zkontroluj obraz v refraktoru uprostřed kopule.\n\n"
-        "Přenosné zrcadlo z pouzdra ve zkušebně je záloha pro hlídku. Stejnou patici najdeš na Posledním "
+        "Spoušť u stolu tyhle hodnoty ukáže na skle za pevným zrcadlem. Přenosné zrcadlo z pouzdra ve zkušebně je záloha pro hlídku. Stejnou patici najdeš na Posledním "
         "stupni vpravo od příchodu, ještě pod prvním schodištěm. Zrcadlo tam umí jednou zachytit druhý "
         "z Ithrenových závěrečných výbojů a přidá čas na sklopení clony."),
     "hvd_book_dome": ("Deník hvězdárny", 4,
@@ -96,9 +98,9 @@ def items(*, test_guide=False):
         result["hvd_book_test"] = item("hvd_book_test", 74, "Zkušební list · řešení brány",
                                       "Pracovní list se sestavou pro aktuální výpravu.", model=6, plot=1)
     descriptors = [
-        ("hvd_mirror", 77, "Přenosné zkušební zrcadlo",
+        ("hvd_mirror", 24, "Přenosné zkušební zrcadlo",
          "Na Posledním stupni ho usaď do mosazné patice vpravo pod schody, dřív než se postavíš Ithrenovi. "
-         "Zachytí jeden výboj a dá družině víc času doběhnout ke cloně návratové lucerny.", 1, 4, ()),
+         "Zachytí jeden výboj a dá družině víc času doběhnout ke cloně návratové lucerny.", 1, MIRROR_MODEL, ()),
         ("hvd_workkey", 65, "Klíč správkyně clon",
          "Otevírá zamčené pouzdro pod stříškou v dolní dílně, u západního okraje podesty. "
          "Po příchodu z Chodeb clon tu stříšku uvidíš vlevo.", 1, 1, ()),

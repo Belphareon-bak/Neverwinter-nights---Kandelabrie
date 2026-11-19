@@ -27,6 +27,10 @@ def stair_model():
         z = LOW + i * rise
         mesh.box(MASONRY if i % 5 else LIMESTONE, 0, y + run/2, z - .25, INNER*2, run+.008, .25)
         mesh.box(TRIM, 0, y + .028, z - .045, INNER*2, .067, .046)
+    # Close the last riser where the flight meets the upper landing.
+    mesh.polygon(MASONRY, ((-INNER, END, HIGH-rise), (INNER, END, HIGH-rise),
+                           (INNER, END, HIGH), (-INNER, END, HIGH)),
+                 ((0, 0), (.6*INNER, 0), (.6*INNER, .3*rise), (0, .3*rise)))
     for side in (-1,1):
         x = side * (INNER + OUTER) / 2
         x0, x1 = sorted((side * INNER, side * 5))
@@ -87,12 +91,15 @@ def aabb_tree(vertices, triangles, faces):
             + aabb_tree(vertices,triangles,ordered[middle:]))
 
 
-def floor_node(name, vertices, triangles):
+def floor_node(name, vertices, triangles, materials=None):
     lines = ["node aabb walkmesh", f"  parent {name}", "  position 0 0 0", "  bitmap NULL",
              "  orientation 0 0 0 0", "  render 0", "  shadow 0", f"  verts {len(vertices)}"]
     lines.extend("    %.5f %.5f %.5f" % p for p in vertices)
     lines.append(f"  faces {len(triangles)}")
-    lines.extend("    %d %d %d 0 0 0 0 4" % f for f in triangles)
+    if materials is None:
+        materials = [4] * len(triangles)
+    lines.extend("    %d %d %d 0 0 0 0 %d" % (*face, material)
+                 for face, material in zip(triangles, materials, strict=True))
     tree = aabb_tree(vertices,triangles,list(range(len(triangles))))
     lines.append("  aabb " + tree[0])
     lines.extend("    " + row for row in tree[1:])

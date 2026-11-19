@@ -41,4 +41,6 @@ Platí pro návrh a stavbu světa, dungeonů a lokací Kandelábrie v NWN:EE. Ro
 3. Po výtvarných úpravách si prohlédni reprezentativní pohled od vstupu, čitelnost klíčových objektů a atmosféru při běžném přiblížení kamery. Pokud má klient v dohledné vzdálenosti vykreslit hodně detailů, ověř také plynulost a viditelnost. Pro zpětnou vazbu pořiď nové záběry v klientu a popiš případný zkušební stav nebo zásah do kamery.
 4. Při předání uveď, jakou sestavu má uživatel spustit a v jakém rozsahu je ověřená. Zkoušku přechodu chůzí, test mechanismu v připraveném stavu, odehrání celého střetu a integraci do K1 reportuj podle toho, co se skutečně provedlo.
 
+Při podrobné obchůzce zkontroluj obě strany cesty zhruba po patnácti metrech a vždy u prahu, odbočky a změny výšky. U truhly nebo ovladače poblíž přechodu klikni z více směrů. I automatický příchod postavy k předmětu musí vést mimo spoušť přechodu.
+
 Příkladem odlišení stanovišť, návaznosti tras a postupného doplnění architektury a vybavení je Hvězdárna druhého nebe. [Záběry z NWN:EE](https://github.com/Belphareon-bak/Neverwinter-nights---Kandelabrie/blob/bda148fb6ce3cbb17c287f4e95fddf2767fdc6a8/dungeony/hvezdarna-druheho-nebe/podklady/nahledy.jpg)

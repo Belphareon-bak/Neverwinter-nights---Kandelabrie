@@ -14,6 +14,7 @@ OFFSETS = ((0, 0), (1, 0), (1, 1), (0, 1))
 SURFACES = {
     "tts02": ("snow", "trees", (120, 123, 124, 126, 116)),
     "tni02": ("stone", "wall", (90,)),
+    "hvd_interior": ("stone", "wall", (0,)),
     "tcm02": ("cobble", "chasm", (34, 35, 36)),
 }
 
@@ -229,7 +230,7 @@ class Area:
         return self
 
     def records(self, tileset):
-        indoor = self.tileset == "tni02"
+        indoor = self.tileset in ("tni02", "hvd_interior")
         mountain = self.tileset == "tts02"
         snow = color(180, 199, 219)
         moon = color(45, 61, 91)

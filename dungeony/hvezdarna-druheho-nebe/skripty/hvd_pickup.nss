@@ -15,5 +15,6 @@ void main()
     }
     int clue = GetLocalInt(item, "hvd_clue");
     if (clue) SetLocalInt(HVD_Module(), "hvd_clue" + IntToString(clue), TRUE);
-    if (resource == "hvd_book_return") SetLocalInt(HVD_Module(), "hvd_notes", TRUE);
+    if (resource == "hvd_book_return" || resource == "hvd_book_optic")
+        SetLocalInt(HVD_Module(), "hvd_notes", TRUE);
 }
