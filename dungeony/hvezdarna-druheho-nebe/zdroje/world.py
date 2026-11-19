@@ -163,6 +163,20 @@ class Area:
         self.places.append(Record(9, **fields, **coordinates(x, y, z, bearing)))
         return self
 
+    def stash(self, appearance, name, x, y, tag, *, bearing=0, text="", key="", reward=False, z=None):
+        self.prop(appearance, name, x, y, tag=tag, bearing=bearing, text=text, z=z)
+        self.places[-1].fields.update(
+            Static=bite(0), Useable=bite(1), HasInventory=bite(1), ItemList=lst([]),
+            Locked=bite(bool(key)), Lockable=bite(bool(key)), KeyRequired=bite(reward),
+            KeyName=string(key), OpenLockDC=bite(34 if key else 0),
+            OnInvDisturbed=ref("hvd_reward" if reward else ""),
+            OnOpen=ref("hvd_reward_open" if reward else ""),
+        )
+        return self
+
+    def find(self, resource, x, y, *, height=0, bearing=0, clue=0):
+        return self.point("hvd_find", x, y, bearing, z=self.z_at(y) + height, find=resource, clue=clue)
+
     def passage(self, name, x, y, to, bearing=0, appearance=28, **settings):
         return self.prop(appearance, name, x, y, action="pass", target=to, bearing=bearing, **settings)
 

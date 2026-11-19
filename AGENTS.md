@@ -13,18 +13,23 @@ Platí pro návrh a stavbu světa, dungeonů a lokací Kandelábrie v NWN:EE. Ro
 - Nakresli vstup, hlavní cestu, místa rozhodnutí, odbočky za odměnou a cestu zpět. Obtížnost a expicí úseky rozděl podle skutečných změn terénu, úkolu nebo protivníků. Počet pater a velikost místností odvoď od funkce místa, měřítka postavy a toho, kolik prostoru potřebuje střet.
 - Umísti vstup do stavby, průchod nebo pozemní přechod tam, kde na něj navazuje cesta. Dveře usaď do ostění. Magická brána může mít vlastní způsob zjevení, rozpoznatelný práh a vazbu na to, co hráč právě udělal.
 - Viditelné schody a lávky musí být skutečně schůdné. Ověř návaznost podlahy, kolize a nástup na schody. Příchozí postava má mít místo na rozhlédnutí a stát mimo spoušť zpátečního přechodu. V základní kampani studuj měřítko, vedení hráče a napojení dveří jako referenci pro vlastní půdorys.
+- Chodby vymez skutečnými stěnami a průchozími otvory v dlaždicích nebo ve vlastní geometrii. U prahu i před ním ponech volnou trasu, která vede od příchodu až do spouště přechodu.
+- Z referenční kampaně studuj celou posloupnost prostorů. Sleduj, jak cesta vede mezi stavbami k průčelí, kudy se vstupuje do interiéru a jak na sál navazuje menší zázemí. Stejný způsob uvažování promítni do půdorysu a výzdoby, které vycházejí z vlastního tématu a provozu lokace.
 - Pokud je nejisté měřítko, práce s kamerou nebo proveditelnost přechodu, vyzkoušej tuto část brzy na krátkém hratelném úseku. Zjištění promítni do zbytku trasy.
 
 ## 3. Vybav scénu ve třech měřítkách
 
 - Nejdřív postav siluetu a orientační body. Stavba má čitelné opory, stěny, vstupy a vztah k okolnímu terénu. Z cesty zvýrazni to, co má hráč zahlédnout jako první. U velkého prostoru navrhni pohled od vstupu i důvod, proč projít k jeho okrajům.
 - Pak vytvoř funkční celky, třeba nocleh, pracoviště optika, výklenek hlídky nebo údržbu navijáku. Rozmísti vybavení s ohledem na jeho uživatele a skutečný pohyb. Potřebné ovladače, kryt a východy musí být čitelné i ze standardní herní kamery.
+- Zkontroluj půdorysy pevných objektů včetně podstavců a míst, odkud se používají. Sloup stojí vedle stolu, lucerna dosedá na nosnou plochu nebo visí z viditelného závěsu. Stěny, pilíře a další objemné vybavení mají kolizi odpovídající jejich tvaru. U ovladačů hýbej pohyblivým dílem a po použití zkontroluj, že podstavec i stupnice zůstaly v původní poloze.
 - Nakonec doplň materiály, světlo, zvuk, značky, opotřebení a drobnosti související s činností na místě. Střídej hustší zákoutí s volným prostorem pro výhled, pohyb a boj. Výzdoba a světlo mohou předem ukázat, kam vede trasa a v jakém stavu je mechanismus. Důležité stavy rozliš také tvarem, znakem, pohybem nebo zvukem.
 - Při požadavku na výrazně bohatší prostředí přidávej čitelné vrstvy do scén. Počet objektů může doložit rozsah práce. Kvalitu posuzuj podle funkce a věrohodnosti prostoru z pohledu hráče. Uživatelské obrazové podklady převáděj na konkrétní prvky, které fungují s kamerou a geometrií NWN:EE.
 
 ## 4. Propoj mechanismy s příběhem a průzkumem
 
 - Dej každému mechanismu fyzickou podobu, viditelný výsledek a stopu, podle které hráč přijde na jeho použití. Otočení ovladače má být vidět na cloně nebo refraktoru. Chybná volba u brány má hráči říct, co může zkontrolovat.
+- Knihy, dopisy a jiné přenosné zápisy umísti jako předměty, které lze sebrat a otevřít z inventáře. Nápovědu napiš jako krátký zápis postavy. Uveď jméno lokace, skutečný orientační bod a účel předmětu nebo další krok, když by je hráč z okolí těžko odvodil.
+- Truhlu s kořistí postav jako otevíratelný herní kontejner. Hráč má vidět otevřené víko, vlastní inventář truhly a kořist, kterou z něj vezme. Klíč a zámek mají fungovat jako herní předmět a zámek. Ověř běžným kliknutím otevření, prohlédnutí obsahu a přenos do inventáře.
 - Pasti a nebezpečné útoky nejdřív signalizuj. Dej hráči čas a způsob, jak reagovat, třeba ústup před rysku, kryt ve výklenku nebo pojistku nalezenou při průzkumu. Odbočka může přinést poklad, užitečný nástroj, novou stopu nebo zkratku.
 - Pokud se hádanka losuje, drž řešení po dobu jedné výpravy společné pro družinu. Pro každou variantu musí být dostupné stopy a potřebné předměty. Při návrhu mysli na chybný pokus, ztrátu předmětu, návrat po smrti a obnovu výpravy podle pravidel modulu.
 - Při návrhu střetů dej nepřátelům odlišné role a rozpoznatelný způsob boje. Vyvažuj podle skutečné výbavy, odolností a velikosti cílové družiny. Při samotné výtvarné úpravě soustřeď zkoušky na to, zda objekty a světla nebrání přístupu, čtení pastí a pohybu při střetu.

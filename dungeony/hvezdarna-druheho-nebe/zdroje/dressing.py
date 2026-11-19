@@ -28,6 +28,7 @@ NAMES = {
     "hvd_grille": "Mosazné mřížoví", "hvd_altarbase": "Stupňovitý základ stanoviště",
     "hvd_pavilion": "Otevřený pavilon poslední služby", "hvd_eddy": "Spirála stlačeného větru",
     "hvd_mistbank": "Vlny mraků pod ochozy",
+    "hvd_landing": "Kamenné předpolí hvězdárny",
 }
 
 STUDY = (
@@ -35,11 +36,11 @@ STUDY = (
     (178, "Lavice zapisovatele", .27, -1.04, 0, 0),
     ("hvd_openbook", None, -.45, .10, .88, 11),
     (455, "Výpočet polohy hvězd", .30, .29, .89, 26),
-    ("hvd_oillamp", None, .72, .10, 1.01, 0),
+    ("hvd_oillamp", None, .72, .10, 1.07, 0),
     (56, "Poznačené svazky", -.97, .26, .87, 17),
     (457, "Volný útržek", .38, -.30, .89, 3),
     ("hvd_crate", None, -1.45, .56, 0, -13),
-    (85, "Pytel pod stolem", 1.36, .54, 0, 51),
+    (85, "Pytel vedle stolu", 1.54, 1.04, 0, 51),
     (49, "Sud u stěny", 1.81, .82, 0, 9),
 )
 
@@ -51,9 +52,8 @@ REPAIR = (
     (360, "Stočené lano", .73, .45, .89, 28),
     ("hvd_crate", None, -1.52, .16, 0, 70),
     (109, "Sestavené součásti", .98, .86, 0, 9),
-    (85, "Pytle se zlomky skla", -1.29, -.48, 0, -20),
     (178, "Pojízdná lavice", .11, -1.12, 0, 3),
-    (48, "Kovadlina pro jemné kování", 1.52, -.41, 0, 180),
+    (48, "Kovadlina pro jemné kování", 1.92, -.61, 0, 180),
 )
 
 SUPPLIES = (
@@ -69,23 +69,21 @@ SUPPLIES = (
 
 GUARD = (
     (287, "Lavice nebeské hlídky", 0, 0, 0, 0),
-    (105, "Stojan na odložené zbraně", -1.85, 1.02, 0, 9),
+    (105, "Stojan na odložené zbraně", -2.38, 1.06, 0, 9),
     (51, "Sbalená noční výstroj", -.44, .82, 0, 84),
-    ("hvd_crate", None, 1.62, .80, 0, 8),
-    (55, "Složený prapor", 1.64, .80, .72, 2),
+    ("hvd_crate", None, 2.55, 1.18, 0, 8),
+    (55, "Složený prapor", 2.56, 1.18, .72, 2),
     (56, "Rozpisy služby", -.38, -.12, .54, 0),
-    ("hvd_oillamp", None, 1.92, .85, .92, 0),
-    (49, "Náhradní olej", 2.41, .90, 0, 6),
-    (527, "Koš s čistými knoty", 1.27, -.02, 0, 99),
+    ("hvd_oillamp", None, 2.72, 1.15, .92, 0),
+    (49, "Náhradní olej", 3.28, .74, 0, 6),
+    (527, "Koš s čistými knoty", 2.65, -.48, 0, 99),
     (383, "Dohořelá svíčka", .65, .13, .55, 0),
-    (85, "Plátěný pytel", -1.71, -.22, 0, -32),
 )
 
 STATION = (
     ("hvd_lectern", None, 0, 0, 0, 0),
     ("hvd_openbook", None, .03, -.01, 1.141, 0),
     (383, "Svíce na pultu", -.29, .18, 1.115, 0),
-    ("hvd_oillamp", None, 1.19, .76, 1.82, 0),
     ("hvd_bluepost", None, 1.19, .76, 0, 0),
     (56, "Záznamy hlídky", .59, .75, 0, 16),
     (14, "Brašna pro poslední záznam", -1.0, .55, 0, -15),
@@ -120,8 +118,8 @@ class Dress:
 
     def relief(self, x, y, direction=0, shade="blue", base=None):
         self.put("hvd_facade", x, y, direction=direction, base=base)
-        self.set(x, y, (("hvd_sconce", None, -.79, -.72, 2.4, 0), ("hvd_sconce", None, .79, -.72, 2.4, 0)),
-                 direction, base)
+        self.set(x, y, (("hvd_sconce", None, -.97, -.53, 2.4, 0),
+                        ("hvd_sconce", None, .97, -.53, 2.4, 0)), direction, base)
         self.lamp(x, y, 2.55, shade, base)
 
     def signpost(self, x, y, shade="blue", direction=0, base=None):
@@ -131,8 +129,8 @@ class Dress:
 
     def arch(self, x, y, direction=0, shade="amber", base=None):
         self.put("hvd_cloister", x, y, direction=direction, base=base)
-        self.set(x, y, (("hvd_oillamp", None, -2.17, -.39, 2.40, 0),
-                        ("hvd_oillamp", None, 2.17, -.39, 2.40, 0)), direction, base)
+        self.set(x, y, (("hvd_sconce", None, -2.42, -.29, 2.22, 0),
+                        ("hvd_sconce", None, 2.42, -.29, 2.22, 0)), direction, base)
         self.lamp(x, y, 2.55, shade, base)
 
     def bridge(self, x, shade):
@@ -154,103 +152,110 @@ class Dress:
 def mountain(s):
     s.area.lighting.update(ChanceSnow=integer(27), FogClipDist=flt(96.0),
                            MoonAmbientColor=color(65,80,119), MoonDiffuseColor=color(193,202,229))
-    # The summit is a shelf in the rock. The exposed terrain is visible behind the drum.
-    for x,y,z,angle in ((15,56,0,81),(21,61,0,13),(29,67,-1.0,112),
-                        (47,69,-.25,240),(56,62,-.65,210),(62,51,-1.0,81),(60.5,42,-3.1,58)):
+    # Wind shelter and provisions face the beginning of the cleared track.
+    s.put("hvd_campshell", 15.8, 20.35)
+    s.put("hvd_campshell", 31.7, 14.85, direction=176)
+    s.set(13.4, 21.55, SUPPLIES, 8)
+    s.set(31.9, 14.3, SUPPLIES, 174)
+    s.put("hvd_oillamp", 20.99, 22.02, lift=1.07)
+    s.lamp(20.99, 22.02, 1.34, "amber")
+    s.signpost(22.6, 25.87, "amber")
+    s.signpost(31.95, 27.75, "blue")
+    # The rock shoulders frame one approach. The secondary lane descends to the workshops.
+    for x,y,z,angle in ((17,56,-.9,66),(22,63,-.1,14),(29,68,-1.4,124),
+                        (50,68,-1.75,232),(55,62,-.9,218),(61,48,-1.8,76)):
         s.put("hvd_crag",x,y,base=z,direction=angle)
-    for x,y,angle in ((26,42,35),(49,45,96),(33,54,35),(52,55,74),(32,62,148),
-                      (33,29,21),(50,33,151),(12,22,31),(28,11,84),(53,28,84)):
+    for x,y,angle in ((27.5,31.9,36),(29.9,35.2,92),(40.3,30.3,89),
+                      (40.9,35.8,75),(28.9,43.8,42),(49.3,44.5,163),
+                      (32.6,59.7,40),(47.4,60.3,80)):
         s.put("hvd_snowbank",x,y,direction=angle)
-    s.put("hvd_campshell",16,18.8,direction=3)
-    s.put("hvd_campshell",27.8,26.1,direction=90)
-    s.set(15.2,21.1,SUPPLIES,5)
-    s.set(22.7,23.7,STUDY,0)
-    s.set(29.0,15.4,SUPPLIES,133)
-    s.set(12.4,17.2,STATION,110)
-    s.set(54,23.5,SUPPLIES,97)
-    for x,y in ((13.2,18),(20.8,21.2),(26.1,24.9),(32.8,31.8),(43.6,39),(37.2,49.2),(45,50.5)):
-        s.lamp(x,y,1.65,"orange")
-    for x,y in ((34.4,31.8),(45.8,35.4),(34.9,40.8),(45.6,44.1),(35.2,47.3),(45.0,47.2)):
-        s.put("hvd_wallfoot",x,y,direction=90 if y < 47 else 0)
-        s.put("hvd_bluepost",x,y+.94)
-        s.put("hvd_rubble",x + (-.64 if x<40 else .71),y - .94,direction=125)
-    for y in (27.5,32.5,37.5,42.5,47.5):
-        s.put("hvd_runner",39.9,y,lift=.016)
-    for x in (34.0,47.0):
-        s.put("hvd_window",x,57.5)
-        s.put("hvd_tallpier",x - .83,55.25)
-        s.put("hvd_tallpier",x + .83,55.25)
-        s.put("hvd_bluebann",x,54.11,lift=1.6)
-        s.put("hvd_wallpanel",x,59.25,direction=90)
-        s.put("hvd_sconce",x,55.79,lift=2.3)
-        s.lamp(x,55.79,2.8,"amber")
-    for x,y,d in ((29,48,14),(31,52,93),(48,48,-12),(52,51,82),(48,64,55),(35,63,149)):
+    for x,y,d in ((31.1,34.9,90),(39.8,38.35,96),(31.05,42.7,90)):
+        s.put("hvd_wallfoot",x,y,direction=d)
+        s.put("hvd_rubble",x + .35,y - 2.0,direction=d - 18)
+    s.signpost(37.65, 42.4, "blue")
+    s.signpost(52.6, 26.75, "amber")
+    s.put("hvd_bluebann", 57.9, 21.12, lift=.75, direction=90)
+    # Flat forecourt and two attached wings close the vestibule against the rock.
+    s.put("hvd_landing",40.0,50.0)
+    for x in (33.15,46.85):
+        s.put("hvd_wallfoot",x,49.8,direction=90)
+        s.put("hvd_window",x,54.6)
+        s.put("hvd_wallpanel",x,56.09,direction=90)
+        s.put("hvd_bluebann",x,54.18,lift=.65)
+        s.put("hvd_sconce",x - .88,54.31,lift=2.3)
+        s.lamp(x - .88,54.03,2.76,"amber")
+    for x,y,d in ((29.0,48.6,15),(30.6,52.1,94),(48.4,49.1,26),(49.1,54.7,84)):
         s.put("hvd_rubble",x,y,direction=d)
-        s.put(255,x+.46,y-.44,direction=d+19,name="Sníh u odhaleného zdiva")
-    s.put("hvd_lectern",33.1,46.3,direction=39)
-    s.put("hvd_lectern",52.3,26.8,direction=117)
-    s.arch(56.8,24.0,90,"amber")
 
 
 def halls(s):
     s.area.lighting.update(MoonAmbientColor=color(66,81,108), MoonDiffuseColor=color(149,166,203))
-    # One side holds active filters. The opposite wall preserves the cover recesses.
-    for x in (31.4,35.5,40,44.5,49.0,53.5,57.4):
-        s.put("hvd_wallfoot",x,20.0)
-        s.put("hvd_wallfoot",x,29.9,direction=180)
-        s.put("hvd_runner",x,25.0,direction=90)
-    for i,x in enumerate((32.3,38.2,44,49.7,55.4)):
-        s.arch(x,25,90, "blue" if i%2 else "violet")
-        s.put("hvd_guide",x-.20,25)
-        s.put("hvd_shutwin",x,29.92)
-        s.put("hvd_bluebann",x,19.95,direction=180,lift=.72)
-        s.put("hvd_sconce",x,20.63,direction=180,lift=2.3)
-        s.put("hvd_tallpier",x-2.4,29.7)
-    for x,y,d in ((13.0,18.8,90),(27.8,16.5,270),(17.9,34.5,90),
-                  (26.9,40.7,270),(58.1,34,270),(59.4,43.8,270),(54.7,49.8,0)):
-        s.relief(x,y,d,"amber" if x<29 else "blue")
-    for x,y,d in ((16.2,17.9,4),(18.3,27.4,90),(18.2,45.8,165),(28.5,47.8,180),
-                  (54,42.2,90),(55.7,46.6,218)):
-        s.set(x,y,STUDY,d)
-    for x,y,d in ((12.5,26,90),(20.8,49.0,3),(23.2,33.3,90),(57.3,39,270),(49,46.3,180)):
-        s.put("hvd_shelf",x,y,direction=d)
-        s.put("hvd_tools",x+.53,y,direction=d,lift=.88)
-    for x,y,d in ((15,46,70),(29.7,40.9,270),(53.3,35.4,180)):
-        s.set(x,y,SUPPLIES,d)
-    for x,y in ((13,21),(18.4,48),(26,43),(47,47),(53,40)):
-        s.signpost(x,y,"amber")
+    # The two native corridors have solid masonry. Furnish the rooms they connect.
+    s.put("hvd_shelf", 9.85, 17.9, direction=90)
+    s.put("hvd_oillamp", 11.59, 13.64, lift=1.07)
+    s.put("hvd_bluepost", 20.2, 16.95)
+    s.set(20.15, 42.0, REPAIR, 180)
+    s.put("hvd_shelf", 14.0, 49.3)
+    s.put("hvd_shelf", 17.0, 49.3)
+    s.relief(15.15, 51.15, 0, "amber")
+    s.put("hvd_armillary", 12.4, 46.6)
+    s.lamp(12.4, 46.6, 2.05, "amber")
+    s.put("hvd_oillamp", 17.0, 49.23, lift=2.50)
+    s.put("hvd_runner", 15.0, 36.0)
+    s.put("hvd_runner", 15.0, 27.0)
+    s.set(53.1, 17.35, STUDY, 180)
+    s.set(55.3, 30.85, REPAIR, 180)
+    s.relief(62.15, 21.1, 270, "blue")
+    s.relief(62.15, 28.2, 270, "amber")
+    s.put("hvd_shutwin", 60.65, 15.35, direction=270)
+    s.put("hvd_shelf", 62.15, 34.1, direction=270)
+    s.put("hvd_armillary", 50.28, 29.25)
+    s.lamp(50.28, 29.25, 1.9, "blue")
+    for x in (26.5, 35.0, 43.5):
+        s.put("hvd_runner", x, 15.0, direction=90)
 
 
 def workshops(s):
     s.area.lighting.update(FogClipDist=flt(87.0), MoonAmbientColor=color(83,91,128),
                            MoonDiffuseColor=color(181,180,194))
-    s.put("hvd_shoproof",17,16.0,direction=7)
+    # Workshop bays have their own work surfaces. The middle aisle leads straight to the bridge.
+    s.put("hvd_shoproof",16.72,16.3)
     s.put("hvd_shoproof",34.3,15.6,direction=180)
-    s.put("hvd_hoist",31.8,19.8,direction=28)
-    s.put("hvd_shoproof",34.2,56.8)
+    s.put("hvd_hoist",31.55,20.72,direction=28)
+    s.put("hvd_tools",17.02,16.02,lift=.88,direction=80)
+    s.put("hvd_oillamp",16.95,16.83,lift=1.07)
+    s.lamp(16.95,16.83,1.28,"amber")
+    s.put("hvd_shelf",12,18.42,direction=90)
+    s.put("hvd_oillamp",12,18.42,lift=2.51,direction=90)
+    s.relief(10.65,15.1,90,"blue")
+    s.set(34.65,16.8,REPAIR,180)
+    s.lamp(34.65,16.8,1.5,"orange")
+    s.set(34.4,10.75,SUPPLIES,165)
+    s.put("hvd_wallfoot",38.9,9.55)
+    s.put("hvd_wallfoot",39.78,20.58,direction=90)
+    s.put("hvd_amberpost",28.47,20.93)
+
     s.bridge(25,"amber")
-    for x,y,d in ((17.0,15.0,0),(34.6,16.9,180),(35.0,56.1,355)):
-        s.set(x,y,REPAIR,d)
-        s.lamp(x,y,1.9,"orange")
-    for x,y,d in ((13,12.8,12),(35.8,12.3,160),(15,53.3,75),(28,59,175),(44.7,59,271)):
-        s.set(x,y,SUPPLIES,d)
-    for x,y,d in ((12,17.6,90),(29.2,12.3,180),(32.8,59,0),(42.7,57.8,180),(18.2,58.8,0)):
-        s.put("hvd_shelf",x,y,direction=d)
-        s.put("hvd_oillamp",x,y,lift=2.31,direction=d)
-    for x,y,d in ((24,17,0),(24,51,0),(41,55,90)):
-        s.arch(x,y,d,"amber")
-    for x,y,d in ((11,15,90),(38.3,13,90),(11.2,56.0,90),(47.2,58,0)):
-        s.relief(x,y,d,"blue")
-    for x,y in ((14.2,16.7),(18,53.5),(41,58.8)):
-        s.put("hvd_armillary",x,y)
-        s.lamp(x,y,1.95,"blue")
-    for y in (51.2,56.2):
-        for x in (15,20,25,30,35,40,44.8):
-            s.put("hvd_pave_w" if x in (15,40) else "hvd_pave_n",x,y)
+    s.arch(25,23.4,0,"amber")
+    s.arch(25,50.75,0,"blue")
     for x in (14,19,31,37):
         s.put("hvd_wallfoot",x,21.4)
         s.put("hvd_wallfoot",x,50.4)
-        s.put("hvd_rubble",x-.68,50.2)
+    s.put("hvd_pave_w",25,18.42)
+    s.put("hvd_pave_w",25,54.8)
+
+    # The far landing is a sheltered maintenance yard below the entrance to the dome.
+    s.put("hvd_shoproof",34.2,57.75)
+    s.set(34.5,57.2,REPAIR,0)
+    s.lamp(34.5,57.2,1.5,"amber")
+    s.relief(11.2,55.3,90,"blue")
+    s.relief(40.75,61.05,0,"blue")
+    s.set(14.85,56.5,SUPPLIES,85)
+    s.put("hvd_shelf",19.25,59.55)
+    s.put("hvd_oillamp",19.25,59.55,lift=2.51)
+    s.put("hvd_armillary",44.0,57.9)
+    s.lamp(44.0,57.9,1.95,"blue")
+    s.put("hvd_pave_n",43.05,54)
     s.clouds([(3,37,-7,27),(41,33,-7,135),(27,64,-8,0)],
              [(7,34,-10,20),(45,42,-7,120),(55,23,-8,55),(53,58,-7,66)])
 
@@ -258,34 +263,45 @@ def workshops(s):
 def dome(s):
     s.area.lighting.update(FogClipDist=flt(60.0), MoonAmbientColor=color(72,83,117),
                            MoonDiffuseColor=color(162,165,202))
-    # Open ribs keep the apparatus visible from above. The books stay on the outer rim.
-    for x,y in ((17.5,27),(19.4,38.4),(25.0,42.3),(36.4,41.7),(41.3,36.6),(42.0,23.7),
+    # Keep the four approaches open around a ring of load-bearing ribs and work bays.
+    for x,y in ((17.9,22.25),(19.4,38.4),(25.0,42.3),(36.4,41.7),(41.4,35.9),(43.2,20.45),
                 (34.7,18.2),(24.1,18.5)):
         direction=degrees(atan2(31-y,30-x))-90
         s.put("hvd_cupolarib",x,y,direction=direction)
         s.put("hvd_bluebann",x,y+.24,lift=2.3,direction=direction)
         s.lamp(x,y,3.9,"violet")
-    for x,y,d in ((12.1,30.3,90),(13.5,36.5,60),(20.8,40,0),(37.3,41.7,0),
-                  (44.0,31,270),(38.2,17.6,180),(24.3,15.6,180),(17.2,19.6,140)):
-        s.relief(x,y,d,"blue")
-    for x,y,d in ((17.7,34.8,98),(21.6,36,6),(36.9,36.6,359),(37.4,19.5,171),(45,28.5,275)):
-        s.set(x,y,STUDY,d)
-    for x,y,d in ((14.6,35.4,90),(20.5,38.9,20),(40,37,268),(36.5,17.5,0),(42.7,28.8,266)):
-        s.put("hvd_shelf",x,y,direction=d)
-        s.put("hvd_oillamp",x,y-.19,lift=2.31)
-    for x,y in ((19.2,24.2),(19.7,37.6),(42,27.7),(38.3,35),(33.6,42.8)):
-        s.put("hvd_armillary",x,y)
-        s.lamp(x,y,2.0,"amber")
-    for x,y,d in ((22.5,20.5,0),(37.5,20.5,0),(17,30.5,0),(17,35.5,0),(42.5,26.0,90),
-                  (42.5,31.0,90),(24.5,39,0),(35.5,39,0),(30,39.5,90),(30,21.4,0)):
-        s.put("hvd_pave_n",x,y,direction=d)
+
+    # South of the instrument, the writer's table faces shelves and the repair station.
+    s.relief(24.2,15.85,180,"amber")
+    s.relief(39.2,15.72,180,"blue")
+    s.put("hvd_shelf",20.55,18.95,direction=135)
+    s.put("hvd_oillamp",20.55,18.95,lift=2.51)
+    s.put("hvd_pave_w",23.0,22.0)
+    s.put("hvd_oillamp",24.80,22.22,lift=1.07)
+    s.lamp(24.80,22.22,1.28,"amber")
+    s.set(38.95,21.7,REPAIR,162)
+    s.put("hvd_pave_n",38.45,21.40)
+
+    # Spare lens racks and charts follow the rounded outer walls on either side.
+    s.relief(12.1,31.35,90,"blue")
+    s.relief(46.25,33.1,270,"blue")
+    s.put("hvd_shelf",14.05,35.6,direction=75)
+    s.put("hvd_shelf",16.95,39.3,direction=22)
+    s.put("hvd_oillamp",16.95,39.3,lift=2.51)
+    s.set(21.0,35.48,STUDY,10)
+    s.put("hvd_pave_n",20.8,35.59)
+    s.put("hvd_shelf",43.65,36.65,direction=270)
+    s.put("hvd_oillamp",43.65,36.65,lift=2.51)
+    s.put("hvd_armillary",38.95,38.6)
+    s.lamp(38.95,38.6,1.9,"amber")
+
+    s.relief(21.05,43.7,0,"blue")
+    s.relief(38.6,44.7,0,"blue")
     s.put("hvd_mounttrim",30,31)
     s.put("hvd_gatecrest",30,46.4)
-    s.arch(30,44.8,0,"violet")
-    for x,y in ((25.0,42.5),(35.0,42.5),(25.0,22),(35.0,22),(18.8,29),(41.4,29)):
-        s.put("hvd_guide",x,y)
-        s.put("hvd_sconce",x,y,lift=1.95,direction=90 if x<30 else -90)
-        s.lamp(x,y,2.8,"amber")
+    s.put("hvd_guide",24.7,29.65)
+    s.put("hvd_guide",35.38,29.65)
+    s.lamp(30,46.15,1.5,"violet")
 
 
 def steps(s):
@@ -300,12 +316,12 @@ def steps(s):
         s.put("hvd_wallfoot",x,50.2,base=15.0)
     s.put("hvd_eddy",30,35.7,base=10.02)
     s.lamp(30,35.7,4.45,"blue",10.0)
-    s.arch(25.0,17.1,0,"blue",5.0)
-    s.arch(35.0,52.5,0,"amber",15.0)
+    s.arch(30.0,17.1,0,"blue",5.0)
     s.put("hvd_pavilion",29.9,57.8,base=15.0)
-    s.set(21.0,15.8,STATION,92,5.0)
+    s.lamp(22.8,15.05,1.25,"amber",5.0)
+    s.put("hvd_oillamp",22.72,15.75,lift=1.07,base=5.0)
     s.set(43.6,34.6,STATION,245,10.0)
-    s.set(21.0,55.5,GUARD,34,15.0)
+    s.set(15.2,55.7,GUARD,18,15.0)
     for x,y,z,tint in ((15.0,33.6,10.0,"blue"),(22.3,32.1,10.0,"violet"),
                        (36.9,32.2,10.0,"blue"),(14.4,38.2,10.0,"blue"),
                        (44.9,38.0,10.0,"amber"),(17.5,54.5,15.0,"amber"),
@@ -369,10 +385,9 @@ def gate(s):
     for x,y,d in ((14.5,15.7,90),(15,23,90),(15.3,30,90),(14.2,36.6,90),
                   (55.7,27.0,270),(56.2,35.5,270)):
         s.arch(x,y,d,"amber",5.0)
-        s.put("hvd_wallpanel",x,y,direction=d,base=5.0)
-    for x,y,d in ((51,17.5,124),(51.5,35.5,268),(19.1,28.4,88),(17.3,33.3,86)):
+    for x,y,d in ((51,17.5,124),(19.1,27.45,88),(17.1,34.65,86)):
         s.set(x,y,GUARD,d,5.0)
-    for x,y,d in ((22.9,17.8,9),(47.8,19.7,185),(25,36.5,162),(45,36.3,220)):
+    for x,y,d in ((20.9,17.3,9),(53.1,26.4,185),(25,36.5,162),(45,36.3,220)):
         s.set(x,y,STATION,d,5.0)
     for x,y,d in ((22,29.8,90),(49.3,26.7,270),(18,20.7,0),(53.6,38.2,0)):
         s.put("hvd_grille",x,y,direction=d,base=5.0)
@@ -392,7 +407,7 @@ def summit(s):
     for x in (4.4,10.1,15.8,21.5,27.2,42.8,48.5,54.2,59.9,65.6):
         s.relief(x,21.65,0,"amber" if x<35 else "blue",base=5)
     s.put("hvd_pavilion",35,54.8,base=10)
-    s.put("hvd_altarbase",35,55.5,base=9.76)
+    s.put("hvd_altarbase",38.2,55.4,direction=90,base=9.2)
     for x,y in ((21.1,54.2),(48.9,54.2)):
         s.put("hvd_sentrybay",x,y,base=10)
         s.put("hvd_armillary",x,y-.96,base=10)
@@ -406,10 +421,10 @@ def summit(s):
         s.put("hvd_pave_n",19.8,y,base=10.0)
         s.put("hvd_runner",35,y,base=10.0)
         s.put("hvd_pave_w",50.2,y,base=10.0)
-    for x,y,d,z in ((23.3,17.6,9,5),(45.6,16.3,-12,5),(24.4,54.4,165,10),
+    for x,y,d,z in ((21.1,17.0,9,5),(47.7,16.05,-12,5),(24.4,54.4,165,10),
                     (45.3,55.7,227,10),(18.4,49.0,96,10),(51.8,49.0,281,10)):
         s.set(x,y,STATION,d,z)
-    for x,y,d in ((10.3,44.2,90),(59,45.8,269),(21.5,55.8,18),(49.6,56.1,355)):
+    for x,y,d in ((10.3,44.2,90),(59,45.8,269),(53.4,53.6,355)):
         s.set(x,y,GUARD,d,10)
     for i,x in enumerate((13.2,18.3,23.4,46.6,51.7,56.8)):
         s.put("hvd_wallfoot",x,50.5)

@@ -8,13 +8,6 @@ void main()
     if (!HVD_IsPlayer(player)) return;
     string operation = GetLocalString(target, "action");
 
-    if (operation == "clue")
-    {
-        int clue = GetLocalInt(target, "clue");
-        SetLocalInt(module, "hvd_clue" + IntToString(clue), TRUE);
-        SendMessageToPC(player, HVD_Clue(clue));
-        return;
-    }
     if (operation == "recap")
     {
         HVD_Recap(player);
@@ -50,24 +43,9 @@ void main()
         HVD_Chime(player, target);
         return;
     }
-    if (operation == "supply")
-    {
-        HVD_Supply(player);
-        return;
-    }
     if (operation == "rest")
     {
         HVD_Rest(player);
-        return;
-    }
-    if (operation == "loot" || operation == "reward")
-    {
-        HVD_Loot(player, GetLocalInt(target, "loot"));
-        return;
-    }
-    if (operation == "mirror")
-    {
-        HVD_GetMirror(player);
         return;
     }
     if (operation == "mount")
@@ -85,12 +63,6 @@ void main()
         HVD_BossStart(player);
         return;
     }
-    if (operation == "notes")
-    {
-        SendMessageToPC(player, GetDescription(target));
-        HVD_WorkshopNotes(player);
-        return;
-    }
     if (operation == "read")
     {
         SendMessageToPC(player, GetDescription(target));
@@ -101,7 +73,7 @@ void main()
         vector mirror = GetPosition(GetObjectByTag("hvd_lab_mirror"));
         HVD_MarkLine(GetArea(player), GetPosition(target), mirror, VFX_IMP_SONIC);
         HVD_MarkLine(GetArea(player), mirror, mirror + Vector(0.0, 6.0, 0.0), VFX_IMP_PULSE_COLD);
-        SendMessageToPC(player, "Paprsek se odrazil od zrcadla. Stejná patice je u poslední lucerny.");
+        SendMessageToPC(player, "Paprsek se odrazil. Přenosné zrcadlo leží v pouzdru vedle zkušebního stolu. Sešit popisuje jeho použití pod schody na Posledním stupni.");
         return;
     }
     if (operation == "disarm")
@@ -109,7 +81,13 @@ void main()
         if (GetSkillRank(SKILL_DISABLE_TRAP, player) >= GetLocalInt(target, "skill") ||
             GetLocalInt(module, "hvd_notes") || GetTag(GetArea(player)) == "hvd_gate")
         {
-            SetLocalInt(module, GetLocalString(target, "flag"), TRUE);
+            string flag = GetLocalString(target, "flag");
+            if (flag == "hvd_chest_off" && !GetLocalInt(module, flag))
+            {
+                HVD_Stock(GetObjectByTag("hvd_guard_cache"), "hvd_glass");
+                SendMessageToPC(player, "Pojistka odsunula falešné dno ve schránce strážnice.");
+            }
+            SetLocalInt(module, flag, TRUE);
             SendMessageToPC(player, "Clona přerušila zdroj výboje.");
         }
         else SendMessageToPC(player, "K ovládání pomůže zneškodňování pastí nebo nález v dílnách. " +

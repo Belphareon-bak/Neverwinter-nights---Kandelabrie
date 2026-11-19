@@ -1,0 +1,88 @@
+"""Walkmesh footprints and use points for the original placeables."""
+
+from math import cos, sin, tau
+
+
+def rectangle(x, y, width, depth):
+    return tuple((x + dx * width / 2, y + dy * depth / 2)
+                 for dx, dy in ((-1,-1),(1,-1),(1,1),(-1,1)))
+
+
+def ring(radius):
+    return tuple((radius * cos(i * tau / 12), radius * sin(i * tau / 12)) for i in range(12))
+
+
+def arch_feet(offset, width, depth, y=0):
+    return tuple(rectangle(x, y, width, depth) for x in (-offset, offset))
+
+
+def shelter(offset):
+    return (rectangle(0, 1.83, offset * 2.1, .41), *arch_feet(offset,.83,.78,-1.75))
+
+
+FOOTPRINTS = {
+    "hvd_octagon": (*arch_feet(3.09,.98,1.04,-6), *arch_feet(2.31,1.49,.40,-3.46),
+                    *arch_feet(1.80,.39,2.75,-2.01), rectangle(0,-.63,3.98,.36),
+                    *arch_feet(5.78,.56,5.65,.1), rectangle(0,6.0,5.6,.5)),
+    "hvd_plinth": (ring(1.99),),
+    "hvd_dial": (ring(.71),),
+    "hvd_console": (ring(.71),),
+    "hvd_columnade": arch_feet(3.17,.68,1.04),
+    "hvd_gatearch": arch_feet(2.88,.98,1.21),
+    "hvd_sealstand": (ring(.62),),
+    "hvd_beacon": (ring(.64),),
+    "hvd_rail": (rectangle(0,0,4.88,.36),),
+    "hvd_tallpier": (rectangle(0,0,1.76,1.76),),
+    "hvd_brokpier": (rectangle(0,0,1.5,1.5),),
+    "hvd_wallpanel": (rectangle(0,0,4.96,.63),),
+    "hvd_wallfoot": (rectangle(0,0,4.96,.63),),
+    "hvd_window": (rectangle(0,0,2.65,.55),),
+    "hvd_cloister": arch_feet(2.42,.90,1.02),
+    "hvd_shutwin": (rectangle(0,-.25,2.87,.60),),
+    "hvd_facade": (rectangle(0,-.04,5.80,.64),),
+    "hvd_campshell": shelter(3.74),
+    "hvd_shoproof": shelter(3.38),
+    "hvd_crag": (rectangle(0,0,7.8,6.8),),
+    "hvd_snowbank": (rectangle(0,0,3.15,2.0),),
+    "hvd_crate": (rectangle(0,0,1.13,.75),),
+    "hvd_shelf": (rectangle(0,0,2.13,.75),),
+    "hvd_lectern": (rectangle(0,0,.80,.72),),
+    "hvd_armillary": (rectangle(0,0,.85,.85),),
+    "hvd_cupolarib": (rectangle(0,0,1.57,1.57),),
+    "hvd_bluepost": (ring(.29),),
+    "hvd_amberpost": (ring(.29),),
+    "hvd_sentrybay": (rectangle(0,1.65,3.68,.35), *arch_feet(1.79,.77,.77)),
+    "hvd_hoist": arch_feet(1.47,.65,.74),
+    "hvd_grille": (rectangle(0,0,4.15,.48),),
+    "hvd_pavilion": (*arch_feet(5,1.29,1.29), *arch_feet(5,1.29,1.29,3.3)),
+}
+
+USE_POINTS = {
+    "hvd_plinth": ((0,-2.68), (0,2.68)),
+    "hvd_dial": ((0,-1.25), (0,1.25)),
+    "hvd_console": ((0,-1.25), (0,1.25)),
+    "hvd_sealstand": ((0,-1.18), (0,1.18)),
+    "hvd_beacon": ((0,-1.24), (0,1.24)),
+}
+
+
+def walkmesh(name):
+    vertices, faces = [], []
+    for polygon in FOOTPRINTS[name]:
+        offset = len(vertices)
+        vertices.extend(polygon)
+        faces.extend((offset,offset+i,offset+i+1) for i in range(1,len(polygon)-1))
+    parent = f"{name}_pwk"
+    lines = [
+        "#MAXDOOR ASCII", f"# model: {parent}",
+        f"node trimesh {name}_wg", f"  parent {parent}", "  position 0 0 0",
+        "  orientation 0 0 0 0", "  bitmap NULL", f"  verts {len(vertices)}",
+    ]
+    lines.extend(f"    {x:.4f} {y:.4f} 0" for x,y in vertices)
+    lines.append(f"  faces {len(faces)}")
+    lines.extend(f"    {a} {b} {c} 0 0 0 0 7" for a,b,c in faces)
+    lines.append("endnode")
+    for i,(x,y) in enumerate(USE_POINTS.get(name,()),1):
+        lines.extend((f"node dummy hvd_pwk_use0{i}", f"  parent {parent}",
+                      f"  position {x} {y} 0", "  orientation 0 0 0 0", "endnode"))
+    return ("\n".join(lines) + "\n").encode("ascii")

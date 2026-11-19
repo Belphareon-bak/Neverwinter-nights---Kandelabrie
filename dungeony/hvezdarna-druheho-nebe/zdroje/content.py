@@ -31,16 +31,62 @@ ARMOR = {
     "ArmorPart_LShin": 8, "ArmorPart_RShin": 8, "ArmorPart_LFoot": 5, "ArmorPart_RFoot": 5,
 }
 
+BOOKS = {
+    "hvd_book_camp": ("Rozpis nebeské hlídky", 3,
+        "Na první straně zůstal vybledlý plán služby. Čtyři pečetě patřily čtyřem stanovištím, "
+        "ale na schody se vždy vydaly jen tři. Pořadí jejich výstupu zadáváme u brány do patic "
+        "zleva doprava, od I po III. Které stanoviště vynechali, zapsal vedoucí směny úplně dole."),
+    "hvd_book_steps": ("Záznam od prvního schodu", 7,
+        "V závětří u prvních schodů se hlídka zastavila, aby dotáhla řemeny. Zapisovatel tu mohl "
+        "zahlédnout dvě pečetě hned za sebou. Jeho poslední poznámka zachycuje, kdo z těch dvou stoupal první."),
+    "hvd_book_gate": ("Opis přísahy a záznam předbraní", 5,
+        "Písař předbraní přepočítal příchozí až pod světlem návratové lucerny. K rozpisu připsal, "
+        "kde měla být třetí pečeť vůči jedné z dvojice popsané na schodech. Teprve s oběma zápisy "
+        "mohla příští hlídka správně nachystat všechny tři patice."),
+    "hvd_book_halls": ("Předpis obsluhy clon", 2,
+        "Při zkoušce filtru se od stěny ke stěně rozbíhá světlý pruh. Jakmile je na kameni vidět, "
+        "ustup za mosaznou rysku a počkej na doznění výboje. Pojistka visí u vstupu do paprskové chodby "
+        "v dolní příjmové síni. Poškozenou západku pomůže uvolnit návod uložený v dolní dílně."),
+    "hvd_book_return": ("Návratový zápis správkyně", 10,
+        "Sestoupila jsem servisní lávkou a vrátila se do dolní dílny. V ohlašovně mě při výměně "
+        "směn minuli. Doufám, že Ithren zahlédne můj zápis dřív, než začne hledat příčinu opakovaných záblesků. "
+        "Lucernu jsem při odchodu nechala na posledním stupni.\n\n"
+        "Klíč jsem uložila do schránky u pracovního stolu v dolní dílně. Otevírá moje zamčené pouzdro "
+        "pod toutéž stříškou, při západním okraji podesty."),
+    "hvd_book_optic": ("Sešit o clonách a zrcadle", 8,
+        "Objektiv po opravě stále táhne na východ. Při příštím měření nastav na západním podstavci "
+        "rysku II a na východním rysku III. Pak zkontroluj obraz v refraktoru uprostřed kopule.\n\n"
+        "Přenosné zrcadlo z pouzdra ve zkušebně je záloha pro hlídku. Stejnou patici najdeš na Posledním "
+        "stupni vpravo od příchodu, ještě pod prvním schodištěm. Zrcadlo tam umí jednou zachytit druhý "
+        "z Ithrenových závěrečných výbojů a přidá čas na sklopení clony."),
+    "hvd_book_dome": ("Deník hvězdárny", 4,
+        "Po Čase potíží jsme nad horskou římsou dokončili průchod pro návrat služební hlídky. "
+        "Ze zdejší kopule lze vidět dvě oblohy. Čistá část skla ukazuje naši horu a prasklina vrací "
+        "světlo poslední lucerny z předbraní.\n\n"
+        "Má-li se průchod ukázat celý, musejí se obrazy spojit. Dílenské nastavení je vyznačené u "
+        "obou podstavců. Až se světlo srovná, vystoupej severním obloukem za objektivem."),
+    "hvd_book_top": ("Plán poslední hlídky", 6,
+        "Hlídka vystupuje k lucerně ve třech výsečích. Před výbojem se na podlaze vyznačí dráha. "
+        "Z té ustup za kamennou clonu nebo do sousední výseče. Zkušební zrcadlo pasuje do "
+        "mosazné patice vpravo pod schody. Až Ithren odstoupí, je potřeba sklopit clonu u samotné lucerny."),
+}
+
 
 def items():
     result = {}
+    for key, (name, model, description) in BOOKS.items():
+        result[key] = item(key, 74, name, description, model=model, plot=1)
     for ident, name, model in [(1, "kotvy", 9), (2, "křídla", 5), (3, "kopí", 3), (4, "lucerny", 13)]:
         key = f"hvd_seal{ident}"
         result[key] = item(key, 77, f"Pečeť {name}", "Pečeť nebeské hlídky pro tuto výpravu. "
                            "V předbraní vlož pečeť kliknutím na patici.", plot=1, model=model)
     descriptors = [
-        ("hvd_mirror", 77, "Zkušební zrcadlo", "Patří do patice u posledního stupně.", 1, 4, ()),
-        ("hvd_workkey", 65, "Klíč správkyně clon", "Otevírá pouzdro na přístroje v dílnách.", 1, 1, ()),
+        ("hvd_mirror", 77, "Přenosné zkušební zrcadlo",
+         "Na Posledním stupni ho usaď do mosazné patice vpravo pod schody, dřív než se postavíš Ithrenovi. "
+         "Zachytí jeden výboj a dá družině víc času doběhnout ke cloně návratové lucerny.", 1, 4, ()),
+        ("hvd_workkey", 65, "Klíč správkyně clon",
+         "Otevírá zamčené pouzdro pod stříškou v dolní dílně, u západního okraje podesty. "
+         "Po příchodu z Chodeb clon tu stříšku uvidíš vlevo.", 1, 1, ()),
         ("hvd_glass", 77, "Broušené nebeské sklo", "Neporušený kus čočky z nebeského předbraní.", 0, 11, ()),
         ("hvd_brooch", 19, "Brož hvězdáře", "Chrání před mrazem a kouzlem slepoty a hluchoty.", 0, 2, (prop(23, 7, 7, 2), prop(53, 6))),
         ("hvd_cloak", 80, "Plášť dvojí oblohy", "Pomáhá přečkat výboje a vítr nad mraky.", 0, 1, (prop(1, 0, 2, 3), prop(23, 13, 7, 2))),

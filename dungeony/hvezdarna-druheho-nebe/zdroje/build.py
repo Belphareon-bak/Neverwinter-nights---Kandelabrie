@@ -12,6 +12,7 @@ import uuid
 from architecture import MODELS as ARCHITECTURE, architecture_textures
 from art import assets
 from aurora import GameResources, Record, VOID, bite, dword, erf_encode, gff_encode, integer, loc, lst, ref, string, word
+from collision import FOOTPRINTS, walkmesh
 from content import creatures, factions, hero, items
 from dressing import NAMES, dress_areas
 from layout import areas
@@ -32,15 +33,15 @@ def metadata(zones):
         "Mod_OnClientEntr": "hvd_client",
         "Mod_OnPlrDeath": "hvd_death",
         "Mod_OnSpawnBtnDn": "hvd_respawn",
+        "Mod_OnAcquirItem": "hvd_pickup",
     }
-    for event in ("Mod_OnHeartbeat", "Mod_OnModStart", "Mod_OnClientLeav", "Mod_OnAcquirItem",
-                  "Mod_OnUnAqreItem", "Mod_OnUsrDefined", "Mod_OnPlrDying", "Mod_OnPlrLvlUp", "Mod_OnPlrRest",
-                  "Mod_OnActvtItem"):
+    for event in ("Mod_OnHeartbeat", "Mod_OnModStart", "Mod_OnClientLeav", "Mod_OnUnAqreItem",
+                  "Mod_OnUsrDefined", "Mod_OnPlrDying", "Mod_OnPlrLvlUp", "Mod_OnPlrRest", "Mod_OnActvtItem"):
         scripts[event] = ""
     start = next(marker for marker in zones[0].waypoints if marker.value("Tag") == "hvd_start")
     return Record(
         Mod_ID=(VOID, uuid.uuid5(uuid.NAMESPACE_URL, "local:nwn/hvezdarna-druheho-nebe").bytes),
-        Mod_Creator_ID=integer(0), Mod_Version=dword(5), Expansion_Pack=word(3),
+        Mod_Creator_ID=integer(0), Mod_Version=dword(6), Expansion_Pack=word(3),
         Mod_Name=loc("Hvězdárna druhého nebe"),
         Mod_Tag=string("HVEZDARNA"), Mod_Hak=string(""),
         Mod_HakList=lst([Record(8, Mod_Hak=string(HAK_NAME))]), Mod_CustomTlk=string(""),
@@ -86,10 +87,10 @@ def compile_scripts(resources, game, compiler, scripts):
             resources[compiled.name] = binary
 
 
-def rift_blueprint(appearance):
-    fields = object_fields("hvd_gateway", "Světlo druhého nebe", "")
+def visual_blueprint(key, label, appearance):
+    fields = object_fields(key, label, "")
     fields.update(Appearance=dword(appearance), Static=bite(0), Useable=bite(0),
-                  Type=bite(0), HasInventory=bite(0), TemplateResRef=ref("hvd_gateway"))
+                  Type=bite(0), HasInventory=bite(0), TemplateResRef=ref(key))
     return Record(PaletteID=bite(0), **fields)
 
 
@@ -98,6 +99,7 @@ def build(game_path, compiler, directory, scripts):
     resources = {}
     prototypes = items()
     appearances, art = assets(game, {name: (NAMES[name], mesh) for name, mesh in ARCHITECTURE.items()})
+    art.update({f"{name}.pwk": walkmesh(name) for name in FOOTPRINTS})
     art.update(architecture_textures())
     sky_ids, skies = sky_assets(game)
     art.update(skies)
@@ -130,7 +132,13 @@ def build(game_path, compiler, directory, scripts):
 
     resources["module.ifo"] = gff_encode("IFO", metadata(zones), TEXT_ENCODING)
     resources["repute.fac"] = gff_encode("FAC", factions(), TEXT_ENCODING)
-    resources["hvd_gateway.utp"] = gff_encode("UTP", rift_blueprint(appearances["hvd_gateway"]), TEXT_ENCODING)
+    for key, label in (
+        ("hvd_gateway","Světlo druhého nebe"), ("hvd_needle","Mosazný ukazatel"),
+        ("hvd_tube","Objektiv druhého nebe"),
+        ("hvd_mirror_set","Zrcadlo zasazené v patici"),
+    ):
+        appearance = appearances["hvd_refractor" if key == "hvd_tube" else key]
+        resources[f"{key}.utp"] = gff_encode("UTP",visual_blueprint(key,label,appearance),TEXT_ENCODING)
     compile_scripts(resources, game_path, compiler, scripts)
     directory.mkdir(parents=True, exist_ok=True)
     module_file = directory / MODULE_NAME

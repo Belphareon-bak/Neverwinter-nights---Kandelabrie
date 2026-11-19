@@ -95,111 +95,6 @@ void HVD_OpenGate(object player)
     HVD_AreaMessage(GetArea(player), "Tři patice zazářily. Světlo se spojilo v bránu na vrcholu schodů.");
 }
 
-int HVD_GearMarker(object player, string flag)
-{
-    if (GetLocalInt(player, flag) == HVD_Run()) return FALSE;
-    SetLocalInt(player, flag, HVD_Run());
-    return TRUE;
-}
-
-void HVD_WorkshopNotes(object player)
-{
-    object module = HVD_Module();
-    SetLocalInt(module, "hvd_notes", TRUE);
-    if (GetLocalInt(module, "hvd_work_lock")) return;
-    object key = GetItemPossessedBy(player, "hvd_workkey");
-    if (GetIsObjectValid(key) && GetLocalInt(key, "hvd_run") == HVD_Run()) return;
-    key = CreateItemOnObject("hvd_workkey", player);
-    if (GetItemPossessor(key) == player)
-    {
-        SetLocalInt(key, "hvd_run", HVD_Run());
-        SendMessageToPC(player, "V deskách leží klíč správkyně clon.");
-    }
-    else
-    {
-        if (GetIsObjectValid(key)) DestroyObject(key);
-        SendMessageToPC(player, "Uvolni místo na klíč a otevři zápis znovu.");
-    }
-}
-
-void HVD_Loot(object player, int which)
-{
-    object module = HVD_Module();
-    if (which >= 3)
-    {
-        if (!GetLocalInt(module, "hvd_won"))
-        {
-            SendMessageToPC(player, "Pečeť poslední hlídky povolí po zavření clony.");
-            return;
-        }
-        if (!HVD_GearMarker(player, "hvd_final_reward"))
-        {
-            SendMessageToPC(player, "Odměnu za tuto výpravu už máš.");
-            return;
-        }
-        string prize = "hvd_cloak";
-        if (which == 4) prize = "hvd_badge";
-        if (!GetIsObjectValid(CreateItemOnObject(prize, player)))
-        {
-            DeleteLocalInt(player, "hvd_final_reward");
-            SendMessageToPC(player, "Uvolni místo v inventáři.");
-            return;
-        }
-        CreateItemOnObject("hvd_glass", player);
-        GiveXPToCreature(player, 500);
-        SendMessageToPC(player, "Odměna poslední hlídky je tvoje.");
-        return;
-    }
-    if (which == 1 && !GetLocalInt(module, "hvd_work_lock"))
-    {
-        object key = GetItemPossessedBy(player, "hvd_workkey");
-        if (GetSkillRank(SKILL_OPEN_LOCK, player) < 15 &&
-            (!GetIsObjectValid(key) || GetLocalInt(key, "hvd_run") != HVD_Run()))
-        {
-            SendMessageToPC(player, "Pouzdro vyžaduje klíč správkyně nebo ovládání zámků.");
-            return;
-        }
-        SetLocalInt(module, "hvd_work_lock", TRUE);
-        if (GetIsObjectValid(key)) DestroyObject(key);
-    }
-    string marker = "hvd_loot_" + IntToString(which);
-    if (!HVD_GearMarker(player, marker))
-    {
-        SendMessageToPC(player, "Zásoby z této schránky už máš.");
-        return;
-    }
-    if (which == 1)
-    {
-        CreateItemOnObject("hvd_brooch", player);
-        CreateItemOnObject("hvd_heal", player, 2);
-    }
-    else
-    {
-        CreateItemOnObject("hvd_glass", player);
-        CreateItemOnObject("hvd_heal", player, 3);
-        if (GetLocalInt(module, "hvd_chest_off"))
-        {
-            CreateItemOnObject("hvd_glass", player);
-            SendMessageToPC(player, "Po zhasnutí pasti je pod falešným dnem vidět druhý kus skla.");
-        }
-    }
-    SendMessageToPC(player, "Přidány zásoby z objevené schránky.");
-}
-
-void HVD_Supply(object player)
-{
-    if (!HVD_GearMarker(player, "hvd_supply"))
-    {
-        SendMessageToPC(player, "Výstroj a zásoby na tuto výpravu už máš.");
-        return;
-    }
-    if (!GetIsObjectValid(GetItemPossessedBy(player, "hvd_sword"))) CreateItemOnObject("hvd_sword", player);
-    if (!GetIsObjectValid(GetItemPossessedBy(player, "hvd_armor"))) CreateItemOnObject("hvd_armor", player);
-    if (!GetIsObjectValid(GetItemPossessedBy(player, "hvd_shield"))) CreateItemOnObject("hvd_shield", player);
-    CreateItemOnObject("hvd_heal", player, 5);
-    SendMessageToPC(player, "Ve výbavě je meč se zvukem, zbroj, štít a nápoje. Pro výstup se hodí úrovně 35–40.");
-}
-
 void HVD_Rest(object player)
 {
     object area = GetArea(player);
@@ -304,21 +199,6 @@ object HVD_FindMirror()
     return OBJECT_INVALID;
 }
 
-void HVD_GetMirror(object player)
-{
-    if (GetLocalInt(HVD_Module(), "hvd_mounted") || GetIsObjectValid(HVD_FindMirror()))
-    {
-        SendMessageToPC(player, "Zrcadlo už má někdo z výpravy nebo je zasazené u Ithrena.");
-        return;
-    }
-    object mirror = CreateItemOnObject("hvd_mirror", player);
-    if (GetIsObjectValid(mirror))
-    {
-        SetLocalInt(mirror, "hvd_run", HVD_Run());
-        SendMessageToPC(player, "Získáno zkušební zrcadlo. V přední části Ithrenovy arény je pro ně patice.");
-    }
-}
-
 void HVD_Mount(object player)
 {
     if (GetLocalInt(HVD_Module(), "hvd_mounted"))
@@ -329,10 +209,11 @@ void HVD_Mount(object player)
     object mirror = HVD_FindMirror();
     if (!GetIsObjectValid(mirror))
     {
-        SendMessageToPC(player, "Patice čeká na zrcadlo ze zkušebny v dílnách.");
+        SendMessageToPC(player, "Do patice patří přenosné zrcadlo z pouzdra ve zkušebně dolních dílen.");
         return;
     }
     DestroyObject(mirror);
     SetLocalInt(HVD_Module(), "hvd_mounted", TRUE);
-    HVD_AreaMessage(GetArea(player), "Zrcadlo může vrátit jeden ze závěrečných výbojů.");
+    HVD_PlacePart("hvd_socket_mirror", "hvd_mirror_set", "hvd_mirror_mount", 0.0);
+    HVD_AreaMessage(GetArea(player), "Zrcadlo zacvaklo do patice. Zachytí jeden výboj v závěru střetu s Ithrenem.");
 }

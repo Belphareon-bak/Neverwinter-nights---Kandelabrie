@@ -219,6 +219,18 @@ def inset(warm=False, narrow=False):
     return m
 
 
+def stone_landing():
+    m = Mesh()
+    surface(m, SLATE, -6, -4.20, 6, 4.20, .029, .22)
+    for x in (-5.93, 5.93):
+        m.box(TRIM, x, 0, -.05, .16, 8.4, .105)
+    for y in (-4.13, 4.13):
+        m.box(TRIM, 0, y, -.05, 12.15, .16, .105)
+    for x in (-4.8, 0.0, 4.8):
+        star(m, x, -3.27, .037, .22, GILT, 4)
+    return m
+
+
 def banner(warm, long=False):
     m = Mesh()
     w, h = (.47, 2.19) if long else (.49, 1.59)
@@ -531,6 +543,7 @@ MODELS = {
     "hvd_sentrybay": sentry_alcove, "hvd_sconce": wall_brazier, "hvd_gatecrest": gate_crest,
     "hvd_hoist": service_hoist, "hvd_grille": lattice, "hvd_altarbase": altar,
     "hvd_pavilion": pavilion, "hvd_eddy": eddy, "hvd_mistbank": mist_bank,
+    "hvd_landing": stone_landing,
 }
 
 

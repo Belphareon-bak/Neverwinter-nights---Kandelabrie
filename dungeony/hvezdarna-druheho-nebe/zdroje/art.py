@@ -189,9 +189,14 @@ def observatory():
     for x in (-3.4, 3.4):
         m.box(DARK, x, -5.85, 0, .55, .75, 2.8)
         m.box(TRIM, x, -5.85, 2.8, .79, .98, .24)
-    # A dark recessed vestibule gives the exterior threshold a back wall.
-    m.box(DARK, 0, -3.46, 0, 6.10, .35, 4.45)
-    m.box(STONE, 0, -3.66, .21, 3.05, .16, 3.38)
+    # Recess the actual threshold between the walls of the vestibule.
+    for side in (-1, 1):
+        m.box(DARK, 2.31 * side, -3.46, 0, 1.49, .35, 4.45)
+        m.box(STONE, 1.80 * side, -2.01, 0, .40, 2.75, 3.57)
+    m.box(DARK, 0, -3.46, 3.47, 3.15, .35, .98)
+    m.box(DARK, 0, -.63, 0, 3.98, .35, 3.60)
+    m.box(DARK, 0, -2.0, 3.43, 3.58, 2.77, .16)
+    m.box(TRIM, 0, -1.98, -.05, 3.13, 2.94, .09)
     arch(m, 1.58, 1.85, -3.83, .18, .21, BRASS)
     m.box(TRIM, 0, -4.24, 0, 5.45, 1.55, .18)
     return m
@@ -228,16 +233,38 @@ def refractor():
     return m
 
 
-def dial():
+def dial(console=False):
     m = Mesh()
     m.disc(DARK, (0, 0, 0), (0, 0, .18), .77, sides=10)
     m.tube(STONE, (0, 0, .18), (0, 0, .94), .47, .37, sides=10)
     m.disc(TRIM, (0, 0, .92), (0, 0, 1.10), .64)
     m.tube(BRASS, (0, 0, 1.11), (0, 0, 1.26), .58, .45, sides=18)
     m.ring(GILT, .49, .048, 1.27)
-    m.trace(GILT, (-.28, -.22, 1.275), (.36, .27, 1.275), .11)
-    m.tube(BRASS, (.35, .28, 1.25), (.38, .29, 1.60), .065, .09)
+    if console:
+        m.disc(DARK, (0,0,1.258), (0,0,1.274), .475, sides=24)
+        for i in range(3):
+            a = pi/2 + i*tau/3
+            m.trace(GILT, (.40*cos(a), .40*sin(a), 1.28),
+                    (.48*cos(a), .48*sin(a), 1.28), .045)
+    else:
+        m.trace(GILT, (-.28, -.22, 1.275), (.36, .27, 1.275), .11)
+        m.tube(BRASS, (.35, .28, 1.25), (.38, .29, 1.60), .065, .09)
     m.disc(BLUE, (0, 0, 1.25), (0, 0, 1.33), .17)
+    return m
+
+
+def needle():
+    m = Mesh()
+    m.trace(BRASS, (0, -.11, 1.35), (0, .34, 1.35), .10)
+    m.polygon(AMBER, ((-.11, .26, 1.36), (.11, .26, 1.36), (0, .44, 1.36)))
+    return m
+
+
+def fitted_mirror():
+    m = Mesh()
+    m.tube(BRASS, (0,0,1.23), (0,0,1.61), .145, .08, sides=10)
+    m.disc(BRASS, (0,.05,1.86), (0,-.065,1.86), .36, sides=20)
+    m.disc(BLUE, (0,-.063,1.86), (0,-.083,1.86), .306, sides=20)
     return m
 
 
@@ -398,6 +425,12 @@ MODELS = {
     "hvd_cloudbed": ("Vrstva mraků pod mosty", cloud_shelf),
 }
 
+INTERACTIVE_MODELS = {
+    "hvd_console": ("Pevná stupnice clony", lambda: dial(True)),
+    "hvd_needle": ("Mosazný ukazatel stupnice", needle),
+    "hvd_mirror_set": ("Usazené zkušební zrcadlo", fitted_mirror),
+}
+
 
 def texture(name, size, base, seed, *, slabs=False):
     rng = random.Random(seed)
@@ -431,7 +464,7 @@ def assets(game, scenery):
     first = int(table.splitlines()[-1].split()[0]) + 1
     appearances, resources = {}, {}
     rows = []
-    for appearance, (name, (_, build_mesh)) in enumerate((MODELS | scenery).items(), first):
+    for appearance, (name, (_, build_mesh)) in enumerate((MODELS | scenery | INTERACTIVE_MODELS).items(), first):
         appearances[name] = appearance
         rows.append(f"{appearance} {name} 8932 {name} **** **** **** **** 0 1 0 **** **** 1")
         resources[f"{name}.mdl"] = build_mesh().mdl(name)

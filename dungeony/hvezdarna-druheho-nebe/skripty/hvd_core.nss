@@ -71,19 +71,32 @@ void HVD_Jump(object player, string marker)
     AssignCommand(player, ActionJumpToLocation(GetLocation(point)));
 }
 
+void HVD_PlacePart(string part, string resource, string anchor, float heading)
+{
+    object mount = GetObjectByTag(anchor);
+    if (!GetIsObjectValid(mount)) return;
+    object module = HVD_Module();
+    object previous = GetLocalObject(module, part);
+    float facing = GetFacing(mount) + heading;
+    if (facing < 0.0) facing += 360.0;
+    if (facing >= 360.0) facing -= 360.0;
+    if (GetIsObjectValid(previous) && fabs(GetFacing(previous) - facing) < 0.1) return;
+    location position = Location(GetArea(mount), GetPosition(mount), facing);
+    object replacement = CreateObject(OBJECT_TYPE_PLACEABLE, resource, position);
+    if (!GetIsObjectValid(replacement)) return;
+    if (GetIsObjectValid(previous)) DestroyObject(previous);
+    SetLocalObject(module, part, replacement);
+}
+
 void HVD_TurnOptics()
 {
     object module = HVD_Module();
     int west = GetLocalInt(module, "hvd_dial1");
     int east = GetLocalInt(module, "hvd_dial2");
-    object tube = GetObjectByTag("hvd_refractor");
     float heading = IntToFloat((west - 1) * 17 + (east - 2) * 9);
-    SetObjectVisualTransform(tube, OBJECT_VISUAL_TRANSFORM_ROTATE_Z, heading,
-                             OBJECT_VISUAL_TRANSFORM_LERP_SMOOTHSTEP, 0.6);
-    SetObjectVisualTransform(GetObjectByTag("hvd_dial_w"), OBJECT_VISUAL_TRANSFORM_ROTATE_Z,
-                             IntToFloat(west * 120), OBJECT_VISUAL_TRANSFORM_LERP_SMOOTHSTEP, 0.5);
-    SetObjectVisualTransform(GetObjectByTag("hvd_dial_e"), OBJECT_VISUAL_TRANSFORM_ROTATE_Z,
-                             IntToFloat(east * 120), OBJECT_VISUAL_TRANSFORM_LERP_SMOOTHSTEP, 0.5);
+    HVD_PlacePart("hvd_tube", "hvd_tube", "hvd_refractor", heading);
+    HVD_PlacePart("hvd_needle_w", "hvd_needle", "hvd_dial_w", IntToFloat(west * 120));
+    HVD_PlacePart("hvd_needle_e", "hvd_needle", "hvd_dial_e", IntToFloat(east * 120));
 }
 
 void HVD_Reveal(string marker)
@@ -170,6 +183,31 @@ string HVD_SealKey(int sign)
     return "hvd_seal" + IntToString(sign);
 }
 
+void HVD_PlaceBooks()
+{
+    int index = 0;
+    object spot = GetObjectByTag("hvd_find", index);
+    while (GetIsObjectValid(spot))
+    {
+        string resource = GetLocalString(spot, "find");
+        object previous = GetLocalObject(HVD_Module(), resource);
+        if (GetIsObjectValid(previous)) DestroyObject(previous);
+        object book = CreateObject(OBJECT_TYPE_ITEM, resource, GetLocation(spot));
+        if (GetIsObjectValid(book))
+        {
+            SetLocalObject(HVD_Module(), resource, book);
+            SetLocalInt(book, "hvd_run", HVD_Run());
+            int clue = GetLocalInt(spot, "clue");
+            if (clue)
+            {
+                SetLocalInt(book, "hvd_clue", clue);
+                SetDescription(book, GetDescription(book) + "\n\nZápis z poslední služby\n" + HVD_Clue(clue));
+            }
+        }
+        spot = GetObjectByTag("hvd_find", ++index);
+    }
+}
+
 int HVD_ValidSeal(object item, int sign)
 {
     return GetIsObjectValid(item) && sign >= 1 && sign <= 4 &&
@@ -189,7 +227,7 @@ void HVD_ClearTokens(object player)
             int sign = StringToInt(GetSubString(resource, 8, 1));
             if (!HVD_ValidSeal(item, sign)) DestroyObject(item);
         }
-        if ((resource == "hvd_mirror" || resource == "hvd_workkey") &&
+        if ((resource == "hvd_mirror" || resource == "hvd_workkey" || GetStringLeft(resource, 9) == "hvd_book_") &&
             GetLocalInt(item, "hvd_run") != HVD_Run()) DestroyObject(item);
         item = next;
     }
@@ -356,6 +394,8 @@ void HVD_ResetBoss()
     if (GetIsObjectValid(lamp)) SetPlaceableIllumination(lamp, TRUE);
 }
 
+#include "hvd_stores"
+
 void HVD_NewRun()
 {
     object module = HVD_Module();
@@ -381,11 +421,9 @@ void HVD_NewRun()
     DeleteLocalInt(module, "hvd_gate_open");
     DeleteLocalInt(module, "hvd_shortcut");
     DeleteLocalInt(module, "hvd_work_link");
-    DeleteLocalInt(module, "hvd_work_lock");
     DeleteLocalInt(module, "hvd_hall_off");
     DeleteLocalInt(module, "hvd_chest_off");
     DeleteLocalInt(module, "hvd_notes");
-    DeleteLocalInt(module, "hvd_mirror_taken");
     DeleteLocalInt(module, "hvd_mounted");
     int index;
     for (index = 1; index <= 4; ++index)
@@ -400,12 +438,15 @@ void HVD_NewRun()
     HVD_Extinguish("hvd_optic_gate");
     HVD_Extinguish("hvd_final_gate");
     HVD_Extinguish("hvd_summit_exit");
+    HVD_Extinguish("hvd_socket_mirror");
     HVD_TurnOptics();
     HVD_ResetBoss();
+    HVD_ResetStores();
+    HVD_PlaceBooks();
     object area = GetFirstArea();
     while (GetIsObjectValid(area))
     {
-        HVD_DestroyMobs(area);
+        if (GetLocalInt(area, "hvd_armed")) HVD_DestroyMobs(area);
         DeleteLocalInt(area, "hvd_armed");
         DeleteLocalInt(area, "hvd_empty");
         DeleteLocalInt(area, "hvd_push");

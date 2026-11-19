@@ -13,7 +13,7 @@ TYPE = {
     "tga": 3, "mdl": 2002, "nss": 2009, "ncs": 2010, "are": 2012, "set": 2013, "ifo": 2014,
     "bic": 2015, "wok": 2016, "2da": 2017, "git": 2023, "uti": 2025,
     "utc": 2027, "itp": 2030, "utt": 2032, "dds": 2033, "gic": 2046, "utp": 2044,
-    "utd": 2042, "dlg": 2029, "fac": 2038, "jrl": 2056,
+    "utd": 2042, "dlg": 2029, "fac": 2038, "pwk": 2053, "jrl": 2056,
 }
 EXT = {number: name for name, number in TYPE.items()}
 
