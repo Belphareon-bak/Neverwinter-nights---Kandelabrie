@@ -1,4 +1,4 @@
-"""Eight compact, connected observatory locations."""
+"""The observatory, the upper terraces and their concealed branches."""
 
 from aurora import bite, flt, integer
 from world import Area, color
@@ -99,13 +99,19 @@ def mountain(art):
 
 
 def halls(art):
-    a = scene(art, "hvd_halls", "Chodby clon", "tni02", (7, 6),
+    a = scene(art, "hvd_halls", "Chodby clon", "tni02", (7, 7),
               [(1, 1, 2, 2), (1, 4, 2, 5), (5, 1, 6, 4)],
               "Příjmová síň s rozcestím, zděná chodba s filtry a dvě oddělené obslužné místnosti.",
               ambient=(79, 88, 118), diffuse=(148, 158, 200), fog=0, music=50, wind=67,
               tiles={(2, 1): (86, 0), (3, 1): (1, 1), (4, 1): (86, 2),
-                     (1, 2): (86, 1), (1, 3): (86, 3)})
+                     (1, 2): (86, 1), (1, 3): (86, 3), (1, 5): (86, 1), (1, 6): (4, 2)})
     a.point("hvd_halls_in", 17.8, 12.9, 90)
+    a.point("hvd_study_secret",15,58.34,90)
+    a.point("hvd_halls_study",15,54.0,270)
+    a.transition("Do komory správkyně","hvt_halls_study",(12.8,59.05,17.2,60.85),"hvd_study_in",
+                 require="hvd_study_open")
+    feature(a,"hvd_wallring","Zapadlý mosazný čep",19.05,57.47,action="study_pin",tag="hvd_study_pin",
+            text="Mezi měřicími tabulkami vystupuje mosazný čep. Tenká táhlice míří za zadní polici.")
     a.point("hvd_halls_works", 16.5, 44.6, 0, "Služební cesta k dílnám")
     a.point("hvd_halls_dome", 55.5, 37.0, 270, "Výstup do kopule")
     a.transition("Ven na římsu", "hvt_halls_rim", (15.6, 8.8, 20.1, 10.9), "hvd_rim_halls")
@@ -121,12 +127,12 @@ def halls(art):
     feature(a, "hvd_dial", "Pojistka paprskové chodby", 20.8, 19.05, action="disarm",
             tag="hvd_ray_lock", flag="hvd_hall_off", skill=15,
             text="Mosazná západka je ohnutá. Postup ukazuje sešit v dolní servisní dílně.")
-    a.find("hvd_book_halls", 11.94, 13.93, height=.88, bearing=78)
+    a.find("hvd_book_halls", 4.16, 13.93, height=.88, bearing=78)
     fixture(a, [
-        (97, "Stůl výpravčího", 11.55, 14.1, 90),
-        (125, "Prapor pozorovatelny", 9.2, 20.5, 90),
-        (447, "Odložený filtr v mosazi", 19, 47.6, 180),
-        (287, "Lavice pod výstupem do kopule", 59.7, 35.8, 90),
+        (97, "Stůl výpravčího", 3.73, 14.1, 90),
+
+        (447, "Odložený filtr v mosazi", 26.3, 47.6, 270),
+        (287, "Lavice pod výstupem do kopule", 66.81, 35.69, 90),
     ])
     for x, y in ((21.5, 11.6), (20.15, 45.7), (48.6, 18.45), (59.2, 40.2)):
         lantern(a, x, y)
@@ -138,24 +144,21 @@ def halls(art):
 
 
 def workshops(art):
-    a = scene(art, "hvd_works", "Dílny a servisní lávka", "tcm02", (6, 7),
-              [(1, 1, 4, 2), (1, 5, 5, 6)],
+    a = scene(art, "hvd_works", "Dílny a servisní lávka", "tcm02", (6, 8),
+              [(1, 1, 4, 2), (1, 5, 5, 7)],
               "Servisní dvůr s optickou zkouškou a dvojicí podest, mezi nimiž vede skutečný most.",
               ambient=(94, 112, 151), diffuse=(180, 192, 228), fog=1, sky=4, music=49, wind=202,
               tiles={(2, 2): (895, 0), (2, 3): (818, 0), (2, 4): (895, 2)})
     a.point("hvd_works_in", 25, 14.9, 90)
     a.point("hvd_work_lab", 17.1, 14.7, 90, "Dolní dílna · zkušebna s klíčem a zrcadlem")
-    a.point("hvd_works_hp", 42, 54, 180, "Horní lávka ke kopuli")
+    a.point("hvd_works_hp", 25, 55.4, 270, "Horní lávka ke kopuli")
     a.point("hvd_works_rim", 36, 15.5, 180, "Sestup ke starému noclehu")
     a.transition("Do chodeb clon", "hvt_works_halls", (23, 10, 29, 13), "hvd_halls_works")
-    a.transition("Lávka do kopule", "hvt_works_dome", (45, 51, 49, 57), "hvd_dome_works")
+    a.transition("Pod kopulí do hvězdárny", "hvt_works_dome", (23.0,60.55,27.0,62.30), "hvd_dome_works")
     a.transition("Starý servisní sestup", "hvt_works_rim", (37, 11, 40, 19), "hvd_rim_works",
                  flag="hvd_work_link")
     feature(a, "hvd_columnade", "Ostění servisního sestupu", 40, 15, bearing=90)
-    feature(a, "hvd_columnade", "Ostění horní galerie", 49, 54, bearing=90)
     cloudbed(a, 29, 34)
-    rail(a, [(16, 19), (34, 19), (16, 51), (35, 51), (44, 51)])
-    rail(a, [(23.3, 35), (26.7, 35)], 90, 6.65)
     fixture(a, [
         (97, "Zkušební stůl", 17, 16, 90), (456, "Výpočty odrazů", 16.3, 16.7, 0),
         (108, "Zbytky prken", 13, 18.4, 90), (48, "Kovadlina na rámy", 32.2, 17.9, 90),
@@ -167,7 +170,7 @@ def workshops(art):
     a.find("hvd_book_optic", 17.37, 15.55, height=.88, bearing=97)
     a.stash(7, "Schránka na klíč správkyně", 15.14, 15.3, "hvd_keycase",
             text="Vedle pracovního stolu v ní správkyně nechala klíč od zamčeného pouzdra.")
-    a.prop(447, "Pevné zrcadlo zkušebny", 19.35, 17.35, bearing=130, tag="hvd_lab_mirror")
+    a.prop(447, "Pevné zrcadlo zkušebny", 18.47, 18.28, bearing=130, tag="hvd_lab_mirror")
     a.stash(8, "Pouzdro s přenosným zrcadlem", 22.0, 13.6, "hvd_mirror_case",
             text="Záložní zrcadlo do patice na Posledním stupni. Sešit na stole vysvětluje jeho použití.")
     feature(a, "hvd_dial", "Spoušť zkušební optiky", 22.7, 17.8, action="testbeam")
@@ -192,6 +195,10 @@ def dome(art):
     a.point("hvd_dome_works", 16, 26, 0, "Servisní vchod")
     a.point("hvd_dome_steps", 30, 41, 270, "Otevření schodů")
     a.point("hvd_dome_short", 41, 26, 180, "Zkratka z předbraní")
+    a.point("hvd_dome_study", 48.3, 18.55, 180)
+    a.point("hvd_dome_secret", 53.03, 18.55, 0)
+    a.transition("Zpět do komory správkyně","hvt_dome_study",(53.45,16.85,55.5,20.25),"hvd_study_dome",
+                 require="hvd_study_link")
     a.point("hvd_optic_gate", 30, 46.2, 90)
     a.transition("Do chodeb clon", "hvt_dome_halls", (27.4, 14.3, 32.6, 16.3), "hvd_halls_dome")
     a.transition("Na lávku do dílny", "hvt_dome_works", (10, 23, 13, 29), "hvd_works_hp")
@@ -219,35 +226,77 @@ def dome(art):
     return a
 
 
-def steps(art):
-    a = scene(art, "hvd_steps", "Schody do nebe", "tcm02", (6, 7),
-              [(2, 1, 4, 6), (1, 3, 5, 5), (0, 2, 6, 3), (0, 4, 6, 5)],
-              "Dvě skutečná stoupání oddělená bouřnou podestou, kryt za poškozenými balustrádami.",
-              ambient=(96, 115, 167), diffuse=(187, 204, 245), fog=2, sky=4, music=49, wind=202,
-              rises=(3, 5), stair_columns={2: (2,), 4: (3,)})
-    a.point("hvd_steps_in", 30, 15.1, 90)
-    a.point("hvd_steps_walks", 30, 53, 270, "Horní schodiště")
-    a.transition("Sestoupit do kopule", "hvt_steps_dome", (27, 10, 33, 13), "hvd_dome_steps")
-    a.transition("K visutým ochozům", "hvt_steps_walks", (27, 56.5, 33, 60), "hvd_walks_in")
-    cloudbed(a, 30, 35)
-    feature(a, "hvd_columnade", "Ostění prvního schodu", 30, 11, bearing=0)
-    feature(a, "hvd_columnade", "Oblouk horních ochozů", 30, 57)
-    feature(a, "hvd_starmap", "Měřicí kruh bouřné podesty", 30, 35.8)
-    rail(a, [(12.3, 35), (47.8, 35), (21.4, 17.1), (38.6, 17.1)], 90)
-    for x, y in ((23, 17.5), (37, 17.5), (31, 38.5), (24.5, 55), (35.5, 55)):
-        lantern(a, x, y)
-    a.find("hvd_book_steps", 23.16, 15.02, height=.88, clue=2)
-    a.prop(97, "Stůl odpočívadla", 22.8, 15.05, bearing=90)
-    feature(a, "hvd_sealstand", "Hnízdo Pečeti křídla", 42, 36.5, action="seal", seal=2, tag="hvd_wing_seal")
-    feature(a, "hvd_beacon", "Ozvučnice bouřné podesty", 17.5, 35, action="chime", tag="hvd_steps_chime")
-    a.point("hvd_storm_center", 30, 35.7)
-    fixture(a, [(125, "Roztržený znak hlídky", 37, 31.2, 0), (336, "Zlomená římsa", 15, 30, 140),
-                (93, "Socha pozorovatele", 39, 54.2, 180), (91, "Socha držící astroláb", 21, 54.2, 180)])
-    cover(a, [(22, 32), (37.8, 34), (24, 38.0), (37.3, 38.2)], 337)
-    a.mob("hvd_vir", 30, 35.7, seal=2, elite=1)
-    a.mob("hvd_spradac", 44, 34)
-    a.mob("hvd_strhavac", 35.7, 49.5)
-    a.mob("hvd_vrhac", 27, 53.5)
+def steps(art, flight):
+    a = scene(art, "hvd_steps", "Schody do nebe", "tcm02", (7, 9),
+              [(1,1,6,8), (0,2,7,3), (0,4,7,5), (0,6,7,7)],
+              "Tři široké lety po kamenné ose, měřicí podesta a vyvýšená bouřná hlídka.",
+              ambient=(100,115,159), diffuse=(206,209,242), fog=1, sky=4, music=49, wind=202,
+              rises=(3,5,7), stair_columns={2:(3,),4:(3,),6:(3,)},
+              tiles={(3,row):(flight,0) for row in (2,4,6)})
+    a.point("hvd_steps_in",35,15.0,90)
+    a.point("hvd_steps_walks",35,75.1,270,"Horní podesta schodů")
+    a.point("hvd_steps_eave",18.25,16.66,0)
+    a.point("hvd_steps_eaveup",51.35,54.1,180)
+    a.point("hvd_eave_secret",15.62,16.65,0)
+    a.point("hvd_eavetop_door",54.90,54.10,0)
+    a.transition("Sestoupit do kopule","hvt_steps_dome",(32,10,38,12.7),"hvd_dome_steps")
+    a.transition("K visutým ochozům","hvt_steps_walks",(31.8,79.1,38.2,81.9),"hvd_walks_in")
+    a.transition("Pod západní opěru","hvt_steps_eave",(13.3,15.1,15.05,18.2),"hvd_eave_in",
+                 require="hvd_eave_open")
+    a.transition("Na servisní římsu","hvt_steps_eaveup",(55.25,51.75,58.1,56.2),"hvd_eave_top",
+                 require="hvd_eave_open")
+    feature(a,"hvd_wallring","Západka protizávaží",19.46,19.62,action="eave_pin",tag="hvd_eave_pin",
+            text="Od táhla u opěry vede řetěz dolů za západní balustrádu. Západku brzdí napnutá pojistka.")
+    feature(a,"hvd_starmap","Rozeta bouřné komory",35,54.85)
+    feature(a,"hvd_sealstand","Hnízdo Pečeti křídla",45.1,56.5,action="seal",seal=2,tag="hvd_wing_seal")
+    feature(a,"hvd_beacon","Ozvučnice bouřné podesty",24.75,55.3,action="chime",tag="hvd_steps_chime")
+    a.point("hvd_storm_center",35,54.85)
+    a.find("hvd_book_steps",27.35,15.48,height=.88,clue=2)
+    a.prop(97,"Stolek obsluhy prvního schodu",27.01,15.5,bearing=90)
+    cover(a,[(29.85,51.9),(41.15,51.9),(28.05,57.4),(42.4,58.3)],337)
+    a.mob("hvd_vir",35,54.85,seal=2,elite=1)
+    a.mob("hvd_spradac",43.65,54.26)
+    a.mob("hvd_strhavac",36.7,36.8)
+    a.mob("hvd_vrhac",37.4,74.5)
+    return a
+
+
+def study(art):
+    a = scene(art,"hvd_study","Skrytá komora správkyně","tni02",(4,4),[(1,1,3,3)],
+              "Pracovna s čočkami a zadní kalibrační chodbou do kopule.",
+              ambient=(85,78,98),diffuse=(174,165,198),fog=0,music=50,wind=68)
+    a.point("hvd_study_in",19.75,13.55,90)
+    a.point("hvd_study_dome",19.75,26.52,270)
+    a.point("hvd_comm_secret",19.75,30.42,90)
+    a.transition("Zpět ke skladům clon","hvt_study_halls",(17.25,9.7,22.4,11.6),"hvd_halls_study")
+    a.transition("Za zadní clonou do kopule","hvt_study_dome",(17.45,30.95,22.02,32.1),"hvd_dome_study",
+                 require="hvd_study_link")
+    feature(a,"hvd_cloister","Ostění za policí",19.75,10.75)
+    feature(a,"hvd_cloister","Ostění kalibrační chodby",19.75,30.4)
+    feature(a,"hvd_wallring","Uzávěr zadní clony",24.38,29.45,action="study_turn",tag="hvd_study_turn",
+            text="Na stupnici je značka kopule. Mosazný převod odtud stahuje obě zadní clony.")
+    a.stash(7,"Kufřík na vyřazené čočky",12.3,26.5,"hvd_study_cache")
+    a.prop(97,"Stůl správkyně s nákresem obou clon",13.1,20.5,bearing=90)
+    return a
+
+
+def eave(art, flight):
+    a = scene(art,"hvd_eave","Římsa pod Schody do nebe","tcm02",(5,9),
+              [(1,1,4,2),(1,5,4,8),(0,6,5,7)],
+              "Spodní servisní můstek pod opěrami a oddělený výlez na bouřnou podestu.",
+              ambient=(80,99,135),diffuse=(160,184,219),fog=2,sky=4,music=49,wind=202,
+              rises=(7,),stair_columns={6:(2,)},
+              tiles={(2,2):(895,0),(2,3):(818,0),(2,4):(895,2),(2,6):(flight,0)})
+    a.point("hvd_eave_in",25,15.3,90)
+    a.point("hvd_eave_top",25,75.8,270)
+    a.transition("Pod západní opěru schodů","hvt_eave_steps",(22.2,10.1,27.8,12.85),"hvd_steps_eave")
+    a.transition("Východ na bouřnou podestu","hvt_eave_up",(22.0,79.6,28.0,81.9),"hvd_steps_eaveup")
+    feature(a,"hvd_cloister","Nízký vstup pod schody",25,11.8)
+    feature(a,"hvd_cloister","Výlez k bouřné podestě",25,80.45)
+    a.trap("Poryv pod obloukem","hvd_eave_wind",(23,30,27,42),hazard=1,flag="hvd_eave_safe",axis=1)
+    feature(a,"hvd_wallring","Pojistka větrné klapky",29.6,18.9,action="eave_brake",tag="hvd_eave_brake",
+            text="Ruční pojistka drží klapku u mostu. Při zajištění odvede poryv do spodního kamenného kanálu.")
+    a.stash(7,"Pouzdro za opěrou",34.28,56.8,"hvd_eave_cache",bearing=30)
     return a
 
 
@@ -263,21 +312,18 @@ def walks(art):
     a.point("hvd_walks_gate", 40, 63, 270, "Výstup do předbraní")
     a.transition("Zpět na bouřnou podestu", "hvt_walks_steps", (37, 10, 43, 13), "hvd_steps_walks")
     a.transition("Do předbraní", "hvt_walks_gate", (37, 67, 43, 70), "hvd_gate_in")
+    a.stash(7,"Kožený kufřík staré hlídky",68.72,62.95,"hvd_walk_cache",bearing=60)
     cloudbed(a, 40, 38)
-    feature(a, "hvd_columnade", "Severní oblouk ochozů", 40, 68)
     feature(a, "hvd_sealstand", "Podstavec Pečeti kopí", 19, 57.7, action="seal", seal=3, tag="hvd_spear_seal")
     feature(a, "hvd_sealstand", "Podstavec Pečeti lucerny", 63, 57.7, action="seal", seal=4, tag="hvd_lamp_seal")
-    rail(a, [(16, 19), (34, 19), (42, 19), (64, 19), (16, 51), (34, 51), (63, 51),
-             (30, 68), (50, 68)])
-    rail(a, [(23.3, 35), (26.7, 35), (53.3, 35), (56.7, 35)], 90, 6.65)
-    for x, y in ((21.8, 18.5), (28.2, 18.5), (55, 17.5), (52, 51.5),
+    for x, y in ((21.8, 18.5), (28.2, 18.5), (59.0, 17.9), (52, 51.5),
                  (19.5, 53), (46, 63), (34, 63)):
         lantern(a, x, y, 15107 if x < 30 else 15113)
     fixture(a, [(105, "Stojan kopiníka", 12.9, 61.3, 90), (125, "Znak kopí", 19, 62, 180),
                 (91, "Kamenný kopiník", 17.5, 61.4, 180), (92, "Kamenný světlonoš", 65, 61.4, 180),
-                (126, "Znak lucerny", 63, 62, 180), (287, "Lavice stráže", 69, 56, 90),
+                (126, "Znak lucerny", 63, 62, 180), (287, "Lavice stráže", 67.8, 65.1, 0),
                 (288, "Stolec pro výměnu knotů", 65.8, 54, 0), (49, "Rezervní olej", 68, 55, 0)])
-    cover(a, [(17, 54), (30, 57), (53, 55), (65, 53), (46, 65)], 337)
+    cover(a, [(17, 54), (30, 57), (53, 55), (65, 53), (50.5, 59.8)], 337)
     for creature, x, y, sign in (("hvd_kopi", 22, 57, 3), ("hvd_strhavac", 26, 51, 0),
                                  ("hvd_vrhac", 32, 57, 0), ("hvd_svetlonos", 61, 56, 4),
                                  ("hvd_spradac", 50, 56, 0), ("hvd_strhavac", 56, 52, 0)):
@@ -285,12 +331,12 @@ def walks(art):
     return a
 
 
-def gate(art):
+def gate(art, flight):
     a = scene(art, "hvd_gate", "Předbraní Horních sfér", "tcm02", (7, 7),
               [(1, 1, 6, 4), (2, 4, 5, 6), (0, 4, 7, 5)],
               "Poutní schodiště, trojice patic pod obřadním obloukem a malá strážnice při zkratce.",
               ambient=(111, 124, 172), diffuse=(204, 214, 251), fog=1, sky=4, music=27, wind=30,
-              rises=(5,), stair_columns={4: (3,)})
+              rises=(5,), stair_columns={4: (3,)}, tiles={(3,4): (flight,0)})
     a.point("hvd_gate_in", 35, 16.3, 90)
     a.point("hvd_gate_top", 35, 50.5, 270)
     a.point("hvd_gate_short", 52, 22.0, 180, "Odpočívárna a servisní zkratka")
@@ -304,11 +350,11 @@ def gate(art):
     feature(a, "hvd_gatearch", "Brána tří pečetí", 35, 53.3, tag="hvd_stone_frame")
     feature(a, "hvd_starmap", "Rozeta pod třemi paticemi", 35, 29)
     feature(a, "hvd_cloister", "Ostění servisního sestupu", 56.15, 22, bearing=90)
-    for i, x in enumerate((29, 35, 41), 1):
-        feature(a, "hvd_sealstand", f"{('I', 'II', 'III')[i-1]} · Patice pečeti", x, 28,
+    for i, (x, y) in enumerate(((27.8,28.2),(31.2,32.2),(41.0,29.15)), 1):
+        feature(a, "hvd_sealstand", f"{('I', 'II', 'III')[i-1]} · Patice pečeti", x, y,
                 action="socket", slot=i, tag=f"hvd_socket_{i}")
-        feature(a, f"hvd_sector{i}", "Podlahový znak stupně", x, 25.7)
-    feature(a, "hvd_dial", "Ověřit tři patice", 35, 35.6, action="gate", tag="hvd_gate_control")
+        feature(a, f"hvd_sector{i}", "Podlahový znak stupně", x, y - 1.75)
+    feature(a, "hvd_dial", "Ověřit tři patice", 39.35, 36.1, action="gate", tag="hvd_gate_control")
     a.prop(240, "Reliéf přísahy", 46.0, 19.1)
     a.prop(97, "Přijímací stůl písaře", 44.0, 20.7, bearing=0)
     a.find("hvd_book_gate", 44.25, 20.34, height=.88, clue=3)
@@ -323,22 +369,21 @@ def gate(art):
     fixture(a, [(453, "Socha navracejícího světlo", 28.9, 53.0, 178),
                 (453, "Socha vítající příchozí", 41.1, 53.0, 182),
                 (125, "Znak nebeské hlídky", 27.3, 55.5, 0), (126, "Znak návratu", 42.7, 55.5, 0),
-                (51, "Složené pokrývky stráže", 54.6, 14.5, 90), (287, "Lavice pod plátnem", 56, 16, 90),
+                (51, "Složené pokrývky stráže", 54.6, 14.5, 90), (287, "Lavice ve strážnici", 51.0, 18.65, 0),
                 (311, "Skříň na výstroj", 55.9, 36.3, 90), (49, "Olej pod policí", 56, 32, 0),
                 (294, "Sféra Horních sfér", 18.9, 35, 0), (91, "Starý člen hlídky", 17, 30, 100)])
-    rail(a, [(12.5, 21), (12.5, 26), (15.5, 38), (52, 38)])
     for x, y in ((21, 28), (46.5, 26.5), (30, 38.6), (40, 38.6), (31, 51.5), (39, 51.5)):
         lantern(a, x, y)
     cover(a, [(24.5, 34.0), (44.4, 35), (47, 28.6)], 78)
     return a
 
 
-def summit(art):
+def summit(art, flight):
     a = scene(art, "hvd_top", "Poslední stupeň", "tcm02", (7, 7),
               [(2, 1, 5, 3), (1, 3, 6, 5), (2, 5, 5, 6), (0, 2, 7, 3)],
               "Tři povrchem odlišené výseče strážní podesty a vyzdvižené stanoviště poslední lucerny.",
               ambient=(93, 105, 147), diffuse=(223, 214, 247), fog=1, sky=4, music=49, wind=30,
-              rises=(3,), stair_columns={2: (3,)})
+              rises=(3,), stair_columns={2: (3,)}, tiles={(3,2): (flight,0)})
     a.point("hvd_top_in", 35, 15.8, 90)
     a.point("hvd_top_mirror", 44.6, 17.8, 270, "Patice zkušebního zrcadla pod schody")
     a.point("hvd_boss_home", 35, 45, 270)
@@ -348,7 +393,6 @@ def summit(art):
     a.transition("Ústup do předbraní", "hvt_top_gate", (32, 10, 38, 13), "hvd_gate_top")
     a.transition("Návrat na římsu", "hvt_top_rim", (32, 57, 38, 60), "hvd_start", require="hvd_won")
     cloudbed(a, 35, 37)
-    feature(a, "hvd_columnade", "Oblouk služebního návratu", 35, 58.7)
     feature(a, "hvd_starmap", "Návratová rozeta", 35, 47.1)
     a.prop(97, "Stůl stráže na Posledním stupni", 25.5, 18.8)
     a.find("hvd_book_top", 25.78, 18.48, height=.88)
@@ -367,8 +411,6 @@ def summit(art):
     for x, y in ((27.5, 37), (42.5, 37), (27.5, 47), (42.5, 47)):
         feature(a, "hvd_beamstrip", "Mosazné značení hranice výsečí", x, y)
     cover(a, [(14.4, 37.5), (55.7, 36), (22.5, 41.7), (46.6, 41.7), (25.5, 49), (44.3, 49)], 337)
-    rail(a, [(12.3, 35), (57.7, 35), (13, 43.8), (57, 43.8)], 90)
-    rail(a, [(23, 57.2), (47, 57.2)])
     for x, y in ((23, 19), (47, 19), (14, 48), (56, 48), (26.35, 56), (43.65, 56)):
         lantern(a, x, y)
     fixture(a, [(125, "Prapor přísahy", 27, 54, 180), (126, "Prapor návratu", 43, 54, 180),
@@ -376,8 +418,11 @@ def summit(art):
     return a
 
 
-def areas(art):
-    zones = [make(art) for make in (mountain, halls, workshops, dome, steps, walks, gate, summit)]
+def areas(art, flight):
+    zones = [
+        mountain(art), halls(art), workshops(art), dome(art), steps(art, flight),
+        walks(art), gate(art, flight), summit(art, flight), study(art), eave(art, flight),
+    ]
     for area in zones:
         for trigger in area.triggers:
             if trigger.value("Type") == 1:

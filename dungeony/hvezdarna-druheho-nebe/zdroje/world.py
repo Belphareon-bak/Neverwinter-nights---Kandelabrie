@@ -31,12 +31,14 @@ def color(red, green, blue):
 
 
 class Tileset:
-    def __init__(self, resource, name):
+    def __init__(self, resource, name, custom=None, paving=None):
         self.name = name
         self.floor, self.border, self.plain = SURFACES[name]
+        if paving is not None:
+            self.plain = (paving,)
         self.choices = defaultdict(list)
         self.rows = {}
-        raw = resource.read(name, "set").decode("latin-1")
+        raw = (custom if custom is not None else resource.read(name, "set")).decode("latin-1")
         for match in re.finditer(r"\[TILE(\d+)\]\s*([^\[]+)", raw):
             ident = int(match[1])
             row = dict(line.strip().split("=", 1) for line in match[2].splitlines() if "=" in line)

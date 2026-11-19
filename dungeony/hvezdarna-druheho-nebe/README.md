@@ -5,7 +5,7 @@
 > **Doporučené úrovně:** 35–40 (spodní část 35–38, horní část 38–40). **Typ:** průzkumný a bojový dungeon s příběhem, prostředím, logickou hádankou a závěrečným bossem.
 >
 
-[Záběry z osmi oblastí v NWN:EE](podklady/nahledy.jpg)
+[Záběry z hratelné verze v NWN:EE](podklady/nahledy.jpg)
 
 ## 1. Obecný popis a autorský záměr
 

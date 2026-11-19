@@ -12,6 +12,8 @@ void main()
         if (requirement == "hvd_aligned") hint = "V oblouku chybí světlo. Seřiď optiku v kopuli.";
         if (requirement == "hvd_gate_open") hint = "Brána se zjeví, až se rozsvítí všechny tři správné patice.";
         if (requirement == "hvd_won") hint = "Sestup se otevře, až ustane odraz poslední lucerny.";
+        if (requirement == "hvd_study_link") hint = "Ve spáře je vidět zadní clona. Z druhé strany ji drží převod.";
+        if (requirement == "hvd_eave_open") hint = "Kamenný kryt drží táhlo pod západní opěrou.";
         SendMessageToPC(player, hint);
         return;
     }

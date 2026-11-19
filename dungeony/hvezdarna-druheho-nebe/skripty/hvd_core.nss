@@ -118,6 +118,20 @@ void HVD_Extinguish(string marker)
     DeleteLocalObject(HVD_Module(), marker);
 }
 
+void HVD_ResetHidden()
+{
+    object module = HVD_Module();
+    DeleteLocalInt(module,"hvd_study_open");
+    DeleteLocalInt(module,"hvd_study_link");
+    DeleteLocalInt(module,"hvd_eave_open");
+    DeleteLocalInt(module,"hvd_eave_safe");
+    HVD_PlacePart("hvd_study_cover","hvd_bookpanel","hvd_study_secret",0.0);
+    HVD_PlacePart("hvd_comm_cover","hvd_stonepanel","hvd_comm_secret",0.0);
+    HVD_PlacePart("hvd_dome_cover","hvd_stonepanel","hvd_dome_secret",0.0);
+    HVD_PlacePart("hvd_eave_cover","hvd_stonepanel","hvd_eave_secret",0.0);
+    HVD_PlacePart("hvd_eavetop_cover","hvd_stonepanel","hvd_eavetop_door",0.0);
+}
+
 int HVD_Digit(int code, int slot)
 {
     if (slot == 1) return code / 100;
@@ -440,6 +454,7 @@ void HVD_NewRun()
     HVD_Extinguish("hvd_summit_exit");
     HVD_Extinguish("hvd_socket_mirror");
     HVD_TurnOptics();
+    HVD_ResetHidden();
     HVD_ResetBoss();
     HVD_ResetStores();
     HVD_PlaceBooks();

@@ -55,6 +55,19 @@ FOOTPRINTS = {
     "hvd_hoist": arch_feet(1.47,.65,.74),
     "hvd_grille": (rectangle(0,0,4.15,.48),),
     "hvd_pavilion": (*arch_feet(5,1.29,1.29), *arch_feet(5,1.29,1.29,3.3)),
+    "hvd_bookpanel": (rectangle(0,0,4.9,.46),),
+    "hvd_stonepanel": (rectangle(0,0,4.9,.46),),
+    "hvd_lining": (rectangle(0,.31,5.03,.59),),
+    "hvd_apsewall": (rectangle(0,.24,5.03,.71),),
+    "hvd_wallring": (rectangle(0,.14,.61,.29),),
+    "hvd_lensrack": (rectangle(0,-.037,2.94,.67),),
+    "hvd_skyport": arch_feet(2.79,1.28,1.0),
+    "hvd_skyrail": (rectangle(0,0,4.92,.60),),
+    "hvd_skybay": (rectangle(0,1.78,6.9,.48),*arch_feet(3.18,1.08,1.11,-.70),
+                   *arch_feet(3.18,.44,1.15,1.32)),
+    "hvd_orrery": (ring(2.4),),
+    "hvd_eavearch": arch_feet(3.13,2.44,3.87),
+    "hvd_beactower": (ring(2.07),),
 }
 
 USE_POINTS = {
@@ -63,6 +76,7 @@ USE_POINTS = {
     "hvd_console": ((0,-1.25), (0,1.25)),
     "hvd_sealstand": ((0,-1.18), (0,1.18)),
     "hvd_beacon": ((0,-1.24), (0,1.24)),
+    "hvd_wallring": ((0,-.89),),
 }
 
 

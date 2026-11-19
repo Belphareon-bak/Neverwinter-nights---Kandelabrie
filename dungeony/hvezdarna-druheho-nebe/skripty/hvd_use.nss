@@ -68,6 +68,48 @@ void main()
         SendMessageToPC(player, GetDescription(target));
         return;
     }
+    if (operation == "study_pin")
+    {
+        if (!GetLocalInt(module,"hvd_study_open"))
+        {
+            SetLocalInt(module,"hvd_study_open",TRUE);
+            HVD_Extinguish("hvd_study_cover");
+            HVD_AreaMessage(GetArea(player),"Čep povolil a zadní police zajela za obezdívku.");
+        }
+        return;
+    }
+    if (operation == "study_turn")
+    {
+        if (!GetLocalInt(module,"hvd_study_link"))
+        {
+            SetLocalInt(module,"hvd_study_link",TRUE);
+            HVD_Extinguish("hvd_comm_cover");
+            HVD_Extinguish("hvd_dome_cover");
+            HVD_AreaMessage(GetArea(player),"Převod stáhl obě zadní clony. Z průchodu je vidět slabé světlo refraktoru.");
+        }
+        return;
+    }
+    if (operation == "eave_pin")
+    {
+        if (!GetLocalInt(module,"hvd_eave_open"))
+        {
+            SetLocalInt(module,"hvd_eave_open",TRUE);
+            HVD_Extinguish("hvd_eave_cover");
+            HVD_Extinguish("hvd_eavetop_cover");
+            HVD_AreaMessage(GetArea(player),"Protizávaží vyzdvihlo západní kryt. Pod schody se ukázal servisní průlez.");
+        }
+        return;
+    }
+    if (operation == "eave_brake")
+    {
+        if (!GetLocalInt(module,"hvd_eave_safe"))
+        {
+            SetLocalInt(module,"hvd_eave_safe",TRUE);
+            ApplyEffectAtLocation(DURATION_TYPE_INSTANT,EffectVisualEffect(VFX_IMP_PULSE_COLD),GetLocation(target));
+            HVD_AreaMessage(GetArea(player),"Klapka se zaklesla. Vítr teď uniká kamenným kanálem pod lávkou.");
+        }
+        return;
+    }
     if (operation == "testbeam")
     {
         vector mirror = GetPosition(GetObjectByTag("hvd_lab_mirror"));

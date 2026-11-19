@@ -1,6 +1,6 @@
 """Room-by-room dressing on the existing observatory floor plans."""
 
-from math import atan2, cos, degrees, radians, sin
+from math import cos, radians, sin
 
 from aurora import bite, flt, integer
 from world import color
@@ -29,6 +29,21 @@ NAMES = {
     "hvd_pavilion": "Otevřený pavilon poslední služby", "hvd_eddy": "Spirála stlačeného větru",
     "hvd_mistbank": "Vlny mraků pod ochozy",
     "hvd_landing": "Kamenné předpolí hvězdárny",
+    "hvd_wallchart": "Mosazná mapa na stěně",
+    "hvd_lining": "Kamenná obezdívka s mosaznou lištou",
+    "hvd_lensrack": "Vestavěná skříň s čočkami",
+    "hvd_wallring": "Mosazné táhlo v překladu",
+    "hvd_bookpanel": "Zadní police archivu",
+    "hvd_stonepanel": "Kamenný kryt v ostění",
+    "hvd_skyport": "Nebeský oblouk s lampami v kameni",
+    "hvd_skyrail": "Balustráda Horních sfér",
+    "hvd_skybay": "Otevřená strážnice pod klenbou",
+    "hvd_hangpier": "Kamenná opěra nad mraky",
+    "hvd_skywalk": "Kamenná dráha s mosaznou linií",
+    "hvd_orrery": "Kamenný orloj druhé oblohy",
+    "hvd_apsewall": "Členěná stěna se soklem",
+    "hvd_eavearch": "Klenutá opěra servisní lávky",
+    "hvd_beactower": "Signální věž visutých ochozů",
 }
 
 STUDY = (
@@ -116,22 +131,42 @@ class Dress:
         for i in range(count):
             self.put(asset, x + dx * i, y + dy * i, direction=direction, lift=lift, base=base)
 
-    def relief(self, x, y, direction=0, shade="blue", base=None):
-        self.put("hvd_facade", x, y, direction=direction, base=base)
-        self.set(x, y, (("hvd_sconce", None, -.97, -.53, 2.4, 0),
-                        ("hvd_sconce", None, .97, -.53, 2.4, 0)), direction, base)
-        self.lamp(x, y, 2.55, shade, base)
-
     def signpost(self, x, y, shade="blue", direction=0, base=None):
         head = "hvd_amberpost" if shade == "amber" else "hvd_bluepost"
         self.put(head, x, y, direction=direction, base=base)
         self.lamp(x, y, 2.09, shade, base)
 
-    def arch(self, x, y, direction=0, shade="amber", base=None):
-        self.put("hvd_cloister", x, y, direction=direction, base=base)
-        self.set(x, y, (("hvd_sconce", None, -2.42, -.29, 2.22, 0),
-                        ("hvd_sconce", None, 2.42, -.29, 2.22, 0)), direction, base)
-        self.lamp(x, y, 2.55, shade, base)
+    def wall(self, x, y, direction, fixture=None, tint='blue', base=None, *, pier=False):
+        self.put('hvd_apsewall' if pier else 'hvd_lining', x, y, direction=direction, base=base)
+        if fixture:
+            model = {'chart': 'hvd_wallchart', 'rack': 'hvd_lensrack'}[fixture]
+            self.put(model, x, y, direction=direction, base=base)
+        self.set(x, y, (('hvd_sconce', None, -2.16, -.17, 2.13, 0),), direction, base)
+        a = radians(direction)
+        self.lamp(x - 2.16*cos(a) + .36*sin(a), y - 2.16*sin(a) - .36*cos(a), 2.51, tint, base)
+
+    def sky(self, x, y, tint, base=None):
+        self.put('hvd_skyport', x, y, base=base)
+        for side in (-1, 1):
+            self.lamp(x + side*2.79, y - .72, 2.63, tint, base)
+
+    def bay(self, x, y, tint, direction=0, base=None):
+        self.put('hvd_skybay', x, y, direction=direction, base=base)
+        self.set(x, y, (('hvd_sconce', None, -2.61, 1.38, 2.00, 0),
+                        ('hvd_sconce', None, 2.61, 1.38, 2.00, 0)), direction, base)
+        a = radians(direction)
+        for dx in (-2.61, 2.61):
+            self.lamp(x + dx*cos(a) - 1.10*sin(a), y + dx*sin(a) + 1.10*cos(a), 2.41, tint, base)
+
+    def rail(self, x, y, count, dx, dy, direction, base):
+        self.line('hvd_skyrail', x, y, count, dx, dy, direction, base=base)
+
+    def service_niche(self, x, y, opens_east, base):
+        # The stone lining joins both jambs so the sliding stone is the only opening.
+        side = -1 if opens_east else 1
+        self.put('hvd_apsewall',x + 2.42*side,y+2.47,base=base)
+        self.put('hvd_apsewall',x + 2.42*side,y-2.47,direction=180,base=base)
+        self.put('hvd_apsewall',x + 4.84*side,y,direction=-90*side,base=base)
 
     def bridge(self, x, shade):
         self.put("hvd_bridgewall", x, 35, base=5.0)
@@ -140,7 +175,8 @@ class Dress:
                 dx = (2.0 if y in (25, 45) else 1.54) * side
                 self.put("hvd_amberpost" if shade == "amber" else "hvd_bluepost", x + dx, y, base=z)
             if y in (30.25, 39.75):
-                self.lamp(x, y, 2.02, shade, z)
+                for side in (-1,1):
+                    self.lamp(x + 1.54*side, y, 2.06, shade, z)
 
     def clouds(self, banks, rocks):
         for x, y, z, angle in rocks:
@@ -189,252 +225,287 @@ def mountain(s):
 
 
 def halls(s):
-    s.area.lighting.update(MoonAmbientColor=color(66,81,108), MoonDiffuseColor=color(149,166,203))
-    # The two native corridors have solid masonry. Furnish the rooms they connect.
-    s.put("hvd_shelf", 9.85, 17.9, direction=90)
-    s.put("hvd_oillamp", 11.59, 13.64, lift=1.07)
-    s.put("hvd_bluepost", 20.2, 16.95)
-    s.set(20.15, 42.0, REPAIR, 180)
-    s.put("hvd_shelf", 14.0, 49.3)
-    s.put("hvd_shelf", 17.0, 49.3)
-    s.relief(15.15, 51.15, 0, "amber")
-    s.put("hvd_armillary", 12.4, 46.6)
-    s.lamp(12.4, 46.6, 2.05, "amber")
-    s.put("hvd_oillamp", 17.0, 49.23, lift=2.50)
-    s.put("hvd_runner", 15.0, 36.0)
-    s.put("hvd_runner", 15.0, 27.0)
-    s.set(53.1, 17.35, STUDY, 180)
-    s.set(55.3, 30.85, REPAIR, 180)
-    s.relief(62.15, 21.1, 270, "blue")
-    s.relief(62.15, 28.2, 270, "amber")
-    s.put("hvd_shutwin", 60.65, 15.35, direction=270)
-    s.put("hvd_shelf", 62.15, 34.1, direction=270)
-    s.put("hvd_armillary", 50.28, 29.25)
-    s.lamp(50.28, 29.25, 1.9, "blue")
-    for x in (26.5, 35.0, 43.5):
-        s.put("hvd_runner", x, 15.0, direction=90)
+    s.area.lighting.update(MoonAmbientColor=color(76,88,118), MoonDiffuseColor=color(168,180,210))
+    # The mounted fittings follow the stock alcoves and share their space with a matching work surface.
+    s.wall(2.0, 14.15, 90, 'chart', 'amber')
+    s.wall(2.02, 18.86, 90, 'rack', 'blue')
+    s.wall(5.15, 1.99, 180)
+    s.put('hvd_openbook', 3.77, 14.58, lift=.88, direction=90)
+    s.put('hvd_oillamp', 3.70, 13.56, lift=1.07)
+    s.lamp(3.70, 13.56, 1.31, 'amber')
+    s.set(5.24,2.84,SUPPLIES,180)
+    # The narrow passages retain their stock stone sides and a clear center.
+    s.put('hvd_runner', 15, 31.2)
+    for x in (27.5,35,42.5):
+        s.put('hvd_runner',x,15,direction=90)
+
+    # An archive at the end of the north hall. The back piece joins the existing access bay.
+    for x, prop in ((5.17, 'chart'), (10.10, 'rack'), (19.95, None), (24.88, 'rack')):
+        s.wall(x,57.49,0,prop,'amber')
+    s.wall(2.03,48.9,90,'rack','blue')
+    s.wall(27.93,45.10,270,'chart','amber')
+    s.set(26.2,50.13,REPAIR,270)
+    s.put('hvd_armillary',6.63,55.22,direction=180)
+    s.lamp(6.63,55.22,2.06,'blue')
+    s.put('hvd_pave_n',12.7,51.19)
+    s.put('hvd_pave_n',17.69,51.19)
+
+    # Opticians use the east alcoves and read their notices against the west wall.
+    for y, prop in ((12.33,'rack'),(22.34,'chart'),(32.35,'chart'),(42.33,'rack')):
+        s.wall(67.93,y,270,prop,'amber')
+    for y, prop in ((23.5,'rack'),(33.53,'chart'),(43.51,'rack')):
+        s.wall(41.91,y,90,prop,'blue')
+    s.set(66.31,32.32,STUDY,270)
+    s.set(66.45,10.3,SUPPLIES,270)
+    s.put('hvd_runner',55.25,34.7)
 
 
 def workshops(s):
-    s.area.lighting.update(FogClipDist=flt(87.0), MoonAmbientColor=color(83,91,128),
-                           MoonDiffuseColor=color(181,180,194))
-    # Workshop bays have their own work surfaces. The middle aisle leads straight to the bridge.
-    s.put("hvd_shoproof",16.72,16.3)
-    s.put("hvd_shoproof",34.3,15.6,direction=180)
-    s.put("hvd_hoist",31.55,20.72,direction=28)
-    s.put("hvd_tools",17.02,16.02,lift=.88,direction=80)
-    s.put("hvd_oillamp",16.95,16.83,lift=1.07)
-    s.lamp(16.95,16.83,1.28,"amber")
-    s.put("hvd_shelf",12,18.42,direction=90)
-    s.put("hvd_oillamp",12,18.42,lift=2.51,direction=90)
-    s.relief(10.65,15.1,90,"blue")
-    s.set(34.65,16.8,REPAIR,180)
-    s.lamp(34.65,16.8,1.5,"orange")
-    s.set(34.4,10.75,SUPPLIES,165)
-    s.put("hvd_wallfoot",38.9,9.55)
-    s.put("hvd_wallfoot",39.78,20.58,direction=90)
-    s.put("hvd_amberpost",28.47,20.93)
+    s.area.lighting.update(FogClipDist=flt(104.0), MoonAmbientColor=color(104,112,141),
+                           MoonDiffuseColor=color(196,191,210))
+    # Two windbreaks close the work yards on opposite sides of the service axis.
+    s.bay(16.13, 17.43, 'amber')
+    s.bay(34.05, 13.28, 'blue', 180)
+    s.put('hvd_tools', 17.03, 16.13, lift=.89, direction=80)
+    s.put('hvd_oillamp', 17.02, 16.86, lift=1.07)
+    s.lamp(17.02, 16.86, 1.30, 'amber')
+    s.put('hvd_lensrack', 14.22, 18.64)
+    s.put('hvd_hoist', 38.05, 17.28, direction=180)
+    s.set(35.3, 15.35, REPAIR, 180)
+    s.set(30.84, 11.68, SUPPLIES, 180)
+    s.sky(25, 23.85, 'amber')
+    s.sky(25, 49.8, 'blue')
+    s.bridge(25, 'amber')
+    for y in (16.8, 54.2):
+        s.put('hvd_skywalk', 25, y)
+    s.rail(12.3, 20.75, 2, 4.89, 0, 0, 5)
+    s.rail(31.4, 20.75, 2, 4.89, 0, 0, 5)
+    for x,y,z in ((17.8,20.4,5),(31.8,20.4,5),(17.9,50.55,5),(32,50.55,5)):
+        s.put('hvd_hangpier', x, y, base=z)
 
-    s.bridge(25,"amber")
-    s.arch(25,23.4,0,"amber")
-    s.arch(25,50.75,0,"blue")
-    for x in (14,19,31,37):
-        s.put("hvd_wallfoot",x,21.4)
-        s.put("hvd_wallfoot",x,50.4)
-    s.put("hvd_pave_w",25,18.42)
-    s.put("hvd_pave_w",25,54.8)
-
-    # The far landing is a sheltered maintenance yard below the entrance to the dome.
-    s.put("hvd_shoproof",34.2,57.75)
-    s.set(34.5,57.2,REPAIR,0)
-    s.lamp(34.5,57.2,1.5,"amber")
-    s.relief(11.2,55.3,90,"blue")
-    s.relief(40.75,61.05,0,"blue")
-    s.set(14.85,56.5,SUPPLIES,85)
-    s.put("hvd_shelf",19.25,59.55)
-    s.put("hvd_oillamp",19.25,59.55,lift=2.51)
-    s.put("hvd_armillary",44.0,57.9)
-    s.lamp(44.0,57.9,1.95,"blue")
-    s.put("hvd_pave_n",43.05,54)
-    s.clouds([(3,37,-7,27),(41,33,-7,135),(27,64,-8,0)],
-             [(7,34,-10,20),(45,42,-7,120),(55,23,-8,55),(53,58,-7,66)])
+    s.put('hvd_octagon',25,64.21,name='Kupole na horní servisní podestě')
+    s.lamp(25,60.12,2.61,'violet')
+    s.bay(15.45, 62.5, 'blue')
+    s.bay(36.5, 62.0, 'amber')
+    s.set(15.2, 62.92, SUPPLIES, 0)
+    s.set(36.25, 62.39, REPAIR, 0)
+    s.rail(14.5, 50.44, 2, 4.90, 0, 0, 5)
+    s.rail(31.1, 50.44, 3, 4.90, 0, 0, 5)
+    s.put('hvd_armillary', 44.0, 57.9)
+    s.lamp(44.0, 57.9, 1.95, 'blue')
+    for x,y,z,angle in ((8,14,-1.0,70),(42,17,-1.7,130),(9,55,-2.0,18),(38,64,-1.6,3)):
+        s.put('hvd_crag', x, y, base=z, direction=angle)
+    s.clouds([(8,36,-10,14),(36,41,-11,133)], [(7,36,-13,38),(42,42,-11,52)])
 
 
 def dome(s):
-    s.area.lighting.update(FogClipDist=flt(60.0), MoonAmbientColor=color(72,83,117),
-                           MoonDiffuseColor=color(162,165,202))
-    # Keep the four approaches open around a ring of load-bearing ribs and work bays.
-    for x,y in ((17.9,22.25),(19.4,38.4),(25.0,42.3),(36.4,41.7),(41.4,35.9),(43.2,20.45),
-                (34.7,18.2),(24.1,18.5)):
-        direction=degrees(atan2(31-y,30-x))-90
-        s.put("hvd_cupolarib",x,y,direction=direction)
-        s.put("hvd_bluebann",x,y+.24,lift=2.3,direction=direction)
-        s.lamp(x,y,3.9,"violet")
-
-    # South of the instrument, the writer's table faces shelves and the repair station.
-    s.relief(24.2,15.85,180,"amber")
-    s.relief(39.2,15.72,180,"blue")
-    s.put("hvd_shelf",20.55,18.95,direction=135)
-    s.put("hvd_oillamp",20.55,18.95,lift=2.51)
-    s.put("hvd_pave_w",23.0,22.0)
-    s.put("hvd_oillamp",24.80,22.22,lift=1.07)
-    s.lamp(24.80,22.22,1.28,"amber")
-    s.set(38.95,21.7,REPAIR,162)
-    s.put("hvd_pave_n",38.45,21.40)
-
-    # Spare lens racks and charts follow the rounded outer walls on either side.
-    s.relief(12.1,31.35,90,"blue")
-    s.relief(46.25,33.1,270,"blue")
-    s.put("hvd_shelf",14.05,35.6,direction=75)
-    s.put("hvd_shelf",16.95,39.3,direction=22)
-    s.put("hvd_oillamp",16.95,39.3,lift=2.51)
-    s.set(21.0,35.48,STUDY,10)
-    s.put("hvd_pave_n",20.8,35.59)
-    s.put("hvd_shelf",43.65,36.65,direction=270)
-    s.put("hvd_oillamp",43.65,36.65,lift=2.51)
-    s.put("hvd_armillary",38.95,38.6)
-    s.lamp(38.95,38.6,1.9,"amber")
-
-    s.relief(21.05,43.7,0,"blue")
-    s.relief(38.6,44.7,0,"blue")
-    s.put("hvd_mounttrim",30,31)
-    s.put("hvd_gatecrest",30,46.4)
-    s.put("hvd_guide",24.7,29.65)
-    s.put("hvd_guide",35.38,29.65)
-    s.lamp(30,46.15,1.5,"violet")
+    s.area.lighting.update(FogClipDist=flt(69.0), MoonAmbientColor=color(89,100,136),
+                           MoonDiffuseColor=color(184,188,222))
+    # Finish the side bays along the actual shell and recess the concealed door into the east apse.
+    for x,y,angle,item,light in (
+        (2.1,33.3,90,'chart','blue'), (2.1,38.29,90,'rack','blue'),
+        (6.2,47.02,0,'rack','blue'), (11.22,47.02,0,'chart','blue'),
+        (21.65,57.85,0,'rack','amber'),(26.66,57.85,0,'chart','blue'),
+        (33.36,57.85,0,'chart','blue'),(38.35,57.85,0,'rack','amber'),
+        (57.89,28.61,270,'rack','blue'), (57.89,33.62,270,'chart','amber'),
+        (57.89,38.48,270,'rack','blue'),
+        (53.17,13.62,270,'rack','violet'), (53.17,23.45,270,'chart','violet'),
+    ):
+        s.wall(x,y,angle,item,light)
+    # The lower portico stands between two joined masonry wings that contain desks and instruments.
+    for x in (19.24,24.25,35.75,40.76):
+        s.wall(x,15.36,180,'chart' if x in (19.24,40.76) else None,'amber',pier=True)
+    s.service_niche(53.03,18.55,False,0)
+    for x,y,angle in ((12.1,38.6,90),(47.6,38.5,270),(16.42,16.28,180),(43.58,16.28,180)):
+        s.put('hvd_cupolarib',x,y,direction=angle)
+    s.put('hvd_oillamp',24.62,22.12,lift=1.06)
+    s.lamp(24.62,22.12,1.30,'amber')
+    s.put('hvd_openbook',23.47,21.99,lift=.88,direction=12)
+    s.put('hvd_tools',24.10,22.22,lift=.89,direction=30)
+    s.set(56.21,34.1,REPAIR,270)
+    s.set(3.9,38.32,STUDY,90)
+    s.put('hvd_armillary',36.32,55.82)
+    s.lamp(36.32,55.82,1.93,'amber')
+    s.put('hvd_mounttrim',30,31)
+    s.put('hvd_guide',24.7,29.65)
+    s.put('hvd_guide',35.38,29.65)
 
 
 def steps(s):
-    s.area.lighting.update(MoonAmbientColor=color(71,88,129), MoonDiffuseColor=color(192,188,229))
-    for x in (5.0,11.0,17.0,35.0,41.0,47.0,53.0):
-        s.relief(x,21.9,0,"blue",base=5.0)
-    for x in (5.0,11.0,17.0,22.8,44.0,50.0,56.0):
-        s.relief(x,41.6,0,"violet",base=10.0)
-    for x in (11.7,16.7,36.0,41.0,46.0,51.0):
-        s.put("hvd_wallfoot",x,30.7,base=10.0)
-    for x in (11.7,16.7,21.7,46.0,51.0):
-        s.put("hvd_wallfoot",x,50.2,base=15.0)
-    s.put("hvd_eddy",30,35.7,base=10.02)
-    s.lamp(30,35.7,4.45,"blue",10.0)
-    s.arch(30.0,17.1,0,"blue",5.0)
-    s.put("hvd_pavilion",29.9,57.8,base=15.0)
-    s.lamp(22.8,15.05,1.25,"amber",5.0)
-    s.put("hvd_oillamp",22.72,15.75,lift=1.07,base=5.0)
-    s.set(43.6,34.6,STATION,245,10.0)
-    s.set(15.2,55.7,GUARD,18,15.0)
-    for x,y,z,tint in ((15.0,33.6,10.0,"blue"),(22.3,32.1,10.0,"violet"),
-                       (36.9,32.2,10.0,"blue"),(14.4,38.2,10.0,"blue"),
-                       (44.9,38.0,10.0,"amber"),(17.5,54.5,15.0,"amber"),
-                       (43.4,54.2,15.0,"amber")):
-        s.signpost(x,y,tint,base=z)
-        s.put("hvd_bluebann",x,y+.36,lift=.70,base=z)
-        s.put("hvd_pave_n",x,y,base=z)
-    for x,y,z,d in ((12,32,10,34),(19,39,10,19),(41,38,10,133),(49,36,10,23),
-                      (20,51,15,129),(40,55,15,220),(18,15,5,21)):
-        s.put("hvd_brokpier",x,y,base=z,direction=d)
-        s.put("hvd_rubble",x+.64,y+.40,base=z,direction=d+33)
-    s.clouds([(6,35,-6,36),(51,41,-8,62),(51,58,-8,42)],
-             [(4,12,-7,90),(3,30,-3,43),(55,35,-4,68),(57,50,-4,165),(4,54,-4,119)])
+    s.area.lighting.update(FogClipDist=flt(130.0), MoonAmbientColor=color(96,113,162),
+                           MoonDiffuseColor=color(210,217,246))
+    s.sky(35, 11.35, 'blue', 5)
+    s.sky(35, 80.0, 'amber', 20)
+    for y,z in ((15.0,5),(33.1,10),(38.0,10),(53.0,15),(57.9,15),(74.4,20)):
+        s.put('hvd_skywalk', 35, y, base=z)
+    # Continuous protective edges follow the highest part of each retaining wall.
+    for y,z in ((30.53,10),(50.53,15),(70.53,20)):
+        s.rail(17.2, y, 3, 4.90, 0, 0, z)
+        s.rail(43, y, 3, 4.90, 0, 0, z)
+        for x in (21.2, 48.8):
+            s.put('hvd_hangpier', x, y, base=z)
+    for x in (30.95,39.05):
+        for y,z in ((32.45,10),(52.45,15),(72.45,20)):
+            s.signpost(x,y,'blue',base=z)
+    # A hidden service entrance lies behind the low western retaining wall.
+    s.service_niche(15.62,16.65,True,5)
+    s.bay(13.3,17.65,'amber',90,5)
+    s.put('hvd_lining',19.55,19.88,base=5)
+    s.rail(20.32, 13.34, 1, 0, 0, 90, 5)
+    s.put('hvd_oillamp', 27.01, 15.91, lift=1.07, base=5)
+    s.lamp(27.01, 15.91, 1.30, 'amber', 5)
+    s.rail(46.7, 12.8, 2, 4.90, 0, 0, 5)
+    s.bay(50.0, 18.4, 'blue', base=5)
+    s.set(50.0,18.95,SUPPLIES,0,5)
+    s.put('hvd_orrery', 49.05, 37.04, direction=15, base=10)
+    s.lamp(49.05,36.58,3.25,'violet',10)
+    s.bay(19.6,36.6,'blue',base=10)
+    s.set(19.6,37.05,STATION,0,10)
+    s.put('hvd_eddy',35,54.85,base=15.02)
+    s.lamp(35,54.85,3.95,'blue',15)
+    s.bay(19.85,57.95,'amber',base=15)
+    s.set(19.73,58.36,GUARD,0,15)
+    s.bay(50.1,57.8,'blue',base=15)
+    s.service_niche(54.90,54.10,False,15)
+    for x in (20.6,49.4):
+        s.bay(x,76.1,'amber',base=20)
+        s.rail(x,80.6,3,4.90,0,0,20)
+    s.clouds([(7,23,-8,24),(50,41,-10,57),(53,67,-8,103),(19,76,-11,18)],
+             [(8,41,-12,14),(59,36,-10,126),(7,61,-8,135),(64,61,-10,23)])
 
 
 def walks(s):
-    s.area.lighting.update(FogClipDist=flt(112.0), MoonAmbientColor=color(76,88,124),
-                           MoonDiffuseColor=color(178,204,236))
-    s.bridge(25,"blue")
-    s.bridge(55,"amber")
-    for x,y,tint in ((25,18,"blue"),(55,18,"amber"),(25,51,"blue"),(55,51,"amber"),(40,66,"amber")):
-        s.arch(x,y,0,tint,5.0)
-    for i,x in enumerate((15,20,31,36,41,46,61,66)):
-        s.put("hvd_wallfoot",x,21.5,base=5.0)
-        s.put("hvd_pave_n" if x<45 else "hvd_pave_w",x,15,base=5.0)
-        if i%2==0:
-            s.signpost(x,19.9,"blue" if x<45 else "amber",base=5.0)
-    s.put("hvd_sentrybay",20,60.8,base=5.0)
-    s.put("hvd_sentrybay",62,60.8,base=5.0)
-    s.set(15.2,58.9,GUARD,87,5.0)
-    s.set(67.0,58.6,GUARD,263,5.0)
-    s.set(22.7,62.2,STATION,151,5.0)
-    s.set(59.1,62.7,STATION,176,5.0)
-    s.set(38.2,18.0,STATION,0,5.0)
-    s.set(11.4,16.8,SUPPLIES,87,5.0)
-    s.set(68.9,16.6,SUPPLIES,286,5.0)
-    for y in (53.8,58.7,63.6):
-        for x in (16.3,21.3,26.3,31.3,53.7,58.7,63.7,68.7):
-            s.put("hvd_pave_n" if x<38 else "hvd_pave_w",x,y,base=5.0)
-    for x,y,angle in ((14,54,90),(36,57,270),(47,57,90),(71,55,270),(32,67,0),(48,67,0)):
-        s.relief(x,y,angle,"blue" if x<40 else "amber",base=5.0)
-        s.put("hvd_bluebann" if x<40 else "hvd_goldbann",x,y-.29,lift=.98,base=5.0,direction=angle)
-    s.clouds([(6,34,-7,55),(38,31,-7,88),(72,39,-6,126),(34,56,-8,9)],
-             [(11,40,-8,29),(6,52,-7,19),(40,41,-8,110),(73,38,-9,91),(45,52,-10,50)])
+    s.area.lighting.update(FogClipDist=flt(119.0), MoonAmbientColor=color(94,111,156),
+                           MoonDiffuseColor=color(194,212,246))
+    for x,tint in ((25,'blue'),(55,'amber')):
+        s.sky(x,22.55,tint)
+        s.sky(x,49.55,tint)
+        s.bridge(x,tint)
+        for y in (17.4,54.1):
+            s.put('hvd_skywalk',x,y)
+        for px,y in ((x-3.55,20.68),(x+3.55,20.68),(x-3.55,50.3),(x+3.55,50.3)):
+            s.put('hvd_hangpier',px,y)
+    for x,count in ((13.0,2),(31.8,4),(62.4,2)):
+        s.rail(x,20.86,count,4.91,0,0,5)
+    for x,y,d in ((11.6,56.2,90),(11.6,61.08,90),(68.8,53.2,90),(37.7,55.8,90),
+                  (47.1,54.9,90),(20.9,65.9,0),(25.8,65.9,0),(56.4,65.9,0)):
+        s.put('hvd_skyrail',x,y,direction=d)
+    s.bay(19.0,62.6,'blue')
+    s.bay(63.0,62.6,'amber')
+    s.put('hvd_beactower',63.0,67.7)
+    s.lamp(63.0,67.7,7.7,'amber')
+    s.bay(47.05,18.55,'blue',180)
+    s.set(12.98,62.3,SUPPLIES,90)
+    s.set(60.18,63.34,STATION,0)
+    s.put('hvd_skyrail',68.0,59.63,direction=90)
+    s.sky(40,68,'amber')
+    s.put('hvd_skywalk',40,64.7)
+    s.rail(30.0,67.7,2,4.90,0,0,5)
+    s.rail(45.1,67.7,2,4.90,0,0,5)
+    s.clouds([(6,34,-9,55),(38,31,-10,88),(72,39,-9,126),(34,56,-8,9)],
+             [(11,40,-12,29),(40,41,-12,110),(73,38,-13,91)])
 
 
 def gate(s):
-    s.area.lighting.update(FogClipDist=flt(102.0), MoonAmbientColor=color(92,103,146),
-                           MoonDiffuseColor=color(214,201,229))
-    for x in (4,10,16,22,28,43,49,55,61,67):
-        s.relief(x,41.32,0,"amber" if x<31 else "blue",base=5.0)
-    for x in (13.8,18.8,23.8,28.8,41.2,46.2,51.2,56.2):
-        s.put("hvd_wallfoot",x,50.8,base=10.02)
-        s.put("hvd_tallpier",x,53.9,base=10.0)
-    s.put("hvd_gatecrest",35,53.3,base=10)
-    for x in (25.4,44.6):
-        s.put("hvd_sentrybay",x,54.7,base=10)
-        s.put("hvd_armillary",x,52.2,base=10)
-        s.put("hvd_goldbann",x,53.1,lift=1.02,base=10)
-        s.lamp(x,52.2,2.5,"amber",10)
-    for x,y,d in ((14.5,15.7,90),(15,23,90),(15.3,30,90),(14.2,36.6,90),
-                  (55.7,27.0,270),(56.2,35.5,270)):
-        s.arch(x,y,d,"amber",5.0)
-    for x,y,d in ((51,17.5,124),(19.1,27.45,88),(17.1,34.65,86)):
-        s.set(x,y,GUARD,d,5.0)
-    for x,y,d in ((20.9,17.3,9),(53.1,26.4,185),(25,36.5,162),(45,36.3,220)):
-        s.set(x,y,STATION,d,5.0)
-    for x,y,d in ((22,29.8,90),(49.3,26.7,270),(18,20.7,0),(53.6,38.2,0)):
-        s.put("hvd_grille",x,y,direction=d,base=5.0)
-    for y in (15.5,20.5,25.5,30.5,35.5,39.0):
-        for x in (19.8,24.8,45.3,50.3):
-            s.put("hvd_pave_w" if x==19.8 or x==50.3 else "hvd_pave_n",x,y,base=5)
-    s.put("hvd_altarbase",35,29.0,base=4.30)
-    for x,y in ((29,23.9),(41,23.9),(27.7,32.5),(43.3,32.5),(29.0,37.5),(41,37.5)):
-        s.signpost(x,y,"amber",base=5.0)
-    s.clouds([(10,51,-6,38),(52,60,-8,109),(56,12,-7,52)],
-             [(8,49,-6,23),(53,62,-5,211),(65,30,-7,78),(3,19,-6,120)])
+    s.area.lighting.update(FogClipDist=flt(116.0), MoonAmbientColor=color(101,116,160),
+                           MoonDiffuseColor=color(218,209,238))
+    s.sky(35,12,'blue',5)
+    for y in (16.5,21.4,30.7,38.15):
+        s.put('hvd_skywalk',35,y,base=5)
+    # The socket court sits between the two working wings. The stone gate has its own ceremonial façade.
+    for x in (22.2,47.8):
+        s.bay(x,37.9,'blue',base=5)
+        s.put('hvd_hangpier',x,50.75,base=10)
+    s.bay(20,24.6,'blue',90,5)
+    s.bay(54.0,16.9,'amber',270,5)
+    s.set(16.18,26.4,GUARD,90,5)
+    s.put('hvd_oillamp',44.86,20.99,lift=1.05,base=5)
+    s.put('hvd_openbook',43.52,20.88,lift=.88,base=5)
+    s.lamp(44.86,20.99,1.28,'amber',5)
+    s.wall(44.04,21.39,0,'chart','amber',5)
+    s.rail(15.1,33.35,2,0,4.90,90,5)
+    s.rail(56.2,27.4,2,0,4.90,90,5)
+    s.rail(18.6,50.74,3,4.90,0,0,10)
+    s.rail(41.65,50.74,3,4.90,0,0,10)
+    s.put('hvd_gatecrest',35,53.33,base=10)
+    for x in (25,45):
+        s.bay(x,54.6,'amber',base=10)
+        s.put('hvd_goldbann',x,55.82,lift=.7,base=10)
+    for x in (18.0,52.0):
+        s.put('hvd_orrery',x,56.0,base=10)
+        s.lamp(x,55.7,3.25,'violet',10)
+    s.clouds([(10,51,-8,38),(52,60,-10,109),(56,12,-9,52)],
+             [(8,49,-12,23),(65,30,-12,78)])
 
 
 def summit(s):
-    s.area.lighting.update(FogClipDist=flt(96.0), MoonAmbientColor=color(80,94,141),
-                           MoonDiffuseColor=color(209,208,241))
-    for x in (4.4,10.1,15.8,21.5,27.2,42.8,48.5,54.2,59.9,65.6):
-        s.relief(x,21.65,0,"amber" if x<35 else "blue",base=5)
-    s.put("hvd_pavilion",35,54.8,base=10)
-    s.put("hvd_altarbase",38.2,55.4,direction=90,base=9.2)
-    for x,y in ((21.1,54.2),(48.9,54.2)):
-        s.put("hvd_sentrybay",x,y,base=10)
-        s.put("hvd_armillary",x,y-.96,base=10)
-        s.put("hvd_goldbann",x,y+.54,lift=1.2,base=10)
-        s.lamp(x,y,2.78,"amber",10)
-    for x,y,angle in ((12.4,34,90),(12.5,42,90),(13.3,49.2,90),
-                      (57.8,34.4,270),(57.6,41.8,270),(56.9,49.3,270)):
-        s.arch(x,y,angle,"blue" if x<35 else "amber",10)
-        s.put("hvd_tallpier",x,y-.96,base=10)
-    for y in (32.8,37.7,42.6,47.5,52.4):
-        s.put("hvd_pave_n",19.8,y,base=10.0)
-        s.put("hvd_runner",35,y,base=10.0)
-        s.put("hvd_pave_w",50.2,y,base=10.0)
-    for x,y,d,z in ((21.1,17.0,9,5),(47.7,16.05,-12,5),(24.4,54.4,165,10),
-                    (45.3,55.7,227,10),(18.4,49.0,96,10),(51.8,49.0,281,10)):
-        s.set(x,y,STATION,d,z)
-    for x,y,d in ((10.3,44.2,90),(59,45.8,269),(53.4,53.6,355)):
-        s.set(x,y,GUARD,d,10)
-    for i,x in enumerate((13.2,18.3,23.4,46.6,51.7,56.8)):
-        s.put("hvd_wallfoot",x,50.5)
-        s.signpost(x,51.5,"blue" if i<3 else "amber",base=10)
-        s.put("hvd_pave_n",x,53.8,base=10)
-    s.clouds([(13,43,-7,86),(59,42,-6,120),(27,65,-8,58)],
-             [(9,37,-7,110),(61,50,-6,19),(8.1,56,-4,129),(59,57,-5,232),(29,66,-8,10)])
+    s.area.lighting.update(FogClipDist=flt(116.0), MoonAmbientColor=color(93,110,150),
+                           MoonDiffuseColor=color(224,215,244))
+    s.sky(35,11.75,'blue',5)
+    s.sky(35,58.7,'amber',10)
+    for x in (24.6,45.8):
+        s.bay(x,20.0,'blue',base=5)
+    s.put('hvd_oillamp',26.31,19.03,base=5,lift=1.07)
+    s.lamp(26.31,19.03,1.32,'amber',5)
+    s.rail(14.1,30.65,3,4.90,0,0,10)
+    s.rail(45.7,30.65,3,4.90,0,0,10)
+    for x,angle,shade in ((13.1,90,'blue'),(56.9,270,'amber')):
+        s.rail(x,39.1,3,0,4.9,90,10)
+        s.bay(x,49.4,shade,angle,10)
+    for x in (21,49):
+        s.bay(x,55.9,'amber',base=10)
+        s.put('hvd_orrery',x,60.7,base=10)
+        s.put('hvd_hangpier',x,58.85,base=10)
+    for y in (16.04,33.7,38.6,43.5,48.4,53.3):
+        z=5 if y<20 else 10
+        s.put('hvd_skywalk',35,y,base=z)
+        if z==10:
+            s.put('hvd_pave_n',20,y,base=z)
+            s.put('hvd_pave_w',50,y,base=z)
+    s.clouds([(13,43,-8,86),(59,42,-9,120),(27,65,-8,58)],
+             [(9,37,-12,110),(61,50,-12,19),(29,66,-12,10)])
+
+
+def study(s):
+    s.area.lighting.update(FogClipDist=flt(38.0), MoonAmbientColor=color(89,82,109),
+                           MoonDiffuseColor=color(177,168,206))
+    for x,y,d,item in ((10.91,13.97,90,'rack'),(10.91,18.97,90,'chart'),(10.91,23.97,90,None),
+                        (10.91,28.97,90,None),(28.95,13.97,270,None),(28.95,18.97,270,'rack'),
+                        (28.95,23.97,270,'chart'),(28.95,28.97,270,'rack'),
+                        (14.77,30.46,0,'rack'),(24.72,30.46,0,'chart'),
+                        (14.77,10.48,180,'chart'),(24.72,10.48,180,None)):
+        s.wall(x,y,d,item,'amber',pier=True)
+    s.put('hvd_tools',13.18,20.16,lift=.88,direction=75)
+    s.put('hvd_oillamp',13.12,21.16,lift=1.08)
+    s.lamp(13.12,21.16,1.32,'amber')
+    s.put('hvd_openbook',12.75,20.04,lift=.88,direction=90)
+    s.set(27.53,19.45,REPAIR,270)
+    s.put('hvd_pave_n',19.75,21.0)
+
+
+def eave(s):
+    s.area.lighting.update(FogClipDist=flt(105.0), MoonAmbientColor=color(85,101,146),
+                           MoonDiffuseColor=color(170,189,232))
+    s.bay(31.98,19.20,'amber',base=5)
+    s.set(33.33,19.80,SUPPLIES,0,5)
+    s.bridge(25,'blue')
+    s.rail(14.3,21.35,2,4.90,0,0,5)
+    for y,z in ((23.0,5),(34.75,6.65),(49.8,5)):
+        s.put('hvd_eavearch',25,y,base=z)
+        for side in (-1,1):
+            s.set(25+side*3.1,y-1.95,(('hvd_sconce',None,0,0,2.05,0),),base=z)
+            s.lamp(25+side*3.1,y-2.35,2.54,'blue',z)
+    s.bay(34.6,58.55,'amber',base=5)
+    s.rail(38.68,56.23,1,0,0,90,5)
+    s.put('hvd_crate',35.86,57.40,direction=26,base=5)
+    s.put('hvd_skywalk',25,55.4,base=5)
+    s.put('hvd_skywalk',25,74.2,base=10)
+    s.bay(36.0,75.85,'blue',base=10)
+    s.rail(14.8,70.83,2,4.90,0,0,10)
+    s.clouds([(5,42,-11,90),(42,32,-11,14)],[(7,30,-10,32),(42,39,-10,49)])
 
 
 def dress_areas(zones):
-    designers = (mountain, halls, workshops, dome, steps, walks, gate, summit)
+    designers = (mountain, halls, workshops, dome, steps, walks, gate, summit, study, eave)
     for area, design in zip(zones, designers, strict=True):
         design(Dress(area))

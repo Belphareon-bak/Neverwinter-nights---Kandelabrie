@@ -459,12 +459,12 @@ def texture(name, size, base, seed, *, slabs=False):
     return struct.pack("<BBBHHBHHHHBB", 0, 0, 2, 0, 0, 0, 0, 0, size, size, depth, 8 if depth == 32 else 0) + pixels
 
 
-def assets(game, scenery):
+def assets(game, scenery, additions):
     table = game.read("placeables", "2da").decode("cp1252").rstrip()
     first = int(table.splitlines()[-1].split()[0]) + 1
     appearances, resources = {}, {}
     rows = []
-    for appearance, (name, (_, build_mesh)) in enumerate((MODELS | scenery | INTERACTIVE_MODELS).items(), first):
+    for appearance, (name, (_, build_mesh)) in enumerate((MODELS | scenery | INTERACTIVE_MODELS | additions).items(), first):
         appearances[name] = appearance
         rows.append(f"{appearance} {name} 8932 {name} **** **** **** **** 0 1 0 **** **** 1")
         resources[f"{name}.mdl"] = build_mesh().mdl(name)

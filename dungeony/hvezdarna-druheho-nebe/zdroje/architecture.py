@@ -1,4 +1,4 @@
-"""Architectural pieces and furnishings for the observatory's eight areas."""
+"""Architectural pieces and furnishings for the observatory."""
 
 from math import cos, pi, sin, tau
 import random
@@ -524,6 +524,233 @@ def mist_bank():
     return m
 
 
+def wall_chart():
+    m = Mesh()
+    m.box(WOOD,0,.075,1.13,3.82,.19,2.24)
+    m.box(INDIGO,0,-.046,1.26,3.55,.052,1.98)
+    for z in (1.14,3.36):
+        m.box(BRASS,0,-.063,z,3.91,.115,.054)
+    for x in (-1.87,1.87):
+        m.box(BRASS,x,-.067,1.14,.065,.12,2.25)
+    routes = ((-1.48,1.73),(-.77,2.04),(-.16,1.80),(.42,2.51),(1.42,2.86),(.98,2.36))
+    for i,(x,z) in enumerate(routes):
+        rosette(m,x,-.083,z,.13 if i in (0,3) else .10,PALE,4)
+        if i:
+            ox,oz=routes[i-1]
+            m.tube(BRASS,(ox,-.087,oz),(x,-.087,z),.018,sides=5)
+    return m
+
+
+def wall_lining():
+    m = Mesh()
+    m.box(MASONRY,0,.31,0,5.03,.59,3.04)
+    m.box(BASALT,0,.11,0,5.03,.27,.59)
+    m.box(LIMESTONE,0,.14,.56,5.01,.25,.13)
+    m.box(MASONRY,0,.16,2.78,5.01,.28,.19)
+    m.box(BRASS,0,.012,2.95,5.0,.038,.043)
+    for x in (-1.25,1.25):
+        m.box(DARK,x,.011,.19,1.89,.049,.22)
+        rosette(m,x,-.019,.30,.105,GILT,4)
+    return m
+
+
+def apse_wall():
+    m=wall_lining()
+    for x in (-1.62,1.62):
+        pillar(m,x,.14,3.0,radius=.21)
+    m.box(BASALT,0,.15,3.06,5.04,.93,.32)
+    m.box(LIMESTONE,0,.08,3.38,5.05,1.06,.13)
+    return m
+
+
+def lens_rack():
+    m = Mesh()
+    m.box(OLDWOOD,0,.18,.26,2.85,.35,2.49)
+    m.box(WOOD,0,.13,.26,2.93,.48,.095)
+    for x in (-1.39,1.39):
+        m.box(WOOD,x,.11,.25,.16,.52,2.69)
+    for z in (1.04,1.93,2.66):
+        m.box(WOOD,0,-.06,z,2.95,.70,.10)
+        m.box(BRASS,0,-.419,z+.04,2.86,.055,.047)
+    for x,z,r in ((-.97,1.40,.26),(-.27,1.35,.23),(.48,1.32,.18),(1.06,1.30,.16),
+                  (-.94,2.27,.20),(.02,2.30,.26),(.9,2.27,.20)):
+        m.disc(BRASS,(x,.03,z),(x,-.164,z),r,sides=16)
+        m.disc(PALE,(x,-.161,z),(x,-.18,z),r*.77,sides=16)
+    m.box(TRIM,0,.16,2.89,2.99,.55,.15)
+    return m
+
+
+def ring_handle():
+    m = Mesh()
+    m.box(DARK,0,.14,0,.61,.29,1.46)
+    m.box(BRASS,0,-.056,1.23,.24,.16,.27)
+    for i in range(16):
+        a,b=i*tau/16,(i+1)*tau/16
+        m.tube(BRASS,(.132*cos(a),-.233,1.20+.132*sin(a)),
+                    (.132*cos(b),-.233,1.20+.132*sin(b)),.028,sides=6)
+    m.tube(GILT,(0,-.231,1.34),(0,-.048,1.35),.035,sides=8)
+    return m
+
+
+def concealed_panel(books=False):
+    m = Mesh()
+    # The top and bottom rails run into the matching wall lining at each end.
+    width = 4.88
+    m.box(OLDWOOD if books else MASONRY,0,0,0,width,.38,3.43)
+    m.box(TRIM,0,-.02,.0,width+.07,.50,.24)
+    m.box(TRIM,0,-.02,3.23,width+.05,.49,.20)
+    for x in (-2.19,0,2.19):
+        m.box(WOOD if books else BASALT,x,-.22,.21,.13,.19,2.97)
+    if books:
+        for row,z in enumerate((.58,1.36,2.09)):
+            m.box(WOOD,0,-.22,z,4.40,.41,.11)
+            for i in range(17):
+                x=-2.05+i*.243
+                if (i+row*3)%9==0:
+                    continue
+                height=.24+.04*((i*7+row)%5)
+                m.box((INDIGO,OLDWOOD,PARCHMENT,CLOTH_WARM)[(i+row)%4],
+                      x,-.323,z+.10,.172,.22,height)
+    else:
+        for x in (-1.16,1.16):
+            rosette(m,x,-.213,2.01,.28)
+        m.box(BRASS,0,-.212,1.04,3.83,.054,.086)
+    return m
+
+
+def sky_portal():
+    m=Mesh()
+    arch(m,2.52,3.32,0,.43,.74,LIMESTONE,masonry=True)
+    arch(m,2.49,3.32,-.429,.068,.085,BRASS)
+    for x in (-2.79,2.79):
+        pillar(m,x,0,3.38,radius=.35)
+        m.box(BASALT,x,0,0,1.37,1.01,.20)
+        m.box(INDIGO,x,-.47,1.38,.37,.12,.99)
+        rosette(m,x,-.55,2.34,.24,PALE)
+        m.tube(BRASS,(x,-.363,2.12),(x,-.72,2.23),.052,sides=7)
+        m.tube(PALE,(x,-.69,2.21),(x,-.69,2.81),.126,.065,sides=12)
+    rosette(m,0,-.413,6.06,.325,GILT,12)
+    return m
+
+
+def sky_parapet():
+    m=Mesh()
+    m.box(MASONRY,0,0,0,4.92,.63,.35)
+    for x in (-2.01,0,2.01):
+        m.box(LIMESTONE,x,0,.31,.34,.67,.82)
+        rosette(m,x,-.333,.70,.148,PALE)
+    for x in (-1.65,-1.10,-.54,.54,1.10,1.65):
+        m.tube(DARK,(x,0,.31),(x,0,1.01),.093,sides=8)
+        m.disc(BRASS,(x,0,.63),(x,0,.73),.116,sides=8)
+    m.box(TRIM,0,0,1.03,5.03,.74,.16)
+    m.box(BRASS,0,-.357,1.14,4.91,.045,.029)
+    return m
+
+
+def sky_shelter():
+    m=Mesh()
+    m.box(MASONRY,0,1.78,0,6.9,.48,3.04)
+    for x in (-3.18,3.18):
+        pillar(m,x,-.70,3.04,radius=.30)
+        m.box(LIMESTONE,x,1.32,0,.44,1.15,3.00)
+        m.box(MASONRY,x,.61,2.58,.66,3.05,.47)
+        m.box(TRIM,x,.54,2.98,.89,3.60,.15)
+    arch(m,2.73,2.95,-.69,.57,.67,LIMESTONE,masonry=True)
+    arch(m,2.73,2.95,-1.056,.075,.074,BRASS)
+    arch(m,2.76,2.95,1.69,.51,.61,MASONRY)
+    for i in range(16):
+        a,b=pi*i/16,pi*(i+1)/16
+        x1,z1=3.34*cos(a),2.97+3.27*sin(a)
+        x2,z2=3.34*cos(b),2.97+3.27*sin(b)
+        m.polygon(CROWN if i%4 else DARK,
+                  ((x1,-1.11,z1),(x1,2.24,z1),(x2,2.24,z2),(x2,-1.11,z2)))
+        m.polygon(MASONRY,((0,1.99,2.94),(x1,1.99,z1),(x2,1.99,z2)))
+        for y in (-1.13,1.01,2.24):
+            m.tube(BRASS,(x1,y,z1),(x2,y,z2),.042,sides=6)
+    for x in (-2.00,0,2.0):
+        m.box(INDIGO,x,1.48,1.32,1.43,.16,1.73)
+        rosette(m,x,1.36,2.40,.30,PALE)
+    m.box(BASALT,0,1.98,0,6.98,.38,.30)
+    return m
+
+
+def eave_arch():
+    m=Mesh()
+    for x in (-3.13,3.13):
+        m.box(BASALT,x,0,-7.05,2.44,3.88,7.25)
+        m.box(MASONRY,x,0,.15,2.44,3.87,2.91)
+        m.box(LIMESTONE,x,0,2.48,2.65,4.13,.53)
+        m.box(BASALT,x,0,5.8,2.50,4.05,1.27)
+    for y in (-1.84,1.84):
+        arch(m,2.36,2.38,y,.65,.53,LIMESTONE,masonry=True)
+        arch(m,2.37,2.38,y+.21,.12,.09,BRASS)
+    arch(m,2.38,2.39,0,1.23,3.8,MASONRY)
+    m.box(MASONRY,0,0,5.76,9.07,4.2,1.29)
+    m.box(TRIM,0,0,6.97,9.24,4.44,.24)
+    m.box(BASALT,0,0,7.20,9.25,4.45,.28)
+    rosette(m,0,-2.203,6.48,.29,PALE)
+    return m
+
+
+def beacon_tower():
+    m=Mesh()
+    m.disc(LIMESTONE,(0,0,0),(0,0,.39),2.07,sides=12)
+    m.tube(MASONRY,(0,0,.4),(0,0,5.93),1.55,1.28,sides=12)
+    m.disc(LIMESTONE,(0,0,5.88),(0,0,6.2),1.76,sides=12)
+    m.disc(BASALT,(0,0,6.13),(0,0,6.47),1.69,sides=12)
+    for i in range(8):
+        a=i*tau/8
+        x,y=1.30*cos(a),1.30*sin(a)
+        pillar(m,x,y,2.48,6.44,.13)
+        m.tube(BRASS,(x,y,7.04),(1.30*cos(a+tau/8),1.30*sin(a+tau/8),7.04),.044,sides=6)
+    m.tube(PALE,(0,0,6.74),(0,0,8.61),.52,.32,sides=12)
+    m.disc(TRIM,(0,0,8.84),(0,0,9.01),1.78,sides=12)
+    m.tube(CROWN,(0,0,8.98),(0,0,10.35),1.70,.19,sides=12)
+    m.tube(BRASS,(0,0,10.26),(0,0,11.01),.11,.05,sides=8)
+    for y,z in ((-1.32,2.3),(-1.31,4.28)):
+        m.box(BASALT,0,y,z,.59,.24,1.04)
+        m.box(INDIGO,0,y-.12,z+.15,.36,.16,.67)
+    return m
+
+
+def hanging_pier():
+    m=Mesh()
+    m.tube(BASALT,(0,0,-7.6),(0,0,-.38),.97,1.82,sides=12)
+    m.disc(LIMESTONE,(0,0,-.90),(0,0,-.20),2.18,sides=12)
+    m.disc(DARK,(0,0,-4.44),(0,0,-3.88),1.31,sides=12)
+    m.disc(BRASS,(0,0,-4.18),(0,0,-3.98),1.39,sides=12)
+    m.disc(PALE,(0,0,-7.91),(0,0,-7.42),.36,sides=10)
+    return m
+
+
+def sky_inlay():
+    m=Mesh()
+    surface(m,SLATE,-1.70,-2.485,1.70,2.485,.022,.31)
+    for x in (-1.51,1.51):
+        m.trace(BRASS,(x,-2.50,.032),(x,2.50,.032),.047)
+        m.trace(PALE,(x*.92,-2.50,.033),(x*.92,2.50,.033),.020)
+    star(m,0,0,.040,.34,GILT,4)
+    return m
+
+
+def sky_orrery():
+    m=Mesh()
+    for z,r in ((0,2.46),(.20,2.30),(.36,1.91)):
+        m.disc(LIMESTONE,(0,0,z),(0,0,z+.20),r,sides=12)
+    for x in (-1.21,1.21):
+        pillar(m,x,0,3.75,radius=.25)
+    m.tube(BRASS,(-2.00,0,3.91),(2.00,0,3.91),.10,sides=10)
+    for index,(r,tilt) in enumerate(((2.76,.02),(2.25,.57),(1.51,1.02))):
+        pts=[(r*cos(i*tau/48),r*sin(i*tau/48)*sin(tilt),3.91+r*sin(i*tau/48)*cos(tilt))
+             for i in range(49)]
+        for i,(pa,pb) in enumerate(zip(pts,pts[1:])):
+            m.tube(BRASS if index!=1 else PALE,pa,pb,.079 if index==0 else .048,sides=6)
+            if i%12==0:
+                m.disc(GILT,add(pa,(0,0,-.10)),add(pa,(0,0,.12)),.14,sides=8)
+    m.disc(PALE,(0,0,3.60),(0,0,4.22),.38,sides=16)
+    return m
+
+
 MODELS = {
     "hvd_tallpier": tall_pier, "hvd_brokpier": broken_pier,
     "hvd_wallpanel": dado, "hvd_wallfoot": lambda: dado(False),
@@ -544,6 +771,15 @@ MODELS = {
     "hvd_hoist": service_hoist, "hvd_grille": lattice, "hvd_altarbase": altar,
     "hvd_pavilion": pavilion, "hvd_eddy": eddy, "hvd_mistbank": mist_bank,
     "hvd_landing": stone_landing,
+}
+
+SKY_MODELS = {
+    "hvd_wallchart": wall_chart, "hvd_lining": wall_lining, "hvd_lensrack": lens_rack,
+    "hvd_wallring": ring_handle, "hvd_bookpanel": lambda: concealed_panel(True),
+    "hvd_stonepanel": concealed_panel, "hvd_skyport": sky_portal,
+    "hvd_skyrail": sky_parapet, "hvd_skybay": sky_shelter, "hvd_hangpier": hanging_pier,
+    "hvd_skywalk": sky_inlay, "hvd_orrery": sky_orrery, "hvd_apsewall": apse_wall,
+    "hvd_eavearch": eave_arch, "hvd_beactower": beacon_tower,
 }
 
 

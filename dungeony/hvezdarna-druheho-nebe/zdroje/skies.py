@@ -40,6 +40,16 @@ def panorama(seed, upper, width=1024, height=512):
             rgb = (11 + 17 * horizon + cloud * 91 + galaxy * 83 + light,
                    14 + 22 * horizon + cloud * 86 + galaxy * 61 + light,
                    30 + 36 * horizon + cloud * 100 + galaxy * 112 + light)
+            if upper:
+                cloud_ridge = .211 + .018*sin(theta*4-1.1) + .014*cos(theta*9+.3)
+                lobes = .57 + .22*sin(theta*19+v*28) + .15*sin(theta*37-v*110)
+                banks = max(0.0,lobes)*exp(-((v-cloud_ridge)*33)**2)
+                ribbon = .343 + .055*sin(theta+2.8) + .028*sin(theta*2+.7)
+                veil = exp(-((v-ribbon)*23)**2)*(.68+.30*sin(theta*12-v*65))
+                edge = exp(-((v-ribbon+.008)*72)**2)*(.6+.4*cos(theta*5-1))
+                rgb = (12 + 17*horizon + banks*109 + veil*59 + edge*31 + light*.83,
+                       17 + 19*horizon + banks*117 + veil*94 + edge*34 + light*.83,
+                       40 + 27*horizon + banks*130 + veil*126 + edge*58 + light*.95)
             pixels.extend(max(0, min(255, int(channel + grain))) for channel in reversed(rgb))
     header = struct.pack("<BBBHHBHHHHBB", 0, 0, 2, 0, 0, 0, 0, 0, width, height, 24, 0)
     return header + pixels

@@ -46,7 +46,16 @@ BOOKS = {
     "hvd_book_halls": ("Předpis obsluhy clon", 2,
         "Při zkoušce filtru se od stěny ke stěně rozbíhá světlý pruh. Jakmile je na kameni vidět, "
         "ustup za mosaznou rysku a počkej na doznění výboje. Pojistka visí u vstupu do paprskové chodby "
-        "v dolní příjmové síni. Poškozenou západku pomůže uvolnit návod uložený v dolní dílně."),
+        "v dolní příjmové síni. Poškozenou západku pomůže uvolnit návod uložený v dolní dílně.\n\n"
+        "Správkyně zaznamenala drhnutí táhla za severní policí údržby. Hlava čepu vyčnívá vedle "
+        "poslední měřicí tabulky. Pokud v archivu ucítíte průvan, zkontrolujte nejdřív tu spáru."),
+    "hvd_book_study": ("Zápis z kalibrační komory", 9,
+        "Zkusila jsem na severní stěně srovnat obě štěrbiny. Mezi komorou a kopulí jsou dvě clony "
+        "na jediném převodu. Mosazný uzávěr u skříně je stáhne zároveň. Do kopule se pak vracím "
+        "za východním pracovním stolem a nemusím zpátky přes paprskovou chodbu.\n\n"
+        "Při kontrole prvního schodu jsem se vyhnula hlídce po spodním můstku. Za západní opěrou "
+        "visí protizávaží krytu. Před přechodem lávky vždy zajisti malou větrnou klapku. "
+        "Pod obloukem se proud stáčí do prostoru, kde člověk nemá kam uhnout."),
     "hvd_book_return": ("Návratový zápis správkyně", 10,
         "Sestoupila jsem servisní lávkou a vrátila se do dolní dílny. V ohlašovně mě při výměně "
         "směn minuli. Doufám, že Ithren zahlédne můj zápis dřív, než začne hledat příčinu opakovaných záblesků. "

@@ -46,6 +46,15 @@ void HVD_FillStores(int run)
     object guard = GetObjectByTag("hvd_guard_cache");
     HVD_Stock(guard, "hvd_glass");
     HVD_Stock(guard, "hvd_heal", 3);
+
+    object study = GetObjectByTag("hvd_study_cache");
+    HVD_Stock(study,"hvd_resist");
+    HVD_Stock(study,"hvd_glass");
+    HVD_Stock(study,"hvd_book_study");
+    HVD_Stock(GetObjectByTag("hvd_eave_cache"),"hvd_glass");
+    HVD_Stock(GetObjectByTag("hvd_eave_cache"),"hvd_heal");
+    HVD_Stock(GetObjectByTag("hvd_walk_cache"),"hvd_glass");
+    HVD_Stock(GetObjectByTag("hvd_walk_cache"),"hvd_heal",2);
 }
 
 void HVD_ResetStores()
@@ -57,6 +66,9 @@ void HVD_ResetStores()
     HVD_ClearStock("hvd_guard_cache");
     HVD_ClearStock("hvd_cloak_reward", TRUE);
     HVD_ClearStock("hvd_badge_reward", TRUE);
+    HVD_ClearStock("hvd_study_cache");
+    HVD_ClearStock("hvd_eave_cache");
+    HVD_ClearStock("hvd_walk_cache");
     DelayCommand(0.15, HVD_FillStores(HVD_Run()));
 }
 

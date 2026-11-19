@@ -9,12 +9,13 @@ import subprocess
 from tempfile import TemporaryDirectory
 import uuid
 
-from architecture import MODELS as ARCHITECTURE, architecture_textures
+from architecture import MODELS as ARCHITECTURE, SKY_MODELS, architecture_textures
 from art import assets
 from aurora import GameResources, Record, VOID, bite, dword, erf_encode, gff_encode, integer, loc, lst, ref, string, word
 from collision import FOOTPRINTS, walkmesh
 from content import creatures, factions, hero, items
 from dressing import NAMES, dress_areas
+from flights import tile_assets
 from layout import areas
 from skies import sky_assets
 from world import Tileset, object_fields
@@ -41,7 +42,7 @@ def metadata(zones):
     start = next(marker for marker in zones[0].waypoints if marker.value("Tag") == "hvd_start")
     return Record(
         Mod_ID=(VOID, uuid.uuid5(uuid.NAMESPACE_URL, "local:nwn/hvezdarna-druheho-nebe").bytes),
-        Mod_Creator_ID=integer(0), Mod_Version=dword(6), Expansion_Pack=word(3),
+        Mod_Creator_ID=integer(0), Mod_Version=dword(7), Expansion_Pack=word(3),
         Mod_Name=loc("Hvězdárna druhého nebe"),
         Mod_Tag=string("HVEZDARNA"), Mod_Hak=string(""),
         Mod_HakList=lst([Record(8, Mod_Hak=string(HAK_NAME))]), Mod_CustomTlk=string(""),
@@ -98,17 +99,21 @@ def build(game_path, compiler, directory, scripts):
     game = GameResources(game_path)
     resources = {}
     prototypes = items()
-    appearances, art = assets(game, {name: (NAMES[name], mesh) for name, mesh in ARCHITECTURE.items()})
+    appearances, art = assets(game, {name: (NAMES[name], mesh) for name, mesh in ARCHITECTURE.items()},
+                              {name: (NAMES[name], mesh) for name, mesh in SKY_MODELS.items()})
     art.update({f"{name}.pwk": walkmesh(name) for name in FOOTPRINTS})
     art.update(architecture_textures())
     sky_ids, skies = sky_assets(game)
     art.update(skies)
-    zones = areas(appearances)
+    flight, paving, stairs = tile_assets(game)
+    art.update(stairs)
+    zones = areas(appearances, flight)
     dress_areas(zones)
     for zone in zones:
         if zone.lighting["SkyBox"][1]:
-            zone.lighting["SkyBox"] = bite(sky_ids["upper" if zone.tileset == "tcm02" else "rim"])
-    tiles = {key: Tileset(game, key) for key in {area.tileset for area in zones}}
+            zone.lighting["SkyBox"] = bite(sky_ids["rim" if zone.key in ("hvd_rim", "hvd_works") else "upper"])
+    tiles = {key: Tileset(game, key, art.get(f"{key}.set"), paving if key == "tcm02" else None)
+             for key in {area.tileset for area in zones}}
     for name, creature in creatures().items():
         resources[f"{name}.utc"] = gff_encode("UTC", creature, TEXT_ENCODING)
     for name, item in prototypes.items():
@@ -136,6 +141,8 @@ def build(game_path, compiler, directory, scripts):
         ("hvd_gateway","Světlo druhého nebe"), ("hvd_needle","Mosazný ukazatel"),
         ("hvd_tube","Objektiv druhého nebe"),
         ("hvd_mirror_set","Zrcadlo zasazené v patici"),
+        ("hvd_bookpanel","Zadní police archivu"),
+        ("hvd_stonepanel","Kamenný kryt"),
     ):
         appearance = appearances["hvd_refractor" if key == "hvd_tube" else key]
         resources[f"{key}.utp"] = gff_encode("UTP",visual_blueprint(key,label,appearance),TEXT_ENCODING)
