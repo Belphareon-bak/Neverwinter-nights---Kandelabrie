@@ -80,7 +80,8 @@ void HVD_PlacePart(string part, string resource, string anchor, float heading)
     float facing = GetFacing(mount) + heading;
     if (facing < 0.0) facing += 360.0;
     if (facing >= 360.0) facing -= 360.0;
-    if (GetIsObjectValid(previous) && fabs(GetFacing(previous) - facing) < 0.1) return;
+    if (GetIsObjectValid(previous) && GetResRef(previous) == resource &&
+        fabs(GetFacing(previous) - facing) < 0.1) return;
     location position = Location(GetArea(mount), GetPosition(mount), facing);
     object replacement = CreateObject(OBJECT_TYPE_PLACEABLE, resource, position);
     if (!GetIsObjectValid(replacement)) return;
@@ -107,7 +108,8 @@ void HVD_Reveal(string marker)
     location entrance = GetLocation(point);
     ApplyEffectAtLocation(DURATION_TYPE_INSTANT, EffectVisualEffect(VFX_FNF_MYSTICAL_EXPLOSION, FALSE, 0.85),
                           entrance);
-    object portal = CreateObject(OBJECT_TYPE_PLACEABLE, "hvd_gateway", entrance);
+    string resource = marker == "hvd_final_gate" ? "hvd_zenith" : "hvd_gateway";
+    object portal = CreateObject(OBJECT_TYPE_PLACEABLE, resource, entrance);
     if (GetIsObjectValid(portal)) SetLocalObject(module, marker, portal);
 }
 
@@ -172,24 +174,72 @@ int HVD_Order(int previous)
     return 123;
 }
 
+int HVD_LensOrder()
+{
+    int west = Random(3) + 1;
+    int center = Random(2) + 1;
+    if (center >= west) ++center;
+    return west * 100 + center * 10 + (6 - west - center);
+}
+
+int HVD_ShutterSign(int order)
+{
+    return 10 - HVD_Digit(order, 1) - HVD_Digit(order, 2) - HVD_Digit(order, 3);
+}
+
+string HVD_FilterName(int index)
+{
+    if (index == 1) return "Srpek";
+    if (index == 2) return "Hvězda";
+    return "Slunce";
+}
+
 string HVD_Clue(int kind)
 {
     object module = HVD_Module();
-    int solution = GetLocalInt(module, "hvd_order");
+    int signs = GetLocalInt(module, "hvd_order");
+    int filters = GetLocalInt(module, "hvd_lens_order");
+    int west = HVD_Digit(signs, 1);
+    int shutter = HVD_ShutterSign(signs);
     if (kind == 1)
     {
-        int absent = 10 - HVD_Digit(solution, 1) - HVD_Digit(solution, 2) - HVD_Digit(solution, 3);
-        return "Pečeť mimo službu – " + HVD_Sign(absent) + ". Všechny ostatní stoupaly.";
+        int low = west;
+        int high = shutter;
+        if (low > high)
+        {
+            low = shutter;
+            high = west;
+        }
+        return "Z dvojice " + HVD_Sign(low) + " a " + HVD_Sign(high) +
+            " šla jedna raznice do závory a druhá do jednoho z krajních sloupů. "
+            + "Pečeť se znakem " + HVD_Sign(shutter) + " nesmí pod clonu se znakem " +
+            HVD_FilterName(HVD_Digit(filters,1)) + ". Při poslední zkoušce by jí začalo měknout plnivo.";
     }
-    int first = GetLocalInt(module, "hvd_pair") + 1;
-    int lower = HVD_Digit(solution, first);
-    int upper = HVD_Digit(solution, first + 1);
-    if (kind == 2) return HVD_Sign(upper) + " patří bezprostředně nad pečeť " + HVD_Sign(lower) + ".";
-    int anchor = HVD_Digit(solution, first + GetLocalInt(module, "hvd_anchor"));
-    int other = HVD_Digit(solution, 5 - first * 2);
-    string comparison = " výše než pečeť ";
-    if (first == 2) comparison = " níže než pečeť ";
-    return HVD_Sign(other) + " patří" + comparison + HVD_Sign(anchor) + ".";
+    string center = HVD_Sign(HVD_Digit(signs, 2));
+    if (kind == 2)
+        return "Vedle sebe svítily značky " + center + " a " + HVD_Sign(HVD_Digit(signs, 3)) +
+            ". Značka " + center + " byla západněji a nad její raznicí svítila clona se znakem " +
+            HVD_FilterName(HVD_Digit(filters, 2)) + ".";
+    string outer = HVD_FilterName(HVD_Digit(filters, 1));
+    return "Na skle se znakem " + outer + " zůstal otisk jedné ze dvou raznic uvedených v rozpisu z noclehu. "
+        + "Tenhle filtr byl západněji než sklo se znakem " + HVD_FilterName(HVD_Digit(filters, 3)) + ".";
+}
+
+string HVD_TestGuide()
+{
+    object module = HVD_Module();
+    int order = GetLocalInt(module, "hvd_order");
+    int filters = GetLocalInt(module, "hvd_lens_order");
+    return "ZKUŠEBNÍ LIST · Výprava " + IntToString(HVD_Run()) + "\n\n"
+        + "Vezmi Kotvu v dílnách, Křídlo na schodech a Kopí s Lucernou na ochozech. "
+        + "Otevři každý sloup a přesuň do něj příslušnou pečeť z inventáře. "
+        + "Páčkou na boku sloupu nastav symbol, který má svítit na čelním skle.\n\n"
+        + "Západní sloup: " + HVD_Sign(HVD_Digit(order,1)) + " · " + HVD_FilterName(HVD_Digit(filters,1)) + "\n"
+        + "Střední sloup: " + HVD_Sign(HVD_Digit(order,2)) + " · " + HVD_FilterName(HVD_Digit(filters,2)) + "\n"
+        + "Východní sloup: " + HVD_Sign(HVD_Digit(order,3)) + " · " + HVD_FilterName(HVD_Digit(filters,3)) + "\n"
+        + "Závora u spouště: " + HVD_Sign(HVD_ShutterSign(order)) + "\n\n"
+        + "Zatáhni za Spoušť tří paprsků a počkej, až se na schodišti spojí světlo. "
+        + "Potom vystup do zjevené brány. Po nové výpravě otevři pouzdro pro nový list.";
 }
 
 string HVD_SealKey(int sign)
@@ -229,6 +279,14 @@ int HVD_ValidSeal(object item, int sign)
         GetLocalInt(item, "hvd_serial") == GetLocalInt(HVD_Module(), HVD_SealKey(sign));
 }
 
+int HVD_SealSign(object item)
+{
+    if (GetStringLeft(GetResRef(item),8) != "hvd_seal") return 0;
+    int sign = StringToInt(GetStringRight(GetResRef(item),1));
+    if (HVD_ValidSeal(item,sign)) return sign;
+    return 0;
+}
+
 void HVD_ClearTokens(object player)
 {
     object item = GetFirstItemInInventory(player);
@@ -247,8 +305,24 @@ void HVD_ClearTokens(object player)
     }
 }
 
-object HVD_HeldSeal(int sign)
+object HVD_GateSocket(int slot)
 {
+    return GetObjectByTag("hvd_socket_" + IntToString(slot));
+}
+
+object HVD_ActiveSeal(int sign)
+{
+    int slot;
+    for (slot = 1; slot <= 4; ++slot)
+    {
+        object chest = HVD_GateSocket(slot);
+        object token = GetFirstItemInInventory(chest);
+        while (GetIsObjectValid(token))
+        {
+            if (HVD_ValidSeal(token,sign)) return token;
+            token = GetNextItemInInventory(chest);
+        }
+    }
     object player = GetFirstPC();
     while (GetIsObjectValid(player))
     {
@@ -272,9 +346,9 @@ void HVD_Seal(object player, int sign)
         SendMessageToPC(player, "Pečeť ještě střeží její hlídka. Zpřístupní se po jejím poražení.");
         return;
     }
-    if (GetIsObjectValid(HVD_HeldSeal(sign)))
+    if (GetIsObjectValid(HVD_ActiveSeal(sign)))
     {
-        SendMessageToPC(player, "Pečeť již drží někdo z výpravy.");
+        SendMessageToPC(player, "Pečeť už je u člena výpravy nebo v předbraní.");
         return;
     }
     object item = CreateItemOnObject(key, player);
@@ -292,42 +366,104 @@ void HVD_Seal(object player, int sign)
     SendMessageToPC(player, "Získána pečeť " + HVD_Sign(sign) + ".");
 }
 
-void HVD_Socket(object player, int slot, int sign)
+int HVD_SocketContents(int slot)
 {
-    object module = HVD_Module();
-    if (GetLocalInt(module, "hvd_gate_open")) return;
-    if (slot < 1 || slot > 3 || (sign && !GetIsObjectValid(HVD_HeldSeal(sign)))) return;
-    SetLocalInt(module, "hvd_slot" + IntToString(slot), sign);
-    HVD_AreaMessage(GetArea(player), "Patice " + IntToString(slot) + " – " + HVD_Sign(sign) + ".");
-    object marker = GetObjectByTag("hvd_socket_" + IntToString(slot));
-    if (GetIsObjectValid(marker))
-        ApplyEffectAtLocation(DURATION_TYPE_INSTANT, EffectVisualEffect(VFX_IMP_HOLY_AID), GetLocation(marker));
-}
-
-int HVD_SealInSocket(int sign)
-{
-    object module = HVD_Module();
-    int slot;
-    for (slot = 1; slot <= 3; ++slot)
+    object chest = HVD_GateSocket(slot);
+    object token = GetFirstItemInInventory(chest);
+    int contents;
+    while (GetIsObjectValid(token))
     {
-        if (GetLocalInt(module, "hvd_slot" + IntToString(slot)) == sign) return TRUE;
+        int sign = HVD_SealSign(token);
+        if (sign && contents) return -1;
+        if (sign) contents = sign;
+        token = GetNextItemInInventory(chest);
     }
-    return FALSE;
+    return contents;
 }
 
-void HVD_Cycle(object player, int slot)
+void HVD_ShowSeal(int slot)
 {
-    int current = GetLocalInt(HVD_Module(), "hvd_slot" + IntToString(slot));
-    int offset;
-    for (offset = 1; offset <= 5; ++offset)
+    string suffix = IntToString(slot);
+    string part = "hvd_seal_display" + suffix;
+    int sign = HVD_SocketContents(slot);
+    if (sign > 0)
+        HVD_PlacePart(part,"hvd_stamp" + IntToString(sign),"hvd_socket_" + suffix,0.0);
+    else HVD_Extinguish(part);
+    if (slot == 4)
+        HVD_PlacePart("hvd_clamp_display",sign > 0 ? "hvd_clamp_up" : "hvd_clamp_down","hvd_socket_4",0.0);
+}
+
+int HVD_FilterAt(int slot)
+{
+    int index = GetLocalInt(HVD_Module(),"hvd_filter_state" + IntToString(slot));
+    if (!index) return 1;
+    return index;
+}
+
+void HVD_ShowFilter(int slot)
+{
+    string suffix = IntToString(slot);
+    HVD_PlacePart("hvd_lens_display" + suffix,"hvd_lens" + IntToString(HVD_FilterAt(slot)),
+                  "hvd_socket_" + suffix,0.0);
+}
+
+void HVD_RotateFilter(object player,int slot)
+{
+    object module = HVD_Module();
+    if (GetLocalInt(module,"hvd_gate_open"))
     {
-        int sign = (current + offset) % 5;
-        if (!sign || (!HVD_SealInSocket(sign) && GetIsObjectValid(HVD_HeldSeal(sign))))
+        SendMessageToPC(player,"Soustava právě drží otevřenou bránu.");
+        return;
+    }
+    int index = HVD_FilterAt(slot) % 3 + 1;
+    SetLocalInt(module,"hvd_filter_state" + IntToString(slot),index);
+    HVD_ShowFilter(slot);
+    SendMessageToPC(player,"V okruží zaklapla clona se znakem " + HVD_FilterName(index) + ".");
+}
+
+int HVD_GateContents()
+{
+    int code;
+    int slot;
+    for (slot = 1; slot <= 4; ++slot)
+    {
+        int sign = HVD_SocketContents(slot);
+        if (sign < 1) return 0;
+        code = code * 10 + sign;
+    }
+    return code;
+}
+
+int HVD_FilterCode()
+{
+    return HVD_FilterAt(1) * 100 + HVD_FilterAt(2) * 10 + HVD_FilterAt(3);
+}
+
+void HVD_ResetGate()
+{
+    object module = HVD_Module();
+    DeleteLocalInt(module,"hvd_gate_attempt");
+    int slot;
+    for (slot = 1; slot <= 4; ++slot)
+    {
+        string suffix = IntToString(slot);
+        object chest = HVD_GateSocket(slot);
+        object token = GetFirstItemInInventory(chest);
+        while (GetIsObjectValid(token))
         {
-            HVD_Socket(player, slot, sign);
-            return;
+            object next = GetNextItemInInventory(chest);
+            if (GetStringLeft(GetResRef(token),8) == "hvd_seal") DestroyObject(token);
+            token = next;
+        }
+        HVD_Extinguish("hvd_seal_display" + suffix);
+        if (slot <= 3)
+        {
+            HVD_Extinguish("hvd_ray_display" + suffix);
+            DeleteLocalInt(module,"hvd_filter_state" + suffix);
+            HVD_ShowFilter(slot);
         }
     }
+    HVD_ShowSeal(4);
 }
 
 void HVD_Recap(object player)
@@ -338,12 +474,10 @@ void HVD_Recap(object player)
     {
         if (GetLocalInt(module, "hvd_clue" + IntToString(step)))
             SendMessageToPC(player, HVD_Clue(step));
-        SendMessageToPC(player, "Patice " + IntToString(step) + " – " +
-            HVD_Sign(GetLocalInt(module, "hvd_slot" + IntToString(step))) + ".");
     }
     for (step = 1; step <= 4; ++step)
     {
-        if (GetLocalInt(module, "hvd_earned" + IntToString(step)) && !GetIsObjectValid(HVD_HeldSeal(step)))
+        if (GetLocalInt(module, "hvd_earned" + IntToString(step)) && !GetIsObjectValid(HVD_ActiveSeal(step)))
             HVD_Seal(player, step);
     }
 }
@@ -420,8 +554,7 @@ void HVD_NewRun()
     SetCampaignInt("hvezdarna_nebe", "last_run", run);
     SetLocalInt(module, "hvd_run", run);
     SetLocalInt(module, "hvd_order", order);
-    SetLocalInt(module, "hvd_pair", Random(2));
-    SetLocalInt(module, "hvd_anchor", Random(2));
+    SetLocalInt(module, "hvd_lens_order", HVD_LensOrder());
     object player = GetFirstPC();
     while (GetIsObjectValid(player))
     {
@@ -446,13 +579,13 @@ void HVD_NewRun()
         DeleteLocalInt(module, "hvd_ready" + number);
         DeleteLocalInt(module, "hvd_earned" + number);
         DeleteLocalInt(module, "hvd_clue" + number);
-        DeleteLocalInt(module, "hvd_slot" + number);
         DeleteLocalInt(module, HVD_SealKey(index));
     }
     HVD_Extinguish("hvd_optic_gate");
     HVD_Extinguish("hvd_final_gate");
     HVD_Extinguish("hvd_summit_exit");
     HVD_Extinguish("hvd_socket_mirror");
+    HVD_ResetGate();
     HVD_TurnOptics();
     HVD_ResetHidden();
     HVD_ResetBoss();

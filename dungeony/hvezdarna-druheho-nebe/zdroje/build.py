@@ -16,9 +16,10 @@ from collision import FOOTPRINTS, walkmesh
 from content import creatures, factions, hero, items
 from dressing import NAMES, dress_areas
 from flights import tile_assets
+from gateart import gate_models, seal_assets
 from layout import areas
 from skies import sky_assets
-from world import Tileset, object_fields
+from world import Tileset, object_fields, variables
 
 
 HERE = Path(__file__).resolve().parent
@@ -28,7 +29,7 @@ HAK_NAME = "hvd_observatory"
 TEXT_ENCODING = "cp1250"
 
 
-def metadata(zones):
+def metadata(zones, test_guide):
     scripts = {
         "Mod_OnModLoad": "hvd_load",
         "Mod_OnClientEntr": "hvd_client",
@@ -40,14 +41,14 @@ def metadata(zones):
                   "Mod_OnUsrDefined", "Mod_OnPlrDying", "Mod_OnPlrLvlUp", "Mod_OnPlrRest", "Mod_OnActvtItem"):
         scripts[event] = ""
     start = next(marker for marker in zones[0].waypoints if marker.value("Tag") == "hvd_start")
-    return Record(
+    info = Record(
         Mod_ID=(VOID, uuid.uuid5(uuid.NAMESPACE_URL, "local:nwn/hvezdarna-druheho-nebe").bytes),
-        Mod_Creator_ID=integer(0), Mod_Version=dword(7), Expansion_Pack=word(3),
+        Mod_Creator_ID=integer(0), Mod_Version=dword(8), Expansion_Pack=word(3),
         Mod_Name=loc("Hvězdárna druhého nebe"),
         Mod_Tag=string("HVEZDARNA"), Mod_Hak=string(""),
         Mod_HakList=lst([Record(8, Mod_Hak=string(HAK_NAME))]), Mod_CustomTlk=string(""),
         Mod_Description=loc("Horská výprava pro úrovně 35–40. Větrní elementálové, Schody do nebe, "
-                            "proměnlivá trojice pečetí a poslední služba solara Ithrena. "
+                            "proměnlivá soustava čtyř pečetí a poslední služba solara Ithrena. "
                             "Pro samostatnou zkoušku se hodí Radan Hvězdář (38)."),
         Mod_IsSaveGame=bite(0), Mod_Entry_Area=ref("hvd_rim"),
         Mod_Entry_X=start.fields["XPosition"], Mod_Entry_Y=start.fields["YPosition"],
@@ -59,6 +60,9 @@ def metadata(zones):
         Mod_Area_list=lst([Record(6, Area_Name=ref(zone.key)) for zone in zones]),
         **{event: ref(script) for event, script in scripts.items()},
     )
+    if test_guide:
+        info.fields["VarTable"] = variables(hvd_test_guide=1)
+    return info
 
 
 def compile_scripts(resources, game, compiler, scripts):
@@ -95,19 +99,22 @@ def visual_blueprint(key, label, appearance):
     return Record(PaletteID=bite(0), **fields)
 
 
-def build(game_path, compiler, directory, scripts):
+def build(game_path, compiler, directory, scripts, *, test_guide=False):
     game = GameResources(game_path)
     resources = {}
-    prototypes = items()
+    prototypes = items(test_guide=test_guide)
+    gate_scenery, gate_visuals = gate_models()
+    additions = {name: (NAMES[name], mesh) for name, mesh in SKY_MODELS.items()}
     appearances, art = assets(game, {name: (NAMES[name], mesh) for name, mesh in ARCHITECTURE.items()},
-                              {name: (NAMES[name], mesh) for name, mesh in SKY_MODELS.items()})
+                              additions | gate_scenery | gate_visuals)
+    art.update(seal_assets())
     art.update({f"{name}.pwk": walkmesh(name) for name in FOOTPRINTS})
     art.update(architecture_textures())
     sky_ids, skies = sky_assets(game)
     art.update(skies)
     flight, paving, stairs = tile_assets(game)
     art.update(stairs)
-    zones = areas(appearances, flight)
+    zones = areas(appearances, flight, test_guide=test_guide)
     dress_areas(zones)
     for zone in zones:
         if zone.lighting["SkyBox"][1]:
@@ -135,15 +142,16 @@ def build(game_path, compiler, directory, scripts):
         for extension, record in zone.records(tiles[zone.tileset]).items():
             resources[f"{zone.key}.{extension}"] = gff_encode(extension, record, TEXT_ENCODING)
 
-    resources["module.ifo"] = gff_encode("IFO", metadata(zones), TEXT_ENCODING)
+    resources["module.ifo"] = gff_encode("IFO", metadata(zones, test_guide), TEXT_ENCODING)
     resources["repute.fac"] = gff_encode("FAC", factions(), TEXT_ENCODING)
-    for key, label in (
+    visual_labels = (
         ("hvd_gateway","Světlo druhého nebe"), ("hvd_needle","Mosazný ukazatel"),
         ("hvd_tube","Objektiv druhého nebe"),
         ("hvd_mirror_set","Zrcadlo zasazené v patici"),
         ("hvd_bookpanel","Zadní police archivu"),
         ("hvd_stonepanel","Kamenný kryt"),
-    ):
+    ) + tuple((key, label) for key, (label, _) in gate_visuals.items())
+    for key, label in visual_labels:
         appearance = appearances["hvd_refractor" if key == "hvd_tube" else key]
         resources[f"{key}.utp"] = gff_encode("UTP",visual_blueprint(key,label,appearance),TEXT_ENCODING)
     compile_scripts(resources, game_path, compiler, scripts)
@@ -166,8 +174,11 @@ def main():
     parser.add_argument("--compiler", required=True, type=Path, help="Linux nwn_script_comp compiler")
     parser.add_argument("--scripts", type=Path, default=HERE / "scripts", help="Directory containing the NWScript sources")
     parser.add_argument("--output", type=Path, default=HERE, help="Directory for the module and character")
+    parser.add_argument("--test-guide", action="store_true",
+                        help="Add a book with the current gate solution to the test chest")
     args = parser.parse_args()
-    build(args.game.resolve(), args.compiler.resolve(), args.output.resolve(), args.scripts.resolve())
+    build(args.game.resolve(), args.compiler.resolve(), args.output.resolve(), args.scripts.resolve(),
+          test_guide=args.test_guide)
 
 
 if __name__ == "__main__":

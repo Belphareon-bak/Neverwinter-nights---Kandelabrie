@@ -1,7 +1,8 @@
 """The observatory, the upper terraces and their concealed branches."""
 
-from aurora import bite, flt, integer
-from world import Area, color
+from aurora import bite, flt, integer, ref
+from gateart import GATE, SHUTTER, SOCKETS
+from world import Area, color, variables
 
 
 def scene(art, key, title, tileset, size, rooms, purpose, *,
@@ -331,41 +332,51 @@ def walks(art):
     return a
 
 
-def gate(art, flight):
+def gate(art, flight, *, test_guide):
     a = scene(art, "hvd_gate", "Předbraní Horních sfér", "tcm02", (7, 7),
               [(1, 1, 6, 4), (2, 4, 5, 6), (0, 4, 7, 5)],
-              "Poutní schodiště, trojice patic pod obřadním obloukem a malá strážnice při zkratce.",
+              "Optický dvůr se třemi sloupy, závorou a schodištěm k Bráně tří paprsků.",
               ambient=(111, 124, 172), diffuse=(204, 214, 251), fog=1, sky=4, music=27, wind=30,
               rises=(5,), stair_columns={4: (3,)}, tiles={(3,4): (flight,0)})
     a.point("hvd_gate_in", 35, 16.3, 90)
     a.point("hvd_gate_top", 35, 50.5, 270)
     a.point("hvd_gate_short", 52, 22.0, 180, "Odpočívárna a servisní zkratka")
-    a.point("hvd_final_gate", 35, 53.3, 90)
+    a.point("hvd_final_gate", *GATE, 90)
     a.transition("Zpět na visuté ochozy", "hvt_gate_walks", (32, 10, 38, 13), "hvd_walks_gate")
     a.transition("Sestup do kopule", "hvt_gate_dome", (54.9, 19.65, 57.4, 24.35),
                  "hvd_dome_short", flag="hvd_shortcut")
     a.transition("Vstoupit na Poslední stupeň", "hvt_gate_top", (32, 53, 38, 57), "hvd_top_in",
                  require="hvd_gate_open")
     cloudbed(a, 35, 38)
-    feature(a, "hvd_gatearch", "Brána tří pečetí", 35, 53.3, tag="hvd_stone_frame")
-    feature(a, "hvd_starmap", "Rozeta pod třemi paticemi", 35, 29)
+    feature(a, "hvd_gatearch", "Kamenné ostění Brány tří paprsků", *GATE, tag="hvd_stone_frame")
+    feature(a, "hvd_gateinlay", "Vedení optické soustavy", 35, 29.6)
     feature(a, "hvd_cloister", "Ostění servisního sestupu", 56.15, 22, bearing=90)
-    for i, (x, y) in enumerate(((27.8,28.2),(31.2,32.2),(41.0,29.15)), 1):
-        feature(a, "hvd_sealstand", f"{('I', 'II', 'III')[i-1]} · Patice pečeti", x, y,
-                action="socket", slot=i, tag=f"hvd_socket_{i}")
-        feature(a, f"hvd_sector{i}", "Podlahový znak stupně", x, y - 1.75)
-    feature(a, "hvd_dial", "Ověřit tři patice", 39.35, 36.1, action="gate", tag="hvd_gate_control")
+    positions = (*SOCKETS, SHUTTER)
+    names = ("Západní sloup", "Střední sloup", "Východní sloup", "Závora převodu")
+    for slot, ((x, y), name) in enumerate(zip(positions, names), 1):
+        a.stash(a.art["hvd_gate_pod" if slot <= 3 else "hvd_clamp_pod"], name, x, y, f"hvd_socket_{slot}",
+                text="Otevři a přesuň do patice jednu pečeť z vlastní výpravy. Pečeť můžeš opět vyjmout.")
+        a.places[-1].fields.update(VarTable=variables(slot=slot), OnInvDisturbed=ref("hvd_slot_inv"))
+        if slot <= 3:
+            feature(a, "hvd_filter_arm", f"{name} · páčka clony", x + .82, y - .12, z=a.z_at(y) + .38,
+                    action="gate_filter", slot=slot, tag=f"hvd_filter_{slot}",
+                    text="Přestavuje clonu mezi Srpkem, Hvězdou a Sluncem. Znak se ukáže na čele sloupu.")
+    feature(a, "hvd_gatepull", "Spoušť tří paprsků", 37.05, 37.45, action="gate", tag="hvd_gate_control",
+            text="Spojí světlo tří seřízených sloupů, pokud správná pečeť drží závoru převodu.")
     a.prop(240, "Reliéf přísahy", 46.0, 19.1)
     a.prop(97, "Přijímací stůl písaře", 44.0, 20.7, bearing=0)
     a.find("hvd_book_gate", 44.25, 20.34, height=.88, clue=3)
     feature(a, "hvd_dial", "Mechanismus výměny ztracených pečetí", 23.9, 21.05,
             action="recap", tag="hvd_recap")
+    if test_guide:
+        a.stash(7, "TEST · Pouzdro s řešením brány", 23.55, 17.50, "hvd_test_case",
+                text="Zkušební list obsahuje přesnou sestavu pro tuto výpravu.")
     a.prop(58, "Odpočinek ve strážnici", 54, 16, action="rest")
     a.stash(8, "Schránka poslední hlídky", 52, 34.4, "hvd_guard_cache")
     feature(a, "hvd_dial", "Zakrytí proudu ve strážnici", 48.1, 30.6, action="disarm",
             flag="hvd_chest_off", skill=15, tag="hvd_guard_lock")
     a.trap("Závora světla ve strážnici", "hvd_gatechest", (50, 31, 55, 36), hazard=2, flag="hvd_chest_off")
-    a.trap("Výboj tří patic", "hvd_gatespark", (27, 24, 43, 36), hazard=0)
+    a.trap("Výboj optických sloupů", "hvd_gatespark", (26, 24, 44, 36), hazard=0)
     fixture(a, [(453, "Socha navracejícího světlo", 28.9, 53.0, 178),
                 (453, "Socha vítající příchozí", 41.1, 53.0, 182),
                 (125, "Znak nebeské hlídky", 27.3, 55.5, 0), (126, "Znak návratu", 42.7, 55.5, 0),
@@ -418,10 +429,10 @@ def summit(art, flight):
     return a
 
 
-def areas(art, flight):
+def areas(art, flight, *, test_guide=False):
     zones = [
         mountain(art), halls(art), workshops(art), dome(art), steps(art, flight),
-        walks(art), gate(art, flight), summit(art, flight), study(art), eave(art, flight),
+        walks(art), gate(art, flight, test_guide=test_guide), summit(art, flight), study(art), eave(art, flight),
     ]
     for area in zones:
         for trigger in area.triggers:

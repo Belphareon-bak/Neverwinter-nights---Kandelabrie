@@ -64,35 +64,81 @@ void HVD_Trap(object trigger, int kind)
     DelayCommand(8.5, DeleteLocalInt(trigger, "hvd_busy"));
 }
 
+int HVD_CurrentProjection(int run, int attempt)
+{
+    return HVD_Run() == run && GetLocalInt(HVD_Module(),"hvd_gate_attempt") == attempt;
+}
+
+void HVD_EndProjection(int run, int attempt)
+{
+    if (!HVD_CurrentProjection(run,attempt)) return;
+    int slot;
+    for (slot = 1; slot <= 3; ++slot)
+        HVD_Extinguish("hvd_ray_display" + IntToString(slot));
+}
+
+void HVD_ResolveGate(int run, int attempt, int seals, int lenses)
+{
+    if (!HVD_CurrentProjection(run,attempt)) return;
+    object module = HVD_Module();
+    object area = GetObjectByTag("hvd_gate");
+    if (HVD_GateContents() != seals || HVD_FilterCode() != lenses)
+    {
+        HVD_EndProjection(run,attempt);
+        HVD_AreaMessage(area,"Soustava se při měření pohnula. Až bude seřízená, použij spoušť znovu.");
+        return;
+    }
+    int order = GetLocalInt(module,"hvd_order");
+    if (seals != 10 * order + HVD_ShutterSign(order) ||
+        lenses != GetLocalInt(module,"hvd_lens_order"))
+    {
+        HVD_EndProjection(run,attempt);
+        HVD_AreaMessage(area,"Světlo se v ostění rozlomilo. Srovnej stopy o pečetích se zápisem o clonách.");
+        HVD_Trap(GetObjectByTag("hvd_gatespark"),2);
+        return;
+    }
+    HVD_Reveal("hvd_final_gate");
+    if (!GetIsObjectValid(GetLocalObject(module,"hvd_final_gate"))) return;
+    SetLocalInt(module,"hvd_gate_open",TRUE);
+    HVD_AreaMessage(area,"Tři paprsky se spojily. Brána na schodech se otevřela.");
+}
+
 void HVD_OpenGate(object player)
 {
     object module = HVD_Module();
-    if (GetLocalInt(module, "hvd_gate_open"))
+    if (GetLocalInt(module,"hvd_gate_open"))
     {
-        SendMessageToPC(player, "Brána už je otevřená. Za ní vede poslední stupeň.");
+        SendMessageToPC(player,"Brána je otevřená. Odtud už vede schodiště k poslední hlídce.");
         return;
     }
+    int seals = HVD_GateContents();
+    if (!seals)
+    {
+        SendMessageToPC(player,"Převod potřebuje přesně jednu platnou pečeť v každém sloupu i v závoře.");
+        return;
+    }
+    int west = HVD_FilterAt(1);
+    int center = HVD_FilterAt(2);
+    int east = HVD_FilterAt(3);
+    if (west == center || west == east || center == east)
+    {
+        SendMessageToPC(player,"V každém sloupu musí svítit jiný znak. Seřiď clony páčkami na bocích.");
+        return;
+    }
+    int attempt = GetLocalInt(module,"hvd_gate_attempt") + 1;
+    SetLocalInt(module,"hvd_gate_attempt",attempt);
     int slot;
-    int code;
     for (slot = 1; slot <= 3; ++slot)
     {
-        int sign = GetLocalInt(module, "hvd_slot" + IntToString(slot));
-        if (!sign || !GetIsObjectValid(HVD_HeldSeal(sign)))
-        {
-            SendMessageToPC(player, "Každá patice potřebuje jednu pečeť z této výpravy. U rozpisu lze znovu vydat ztracené.");
-            return;
-        }
-        code = code * 10 + sign;
+        string suffix = IntToString(slot);
+        HVD_ShowSeal(slot);
+        HVD_PlacePart("hvd_ray_display" + suffix,"hvd_ray" + suffix + IntToString(HVD_FilterAt(slot)),
+                      "hvd_final_gate",0.0);
     }
-    if (code != GetLocalInt(module, "hvd_order"))
-    {
-        HVD_AreaMessage(GetArea(player), "Brána sestavu odmítla. Znovu přečti stopy od noclehu k reliéfu.");
-        HVD_Trap(GetObjectByTag("hvd_gatespark"), 2);
-        return;
-    }
-    SetLocalInt(module, "hvd_gate_open", TRUE);
-    HVD_Reveal("hvd_final_gate");
-    HVD_AreaMessage(GetArea(player), "Tři patice zazářily. Světlo se spojilo v bránu na vrcholu schodů.");
+    HVD_ShowSeal(4);
+    HVD_AreaMessage(GetArea(player),"Čočky zachytily světlo. Paprsky stoupají po schodech.");
+    DelayCommand(1.8,HVD_ResolveGate(HVD_Run(),attempt,seals,HVD_FilterCode()));
+    DelayCommand(5.2,HVD_EndProjection(HVD_Run(),attempt));
 }
 
 void HVD_Rest(object player)

@@ -68,6 +68,9 @@ FOOTPRINTS = {
     "hvd_orrery": (ring(2.4),),
     "hvd_eavearch": arch_feet(3.13,2.44,3.87),
     "hvd_beactower": (ring(2.07),),
+    "hvd_gate_pod": (ring(.91),),
+    "hvd_clamp_pod": (ring(.91),),
+    "hvd_gatepull": (ring(.73),),
 }
 
 USE_POINTS = {
@@ -77,6 +80,9 @@ USE_POINTS = {
     "hvd_sealstand": ((0,-1.18), (0,1.18)),
     "hvd_beacon": ((0,-1.24), (0,1.24)),
     "hvd_wallring": ((0,-.89),),
+    "hvd_gate_pod": ((0,-1.45),(1.34,.04)),
+    "hvd_clamp_pod": ((0,-1.43),(1.40,.05)),
+    "hvd_gatepull": ((0,-1.22),),
 }
 
 

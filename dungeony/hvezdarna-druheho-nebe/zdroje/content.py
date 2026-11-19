@@ -1,6 +1,7 @@
 """Original creatures, items, factions, and a ready-to-play local character."""
 
 from aurora import SHORT, Record, bite, dword, flt, integer, loc, lst, ref, string, word
+from gateart import SEAL_MODELS
 from world import variables
 
 
@@ -33,16 +34,17 @@ ARMOR = {
 
 BOOKS = {
     "hvd_book_camp": ("Rozpis nebeské hlídky", 3,
-        "Na první straně zůstal vybledlý plán služby. Čtyři pečetě patřily čtyřem stanovištím, "
-        "ale na schody se vždy vydaly jen tři. Pořadí jejich výstupu zadáváme u brány do patic "
-        "zleva doprava, od I po III. Které stanoviště vynechali, zapsal vedoucí směny úplně dole."),
-    "hvd_book_steps": ("Záznam od prvního schodu", 7,
-        "V závětří u prvních schodů se hlídka zastavila, aby dotáhla řemeny. Zapisovatel tu mohl "
-        "zahlédnout dvě pečetě hned za sebou. Jeho poslední poznámka zachycuje, kdo z těch dvou stoupal první."),
-    "hvd_book_gate": ("Opis přísahy a záznam předbraní", 5,
-        "Písař předbraní přepočítal příchozí až pod světlem návratové lucerny. K rozpisu připsal, "
-        "kde měla být třetí pečeť vůči jedné z dvojice popsané na schodech. Teprve s oběma zápisy "
-        "mohla příští hlídka správně nachystat všechny tři patice."),
+        "Rozpis údržby. Kotva je v horní dílně, Křídlo na bouřné podestě a Kopí s Lucernou "
+        "na visutých ochozech. Doneseme všechny čtyři raznice do předbraní. Tři pustí světlo do optických sloupů, "
+        "čtvrtá zvedne závoru u spouště. Každá směna používá vlastní rozpis, aby se vedením nedalo projít naslepo."),
+    "hvd_book_steps": ("Zápis seřizovače na schodech", 7,
+        "Na spodním stolku zůstala poznámka z poslední zkoušky. Při měření se díváme od nástupu "
+        "k bráně. Po levé ruce máme západní sloup, po pravé východní. Písmenům na starých štítcích "
+        "už nevěřím, ale znaky na okružích jsou pořád dobře čitelné."),
+    "hvd_book_gate": ("Protokol o seřízení sloupů", 5,
+        "Povolili jsme všechny tři páčky. V každém okruží má svítit jiný znak, Srpek, Hvězda nebo Slunce. "
+        "Závora propouští převod i se čtvrtou raznicí a vlastní clonu nemá. Spoušť táhneme až po "
+        "seřízení, když všichni stojí za mosazným značením. Zkoušku vadného vedení jsem si od minule odřel do kamene."),
     "hvd_book_halls": ("Předpis obsluhy clon", 2,
         "Při zkoušce filtru se od stěny ke stěně rozbíhá světlý pruh. Jakmile je na kameni vidět, "
         "ustup za mosaznou rysku a počkej na doznění výboje. Pojistka visí u vstupu do paprskové chodby "
@@ -81,14 +83,18 @@ BOOKS = {
 }
 
 
-def items():
+def items(*, test_guide=False):
     result = {}
     for key, (name, model, description) in BOOKS.items():
         result[key] = item(key, 74, name, description, model=model, plot=1)
-    for ident, name, model in [(1, "kotvy", 9), (2, "křídla", 5), (3, "kopí", 3), (4, "lucerny", 13)]:
+    for ident, (name, model) in enumerate(zip(("Kotvy", "Křídla", "Kopí", "Lucerny"), SEAL_MODELS), 1):
         key = f"hvd_seal{ident}"
-        result[key] = item(key, 77, f"Pečeť {name}", "Pečeť nebeské hlídky pro tuto výpravu. "
-                           "V předbraní vlož pečeť kliknutím na patici.", plot=1, model=model)
+        result[key] = item(key, 24, f"Pečeť {name}", "Osmiboká mosazná raznice se znakem nebeské hlídky. "
+                           "V předbraní otevři patici sloupu nebo závoru a přesuň do ní pečeť z inventáře.",
+                           model=model)
+    if test_guide:
+        result["hvd_book_test"] = item("hvd_book_test", 74, "Zkušební list · řešení brány",
+                                      "Pracovní list se sestavou pro aktuální výpravu.", model=6, plot=1)
     descriptors = [
         ("hvd_mirror", 77, "Přenosné zkušební zrcadlo",
          "Na Posledním stupni ho usaď do mosazné patice vpravo pod schody, dřív než se postavíš Ithrenovi. "

@@ -5,7 +5,7 @@
 > **Doporučené úrovně:** 35–40 (spodní část 35–38, horní část 38–40). **Typ:** průzkumný a bojový dungeon s příběhem, prostředím, logickou hádankou a závěrečným bossem.
 >
 
-[Záběry z hratelné verze v NWN:EE](podklady/nahledy.jpg)
+[Brána tří paprsků v NWN:EE](podklady/brana-tri-paprsku.jpg) · [Prohlídka oblastí z v7](podklady/nahledy.jpg)
 
 ## 1. Obecný popis a autorský záměr
 
@@ -27,7 +27,7 @@ Dlouho byla hvězdárna považována za uzavřené a zapomenuté místo. Nedávn
 - **Jedno silné téma:** dvě oblohy, světlo, vítr, stará služba a přísaha, která přežila svůj původní důvod.
 - **Příběh odhalovaný prostředím:** hráči chápou, co se stalo, z rozpisů hlídek, dílenských záznamů, optiky a samotného chování stráží.
 - **Srozumitelné mechaniky:** nebezpečné útoky jsou předem označené; vítězí družina, která reaguje na prostředí, ne pouze ta s nejvyšším poškozením.
-- **Důvod k opakovaným návštěvám:** dva propojené okruhy, samostatně použitelné střety a obměňované řešení Brány tří pečetí.
+- **Důvod k opakovaným návštěvám:** dva propojené okruhy, samostatně použitelné střety a obměňované řešení Brány tří paprsků.
 
 ### 1.4 Jaký je skutečný problém (spoiler pro autora)
 
@@ -55,7 +55,7 @@ Místní hvězdáři se pokusili využít znalosti o nebeských průchodech k vy
 
 Hvězdárna k tomu potřebovala zvláštní optiku a systém clon. Za běžných okolností ukazovalo okno kopule kandelábrijskou oblohu, zatímco hlavní objektiv zachycoval světlo druhé strany. Od toho dostalo místo své jméno: **Hvězdárna druhého nebe**.
 
-Provoz zajišťovali hvězdáři, správkyně clon a nebeská hlídka. Rozpis služby používal čtyři symboly — **Kotvu, Křídlo, Kopí a Lucernu**. Tři pečetě vyznačovaly pořadí právě sloužících stráží, čtvrtá zůstávala na stanovišti. Tento původně praktický systém dnes tvoří hádanku závěrečné brány.
+Provoz zajišťovali hvězdáři, správkyně clon a nebeská hlídka. Rozpis služby používal čtyři symboly — **Kotvu, Křídlo, Kopí a Lucernu**. Čtyři raznice uzavíraly převod mezi optickými sloupy a bránou. Tři vedly světlo přes clony, čtvrtá jistila závoru. Obsluha měnila sestavu pro každou směnu.
 
 ### 2.3 Co se stalo před opuštěním stavby
 
@@ -106,12 +106,12 @@ Dungeon tvoří **dvě navazující části**. Hráči je mohou projít jako jed
 ČÁST II — Schody do nebe (38–40)
 [4] Kopule → [5] Schody a bouřná podesta → [6] Visuté ochozy
                                                   ↓
-                                [7] Předbraní a Brána tří pečetí
+                                [7] Předbraní a Brána tří paprsků
                                                   ↓
                                       [8] Poslední stupeň: Ithren
 ```
 
-**Povinná dějová posloupnost:** objevit hvězdárnu → zprovoznit optiku → vystoupat na schody → získat tři aktuálně potřebné pečetě → vyřešit bránu → zpřístupnit lucernu přes Ithrenovu obranu → sklopit clonu.
+**Povinná dějová posloupnost:** objevit hvězdárnu → zprovoznit optiku → vystoupat na schody → získat čtyři pečetě → vyřešit bránu → zpřístupnit lucernu přes Ithrenovu obranu → sklopit clonu.
 
 **Nepovinné, ale užitečné objevy:** dílenský záznam o návratu správkyně, odrazové zrcadlo, ozvučnice, poklady strážnice a zkratky pro opakované průchody. Stopy potřebné k řešení brány musejí být dostupné i hráčům, kteří nepovinné části přeskočí.
 
@@ -180,13 +180,13 @@ Dungeon tvoří **dvě navazující části**. Hráči je mohou projít jako jed
 
 **Hratelnost:** jedna větev obsahuje **kopiníka** s čelně vyznačeným výpadem a **Pečetí kopí**. Druhá větev patří **světlonoši**, který vede světelný útok po vyznačené trase; po něm lze získat **Pečeť lucerny**. Světlonoše může doplňovat slabší větrný elementál.
 
-**Volba:** větve lze projít v libovolném pořadí a podle první stopy jednu z pečetí případně vynechat. Spojovací schodiště a návratová zkratka dovolují obchvat.
+**Volba:** větve ochozů lze projít v libovolném pořadí. Spojovací schodiště a návratová zkratka dovolují obchvat.
 
-#### 7 — Předbraní a Brána tří pečetí
+#### 7 — Předbraní a Brána tří paprsků
 
-**Atmosféra:** poslední strážnice před hranicí druhého nebe, tři svislé patice ve dveřích, reliéf někdejší služby.
+**Atmosféra:** poslední strážnice před hranicí druhého nebe, tři optické sloupy pod schody a provozní závora u spouště.
 
-**Hratelnost:** třetí stopa umožňuje určit pořadí tří pečetí. Při nesprávné kombinaci brána upozorní hráče zábleskem a po varování vyšle omezený poryv; bez trvalého uzamčení. Všechny objevené stopy si lze znovu přečíst.
+**Hratelnost:** třetí záznam propojí polohy pečetí s nastavením clon. Z vadné sestavy se paprsky rozpojí a po světelném varování přijde výboj. Pult v předbraní připomene objevené stopy.
 
 **Vedlejší obsah:** strážnice obsahuje poklad, světelnou past, skrytou přihrádku a návratovou spojku směrem ke kopuli.
 
@@ -259,11 +259,9 @@ Reference: [NWN Lexicon — EffectDamageImmunityDecrease](https://www.nwnlexicon
 
 **Pravidlo:** hádanka nesmí být slepá ani zablokovat výpravu. Po chybě lze nastavení zopakovat; nápověda musí zůstat dostupná.
 
-### 5.2 Brána tří pečetí — princip jednoduše
+### 5.2 Brána tří paprsků
 
-Brána má **tři patice seřazené odspodu nahoru**. Existují ale **čtyři různé pečetě**: Kotva, Křídlo, Kopí a Lucerna.
-
-V každé výpravě hra určí **jednu pečeť mimo službu** a **pořadí zbývajících tří**. Hráči tedy nepotřebují všechny čtyři. Během cesty najdou tři stopy, podle nichž poznají, které symboly a v jakém pořadí použít.
+Obsluha vkládá čtyři mosazné pečetě do západního, středního a východního optického sloupu a do závory u spouště. Každý sloup má vlastní clonu se Srpkem, Hvězdou nebo Sluncem. Znaky se v seřízené soustavě použijí právě jednou. Pečeť v patici ukáže svůj reliéf, páčka vymění viditelný znak clony a vložení do závory posune mosaznou západku.
 
 | Pečeť | Kde ji získat |
 | --- | --- |
@@ -272,23 +270,9 @@ V každé výpravě hra určí **jednu pečeť mimo službu** a **pořadí zbýv
 | **Kopí** | Stanoviště elitního kopiníka na visutých ochozech |
 | **Lucerna** | Stanoviště světlonoše na visutých ochozech |
 
-**Příklad jednoho průchodu:**
+Rozpis z noclehu vymezí dvojici pečetí pro krajní sloup a závoru a přidá omezení pro jednu clonu. Zápis na schodech uvádí sousední sloupy a jednu stopu ke cloně. Protokol v předbraní popíše otisk dvojice a vzájemnou polohu dvou filtrů. Dohromady určují jedinou sestavu pro každou ze 144 kombinací.
 
-1. V horském noclehu hráči najdou: **„Kotva zůstala na stanovišti.“** → Kotva se nepoužije.
-2. Na odpočívadle schodů objeví: **„Kopí stoupalo bezprostředně nad Křídlem.“** → Křídlo a Kopí musejí být sousední, Kopí výš.
-3. Na reliéfu v předbraní stojí: **„Lucerna prošla níž než Křídlo.“** → Známe úplné pořadí.
-
-**Řešení od spodní patice:** `Lucerna → Křídlo → Kopí`.
-
-V dalším průchodu může být řešení jiné. Ze čtyř symbolů a tří patic vzniká **24 možných pořadí** (4 možnosti vynechané pečeti × 6 pořadí zbývajících). Pro každé pořadí se počítá se čtyřmi variantami indicií, tedy **96 sadami stop**. Před zapojením generátoru do hry je nutné v jeho testech ověřit, že **každá** sada skutečně vede k jedinému řešení.
-
-**Pravidla pro hráče:**
-
-- Pečetě lze vkládat a přemisťovat bez omezení až do potvrzení.
-- Chybné řešení nespustí trvalý zákaz; po varovaném poryvu lze zkusit další kombinaci.
-- Již objevené stopy lze u brány znovu přečíst.
-- Získanou pečeť, kterou někdo odnesl nebo s níž se odpojil, lze u brány pro tuto výpravu znovu vydat.
-- Jednou správně otevřená brána zůstává pro danou výpravu otevřená i při opakovaném pokusu o finální souboj.
+Po použití spouště vystoupají z čoček tři paprsky do ostění. Správně seřízená brána zůstane otevřená pro celou výpravu. Pokud světlo nesedí, následný výboj má viditelné varování. Získanou a později ztracenou pečeť znovu vydá výměnný pult.
 
 ### 5.3 Pomocné vybavení, které má důvod existovat
 
@@ -346,7 +330,7 @@ Konkrétní statistiky předmětů, ceny, zkušenosti i drop rate musí odpovíd
 ### 7.2 Co se při opakované výpravě mění
 
 - Střety v jednotlivých částech se obnovují podle skutečného režimu dané oblasti na Kandelábrii.
-- Brána má při nové výpravě jinou kombinaci tří pečetí a stop; konkrétní pravidla opakování se musí přizpůsobit multiplayer režimu serveru.
+- Nová výprava mění rozmístění čtyř pečetí a losuje nastavení clon. Na serveru je třeba přizpůsobit obnovu tomu, zda družiny sdílejí oblasti.
 - Otevření brány a získání pečetí se eviduje **na úrovni výpravy**, ne pouze u jednotlivé postavy.
 - Při neúspěšném finálním boji se Ithren může obnovit, ale **již vyřešená brána se během téže výpravy nezamyká**.
 - Finální odměna náleží za dokončení, nikoliv za nekonečné opakování jednotlivých fází bossa.
@@ -390,7 +374,7 @@ Tato část je **vývojová**, nikoliv součást hráčské anotace. Záměrně 
 - Projít trasu s různými třídami a výbavou, včetně družiny **bez zvukového bonusu**.
 - Testovat varování a zásah přesně na hranici označené oblasti a při přerušení pohybu příkazovou frontou.
 - Prověřit kombinace nucených přesunů; žádný úder nesmí hráče uvěznit mimo dostupnou cestu.
-- Automaticky přepočítat všech **24 pořadí** a plánovaných **96 sad stop**; každá sada musí mít právě jedno řešení.
+- Přepočítat všech **144 sestav** pečetí a clon. Každá trojice zápisů musí určovat právě jedno řešení.
 - Zkusit chybné pořadí pečetí, současné použití několika hráči, smrt/odpojení nositele a opakovanou výpravu.
 - U boss fightu otestovat opakovaný pull, odpojení během fáze, zrcadlo i hru bez něj, okamžik sklopení clony a jednorázové vydání odměny.
 - Až po funkčních testech ladit HP, zásahy, cooldowny, XP a poklad proti reálným referenčním postavám Kandelábrie.

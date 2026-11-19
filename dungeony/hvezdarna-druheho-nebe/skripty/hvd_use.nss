@@ -18,9 +18,9 @@ void main()
         HVD_Seal(player, GetLocalInt(target, "seal"));
         return;
     }
-    if (operation == "socket")
+    if (operation == "gate_filter")
     {
-        HVD_Cycle(player, GetLocalInt(target, "slot"));
+        HVD_RotateFilter(player, GetLocalInt(target, "slot"));
         return;
     }
     if (operation == "gate")

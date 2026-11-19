@@ -55,6 +55,14 @@ void HVD_FillStores(int run)
     HVD_Stock(GetObjectByTag("hvd_eave_cache"),"hvd_heal");
     HVD_Stock(GetObjectByTag("hvd_walk_cache"),"hvd_glass");
     HVD_Stock(GetObjectByTag("hvd_walk_cache"),"hvd_heal",2);
+
+    if (GetLocalInt(HVD_Module(),"hvd_test_guide"))
+    {
+        object testCase = GetObjectByTag("hvd_test_case");
+        HVD_Stock(testCase,"hvd_book_test");
+        object testBook = GetItemPossessedBy(testCase,"hvd_book_test");
+        if (GetIsObjectValid(testBook)) SetDescription(testBook,HVD_TestGuide());
+    }
 }
 
 void HVD_ResetStores()
@@ -69,6 +77,7 @@ void HVD_ResetStores()
     HVD_ClearStock("hvd_study_cache");
     HVD_ClearStock("hvd_eave_cache");
     HVD_ClearStock("hvd_walk_cache");
+    HVD_ClearStock("hvd_test_case");
     DelayCommand(0.15, HVD_FillStores(HVD_Run()));
 }
 
