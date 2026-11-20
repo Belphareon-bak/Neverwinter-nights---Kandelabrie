@@ -192,7 +192,7 @@ def as_tile(name, mesh, floor, is_flight=False, *, empty=False):
     return {f"{name}.mdl":model, f"{name}.wok":walk, f"mi_{name}.tga":header+pixels}
 
 
-def tile_assets(game):
+def tile_assets(game, workshop):
     raw = game.read("tcm02","set").decode("latin-1")
     raw = raw.replace("Border=Cobble", "Border=Chasm", 1)
     # This is the sky outside the authored islands, including area border
@@ -202,12 +202,16 @@ def tile_assets(game):
     if not found:
         raise ValueError("Castle Exterior tileset has no tile count")
     number = int(found[2])
-    raw = raw[:found.start(2)] + str(number+6) + raw[found.end(2):]
+    raw = raw[:found.start(2)] + str(number+6+len(workshop)) + raw[found.end(2):]
     cursor = re.search(r"(?im)^\[GROUPS\]",raw).start()
     ids = TerraceTiles(number,number+1,number+2,number+3,(number+4,number+5))
     rows = (set_row(ids.flight,FLIGHT,1) + set_row(ids.paving,PAVING,0) +
             set_row(ids.court,TERRACE,0) + set_row(ids.air,AIR,0,"chasm") +
             ''.join(set_row(i,name,1) for i,name in zip(ids.wide,WIDE,strict=True)))
+    workshop_ids = {}
+    for index,(cell,(name,_)) in enumerate(workshop.items(),number+6):
+        workshop_ids[cell] = index,0
+        rows += set_row(index,name,0)
     raw = raw[:cursor] + rows + raw[cursor:]
     paving = Mesh()
     surface(paving, MASONRY, -5,-5,5,5,LOW,.30)
@@ -227,4 +231,6 @@ def tile_assets(game):
     }
     for name, side in zip(WIDE,(-1,1),strict=True):
         resources.update(as_tile(name,*wide_stair(side),True))
-    return ids, resources
+    for _,pieces in workshop.values():
+        resources.update(pieces)
+    return ids, workshop_ids, resources

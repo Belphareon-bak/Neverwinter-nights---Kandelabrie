@@ -13,7 +13,7 @@ from reportlab.pdfgen.canvas import Canvas
 
 from aurora import TYPE, erf_index, gff_decode
 from plan import (DIRECTIONS, JOINS, LANDING_INSET, LANDMARKS, PASSAGE_WIDTH, SECRET_LEVEL,
-                  SECRET_WALKS, THRESHOLD_INSET, TILE, VERSION, WALKS, ZONES, check_plan)
+                  SECRET_WALKS, THRESHOLD_INSET, TILE, VERSION, WALKS, WORK_YARD_WALLS, ZONES, check_plan)
 
 PAPER = '#f5f2e9'
 INK = '#211f2e'
@@ -169,6 +169,10 @@ def floor(c, code, secrets):
     fill(c, FLOORS[code])
     for l, b, r, t in cells.values():
         c.rect(*px(*zone.world(l, b)), (r-l)*SCALE, (t-b)*SCALE, fill=1, stroke=0)
+    if zone.enclosed:
+        fill(c, '#b6c7ce')
+        for l, b, r, t in zone.enclosed:
+            c.rect(*px(*zone.world(l,b)), (r-l)*SCALE, (t-b)*SCALE, fill=1, stroke=0)
     ink(c, WALL, .8)
     for (i, j), (l, b, r, t) in cells.items():
         for neighbor, p, q in (
@@ -177,6 +181,10 @@ def floor(c, code, secrets):
         ):
             if neighbor not in cells:
                 c.line(*px(*zone.world(*p)), *px(*zone.world(*q)))
+    if code == 'works':
+        ink(c,WALL,1.65)
+        for a,b in WORK_YARD_WALLS:
+            c.line(*px(*zone.world(*a)),*px(*zone.world(*b)))
     for row in sorted({row for _, row in zone.stairs}):
         left, bottom = px(*zone.world(0, row*TILE))
         step = TILE * SCALE
@@ -270,7 +278,7 @@ def captions(c, secrets):
         'camp': (1.45, True, 'Zásoby a jediná stezka na římsu'),
         'rim': (4.1, True, 'Jediná veřejná brána do Zkušebny'),
         'halls': (9.4, True, 'Z jižní síně do horní dílny'),
-        'works': (11.4, False, 'Vstupní T, zkušebna, most a Kotva'),
+        'works': (11.4, False, 'Zděná síň, dvory a servisní lávka'),
         'dome': (17.7, False, 'Refraktor mezi oběma okruhy'),
         'steps': (25.3, False, 'Tři ramena široká 18,2 m, dvě mezipodesty'),
         'walks': (25.3, True, 'Dva mosty a horní výstup'),
@@ -319,7 +327,7 @@ def draw(target, module, fonts, secrets):
     fill(c, PAPER)
     c.rect(0, 0, *SIZE, stroke=0, fill=1)
     text(c, 43, 1765, 'Hvězdárna druhého nebe', 32, bold=True)
-    subtitle = 'Dva okruhy · vstupní síň · služební štola' if secrets else 'Dva okruhy a vstupní síň'
+    subtitle = 'Dva okruhy · zděné spoje · služební štola' if secrets else 'Dva okruhy a zděné spoje'
     text(c, 44, 1735, subtitle, 15, color=MUTED)
     text(c, 1060, 1772, f'V{VERSION:02}', 13, color=DOOR, bold=True, align='right')
     arrow(c, 1050, 1739, 0, 1, INK)

@@ -21,7 +21,7 @@ from furnishings import SCENERY as FURNISHINGS, book_assets
 from lightart import SCENERY as LINK_SCENERY, VISUALS as LINK_VISUALS
 from plan import SECRET_LEVEL, VERSION
 from routes import route_assets
-from interiors import tileset as interior_tiles
+from interiors import tileset as interior_tiles, workshop_tiles, yard_wall_assets
 from layout import areas
 from skies import sky_assets
 from workart import SCENERY as WORKSHOP_SCENERY, VISUALS as WORKSHOP_VISUALS
@@ -116,7 +116,7 @@ def build(game_path, compiler, directory, scripts, *, test_guide=False):
     sills, inscriptions = route_assets()
     additions = {name: (NAMES[name], mesh) for name, mesh in SKY_MODELS.items()}
     additions.update(gate_scenery | gate_visuals | WORKSHOP_SCENERY | WORKSHOP_VISUALS | sills | FURNISHINGS)
-    additions.update(LINK_SCENERY | LINK_VISUALS)
+    additions.update(LINK_SCENERY | LINK_VISUALS | yard_wall_assets())
     appearances, art = assets(game, {name: (NAMES[name], mesh) for name, mesh in ARCHITECTURE.items()},
                               additions)
     art.update(seal_assets())
@@ -127,10 +127,10 @@ def build(game_path, compiler, directory, scripts, *, test_guide=False):
     art.update(architecture_textures())
     sky_ids, skies = sky_assets(game)
     art.update(skies)
-    terrace_tiles, stairs = tile_assets(game)
-    art.update(stairs)
+    terrace_tiles, work_tiles, castle_tiles = tile_assets(game, workshop_tiles())
+    art.update(castle_tiles)
     art.update(interior_tiles(game))
-    zones = areas(appearances, terrace_tiles, test_guide=test_guide)
+    zones = areas(appearances, terrace_tiles, work_tiles, test_guide=test_guide)
     dress_areas(zones)
     for zone in zones:
         if zone.lighting["SkyBox"][1]:

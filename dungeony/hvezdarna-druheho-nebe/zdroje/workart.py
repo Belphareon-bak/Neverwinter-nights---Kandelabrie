@@ -14,6 +14,7 @@ MIRROR_MODEL = 245
 
 RAY_AMBER=Material((1,.63,.29),'hvd_raylight',(.73,.39,.16),alpha=.91)
 RAY_BLUE=Material((.46,.79,1),'hvd_raylight',(.34,.67,.97),alpha=.88)
+RAY_WHITE=Material((.80,.91,1),'hvd_raylight',(.63,.82,1),alpha=.89,shadow=0)
 WOOD=Material((.54,.44,.33),'hvd_oak')
 
 
@@ -43,10 +44,15 @@ def archive_case():
 def ray_case():
     m=Mesh()
     for side in (-1,1):
-        y=side*2.30
-        m.box(BASALT,0,y,.40,.86,.29,1.76)
-        m.box(TRIM,0,y,1.92,.98,.31,.29)
-        m.disc(BRASS,(0,y,1.30),(0,y-side*.245,1.30),.29,sides=12)
+        y=side*2.42
+        front=y-side*.27
+        m.box(MASONRY,0,y,0,1.51,.49,2.97,tile_uv=.30)
+        m.box(BASALT,0,y,0,1.64,.61,.36,tile_uv=.33)
+        m.box(LIMESTONE,0,y,2.84,1.69,.62,.22,tile_uv=.33)
+        m.box(DARK,0,front,.58,1.09,.063,1.86)
+        for x in (-.46,.46):
+            m.box(BRASS,x,front-side*.060,.47,.083,.118,2.05)
+        m.disc(BRASS,(0,y,1.38),(0,front-side*.07,1.38),.32,sides=16)
         m.trace(BRASS,(-1.18,0,.018),(-1.18,side*2.27,.018),.07)
         m.trace(BRASS,(1.18,0,.018),(1.18,side*2.27,.018),.07)
     return m
@@ -55,10 +61,24 @@ def ray_case():
 def ray_eye(isolated):
     m=Mesh()
     for side in (-1,1):
-        depth=side*2.05
-        m.disc(DARK if isolated else RAY_AMBER,(0,depth,1.30),(0,depth-side*.045,1.30),.193,sides=12)
+        depth=side*2.055
+        m.disc(DARK if isolated else RAY_BLUE,(0,depth,1.38),(0,depth-side*.052,1.38),.241,sides=16)
+        offset=0 if isolated else .31
+        for x in (-.132,.132):
+            px=x+(offset if x>0 else -offset)
+            m.box(BRASS,px,depth-side*.057,.965,.255,.075,.83)
         if isolated:
-            m.box(PALE,0,depth-side*.060,1.26,.22,.07,.068)
+            m.box(TRIM,0,depth-side*.10,1.31,.10,.080,.14)
+    return m
+
+
+def ray_warning():
+    m=Mesh()
+    for side in (-1,1):
+        start=(0,side*2.003,1.38)
+        foot=(0,side*.15,.049)
+        m.tube(RAY_WHITE,start,foot,.031,.046,sides=7,open_ends=True)
+    m.trace(RAY_WHITE,(0,-2.04,.047),(0,2.04,.047),.038)
     return m
 
 
@@ -179,5 +199,6 @@ VISUALS = {
     'hvd_arc_cabinet':('Skříň s kalibračním archivem',archive_case),
     'hvd_ray_ready':('Připravené vysílače',lambda:ray_eye(False)),
     'hvd_ray_cut':('Zakryté vysílače',lambda:ray_eye(True)),
+    'hvd_rayflash':('Varovný pruh vysílačů',ray_warning),
     'hvd_lab_trace':('Zkušební odraz se stupnicí',light_trial),
 }

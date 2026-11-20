@@ -40,6 +40,54 @@ def service_roof():
     return m
 
 
+def lab_eaves():
+    m = Mesh()
+    for x in (-5.34,5.34):
+        m.box(BASALT,x,-2.7,0,.76,.76,.34,tile_uv=.31)
+        m.box(MASONRY,x,-2.7,.33,.47,.47,2.78,tile_uv=.34)
+        m.box(LIMESTONE,x,-2.70,2.92,.68,.70,.29,tile_uv=.35)
+    m.box(TRIM,0,-2.69,3.12,11.20,.32,.22,tile_uv=.33)
+    for i in range(12):
+        a,b = -5.62+11.24*i/12,-5.62+11.24*(i+1)/12
+        cover = ((a,-2.92,3.32),(b,-2.92,3.32),(b,.50,3.97),(a,.50,3.97))
+        m.polygon(OXIDE,cover,((0,0),(1,0),(1,3),(0,3)))
+        m.polygon(IRON,cover[::-1])
+        m.tube(BRASS,cover[0],cover[3],.024,sides=5)
+    return m
+
+
+def forge_flue():
+    m = Mesh()
+    m.box(BASALT,0,.12,0,1.64,.90,.43,tile_uv=.31)
+    m.box(MASONRY,0,.12,.40,1.45,.77,4.79,tile_uv=.33)
+    m.box(LIMESTONE,0,.12,4.99,1.72,.98,.24)
+    m.box(BASALT,0,.12,5.23,1.88,1.05,.18)
+    lower = ((-1.12,.10,2.41),(1.12,.10,2.41),
+             (1.12,2.51,2.41),(-1.12,2.51,2.41))
+    upper = ((-.62,.14,3.77),(.62,.14,3.77),(.62,.54,3.77),(-.62,.54,3.77))
+    for i,(a,b) in enumerate(zip(lower,lower[1:]+lower[:1])):
+        j=(i+1)%4
+        m.polygon(IRON,(a,b,upper[j],upper[i]))
+        m.tube(BRASS,a,b,.049,sides=6)
+    m.polygon(DARK,lower[::-1])
+    return m
+
+
+def filter_table():
+    m = Mesh()
+    m.box(BASALT,0,0,0,2.42,1.04,.24,tile_uv=.34)
+    m.box(MASONRY,0,.19,.24,2.26,.63,.57,tile_uv=.36)
+    m.box(LIMESTONE,0,0,.78,2.48,1.06,.15)
+    m.box(BRASS,-.46,.14,.92,.34,.30,.49)
+    m.tube(BRASS,(-.61,.12,1.29),(.65,.12,1.29),.065,sides=8)
+    for x in (-.57,-.05,.52):
+        m.disc(BRASS,(x,.11,1.30),(x+.09,.11,1.30),.267,sides=16)
+        m.disc(PALE,(x+.09,.11,1.30),(x+.113,.11,1.30),.217,sides=18)
+    for x in (.51,.83):
+        m.trace(TRIM,(x,-.43,.94),(x,.29,.94),.036)
+    return m
+
+
 def grinding_bench():
     m = Mesh()
     bench(m, 2.60, 1.21)
@@ -240,6 +288,9 @@ def stair_headhouse():
 
 SCENERY = {
     'hvd_workroof': ('Měděná střecha servisní dílny', service_roof),
+    'hvd_lab_eaves': ('Měděná střecha nad zkušebním stolem', lab_eaves),
+    'hvd_forge_flue': ('Kamenný komín s odtahem nad výhní', forge_flue),
+    'hvd_filterbench': ('Kontrolní stolec pro osazené filtry', filter_table),
     'hvd_grinder': ('Brus čoček s vodní vanou', grinding_bench),
     'hvd_smithbench': ('Stůl s přípravkem na kování obrub', smith_bench),
     'hvd_capstan': ('Buben lana pro vytažení lávky', capstan),

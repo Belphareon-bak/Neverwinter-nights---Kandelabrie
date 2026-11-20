@@ -133,19 +133,21 @@ def halls(art):
     return a
 
 
-def workshops(art):
+def workshops(art, tiles):
     a = scene(art, "hvd_works", "Dílny a servisní lávka", "tcm02",
-              "Servisní dvůr s optickou zkouškou a dvojicí podest, mezi nimiž vede skutečný most.",
-              ambient=(94, 112, 151), diffuse=(180, 192, 228), fog=1, sky=4, music=49, wind=202)
+              "Klenutá vstupní síň, dvůr zkušebny a kovárny, servisní lávka a horní přijímací dvůr.",
+              ambient=(94, 103, 133), diffuse=(183, 184, 205), fog=1, sky=4, music=49, wind=202,
+              tiles=tiles)
+    a.fixed_tiles = True
     a.point("hvd_entry",53,15,90,"Vstupní síň · Zkušebna vlevo, Chodby clon vpravo")
     feature(a,"hvd_wallchart","Rozpis stanovišť na severní stěně",53,17.60,action="read",
             text="Vlevo je Zkušebna. Za dílnami pokračuje servisní lávka na horní dvůr. Vpravo jsou Chodby clon. "
                  "Přes filtrovnu a archiv také dojdeš na horní dvůr.")
     a.point("hvd_work_lab", 17.1, 14.7, 90, "Dolní dílna · zkušebna s klíčem a zrcadlem")
     cloudbed(a, 29, 34)
-    a.trap("Poryv při patě zkušebny","hvd_wind",(40,13,49,19),hazard=1)
-    a.mob("hvd_strhavac",46,17.8)
-    a.mob("hvd_vrhac",41.5,12.6)
+    a.trap("Poryv při vstupu na dvůr","hvd_wind",(40,12.9,49,17.8),hazard=1)
+    a.mob("hvd_strhavac",46,16.85)
+    a.mob("hvd_vrhac",41.5,13.3)
     fixture(a, [
         (97, "Zkušební stůl", 17, 16, 90), (456, "Výpočty odrazů", 16.3, 16.7, 0),
         (108, "Odložené díly rámů", 12.15, 17.9, 90), (48, "Kovadlina na rámy", 29.9, 12.6, 90),
@@ -358,10 +360,10 @@ def study(art):
     return a
 
 
-def areas(art, terrain, *, test_guide=False):
+def areas(art, terrain, work_tiles, *, test_guide=False):
     check_plan()
     zones = [
-        camp(art), mountain(art), halls(art), workshops(art), dome(art), steps(art, terrain),
+        camp(art), mountain(art), halls(art), workshops(art,work_tiles), dome(art), steps(art, terrain),
         walks(art, terrain.flight), gate(art, terrain.flight, test_guide=test_guide),
         summit(art, terrain.flight), study(art),
     ]

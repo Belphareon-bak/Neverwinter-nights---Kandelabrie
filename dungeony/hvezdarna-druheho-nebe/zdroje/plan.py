@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 
-VERSION = 13
+VERSION = 14
 TILE = 10
 THRESHOLD_INSET = 1.55
 LANDING_INSET = 5.0
@@ -11,6 +11,11 @@ PASSAGE_WIDTH = 4.8
 SECRET_LEVEL = 38
 STAIR_EDGE = .9
 DIRECTIONS = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}
+WORK_YARD_WALLS = (
+    ((10.46,10.40),(39.75,10.40)), ((39.75,10.40),(39.75,12.10)),
+    ((39.75,17.90),(39.75,19.62)), ((39.75,19.62),(27.66,19.62)),
+    ((22.31,19.62),(10.46,19.62)), ((10.46,19.62),(10.46,10.40)),
+)
 
 
 @dataclass(frozen=True)
@@ -22,6 +27,7 @@ class ZonePlan:
     interior: bool = False
     bridges: tuple[int, ...] = ()
     stairs: tuple[tuple[int, int], ...] = ()
+    enclosed: tuple[tuple[float, float, float, float], ...] = ()
 
     def world(self, x, y):
         return self.origin[0] * TILE + x, self.origin[1] * TILE + y
@@ -41,7 +47,7 @@ class ZonePlan:
             return self.rooms
         terraces = [tuple(edge * TILE for edge in room) for room in self.rooms]
         spans = [(x - 1.95, 20, x + 1.95, 50) for x in self.bridges]
-        return (*terraces, *spans)
+        return (*terraces, *spans, *self.enclosed)
 
     def contains(self, x, y):
         row = int(y // TILE)
@@ -75,8 +81,10 @@ ZONES = {
         (19.5, 50.6, 23.0, 57.9), (0, 52.2, 7, 57.8),
     ), interior=True),
     'works': ZonePlan('Dílny a servisní lávka', (0, 7), (6, 8), (
-        (1, 1, 6, 2), (4, 0, 6, 1), (1, 5, 5, 7), (5, 5, 6, 6), (2, 7, 4, 8),
-    ), bridges=(25,)),
+        (1, 1, 4, 2), (1, 5, 5, 7), (2, 7, 4, 8),
+    ), bridges=(25,), enclosed=(
+        (50.1, 0, 55.9, 12.1), (40, 12.1, 60, 17.9), (50, 52.2, 60, 57.8),
+    )),
     'dome': ZonePlan('Kopule', (0, 15), (6, 6), (
         (13.2, 21.8, 46.8, 42.2), (18.3, 17, 41.7, 21.8),
         (18.3, 42.2, 41.7, 46), (27, 0, 33, 17),
@@ -201,7 +209,7 @@ LANDMARKS = {
     'camp': ((23,16,'Nocleh'),),
     'rim': ((23,14.2,'Rozcestí'),),
     'halls': ((15.5,50,'Archiv'), (36,15,'Clony')),
-    'works': ((16.8,16,'Zkušebna'), (51.5,16.9,'Vstupní síň'), (18,57,'Kotva')),
+    'works': ((16.8,16,'Zkušebna'), (34.3,13.6,'Kovárna'), (51.5,16.9,'Vstupní síň'), (18,57,'Kotva')),
     'dome': ((30,31,'Refraktor'),),
     'steps': ((48,57.5,'Křídlo'),),
     'walks': ((19,62.7,'Kopí'), (63,62.7,'Lucerna')),

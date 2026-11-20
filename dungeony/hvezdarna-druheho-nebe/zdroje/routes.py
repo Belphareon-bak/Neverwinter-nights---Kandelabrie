@@ -6,6 +6,7 @@ from struct import pack
 from architecture import BASALT, LIMESTONE
 from art import GILT, Material, Mesh
 from aurora import bite
+from interiors import VIEW_MODELS, shared_view_assets
 from plan import JOINS, LANDING_INSET, PASSAGE_WIDTH, SECRET_LEVEL, THRESHOLD_INSET, ZONES
 
 
@@ -93,7 +94,7 @@ def route_assets():
     appearances = {NAMES[route]: (f'Práh · {sill.label}', lambda sill=sill: sill_model(sill))
                    for route, sill in THRESHOLDS.items()}
     textures = {f'{resource}.tga': label_texture(label) for label, resource in LABELS.items()}
-    return appearances, textures
+    return appearances | shared_view_assets(), textures
 
 
 def transition(area, name, tag, target, require, minimum_level, view):
@@ -119,6 +120,7 @@ def place_transitions(zones):
             landing = 'hvd_land_' + join.route(target, source)
             areas[target].point(landing, *join.point(target, LANDING_INSET), join.heading(source))
             model = 'hvd_join_hall' if ZONES[target].interior else 'hvd_join_deck'
+            model = VIEW_MODELS.get((join.label,target),model)
             if join.label == 'S1':
                 model = 'hvd_rift_in' if target == 'study' else 'hvd_rift_out'
             transition(areas[source], name, 'hvt_' + route, landing, require,

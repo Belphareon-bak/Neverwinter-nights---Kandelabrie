@@ -5,9 +5,9 @@
 > **Doporučené úrovně:** 35–40 (dolní okruh 35–37, horní okruh 38–40). **Typ:** průzkumný a bojový dungeon s příběhem, prostředím, logickou hádankou a závěrečným bossem.
 >
 
-Ve verzi 13 vede z Výstupové římsy jediná veřejná brána do síně ve tvaru T. Dolní okruh se uzavírá přes Chodby clon a horní dvůr dílen. Schody do nebe mají tři ramena široká 18,2 m. [Mapa pro hráče](podklady/mapa-hvezdarny.png) · [Stavební plán včetně tajných cest](podklady/mapa-hvezdarny.pdf)
+Ve verzi 14 vede z Výstupové římsy jediná veřejná brána do zděné síně ve tvaru T. Dílny, ohlašovna clon a archiv navazují dvěma klenutými spojkami. Schody do nebe mají tři ramena široká 18,2 m. [Mapa pro hráče](podklady/mapa-hvezdarny.png) · [Stavební plán včetně tajných cest](podklady/mapa-hvezdarny.pdf)
 
-[Záběry z v13 v NWN:EE](podklady/v13-prehled.jpg) · [Brána tří paprsků v NWN:EE](podklady/v13-brana-otevrena.jpg)
+[Obě strany spojů ve verzi 14](podklady/v14-spojky.jpg) · [Dílenský dvůr](podklady/v14-dilensky-dvur.jpg) · [Varovný paprsek v chodbě](podklady/v14-warning.jpg) · [Brána tří paprsků v NWN:EE](podklady/v13-brana-otevrena.jpg)
 
 ## 1. Obecný popis a autorský záměr
 

@@ -1,8 +1,9 @@
 """Walkmesh footprints and use points for the original placeables."""
 
-from math import cos, sin, tau
+from math import cos, hypot, sin, tau
 
 from architecture import CHECKPOINT_WALLS
+from interiors import YARD_MODELS
 
 
 def rectangle(x, y, width, depth):
@@ -87,6 +88,10 @@ FOOTPRINTS = {
     "hvd_smithbench": (rectangle(0,0,2.76,1.16),),
     "hvd_capstan": (rectangle(0,0,2.04,1.46),),
     "hvd_writedesk": (rectangle(0,0,2.68,1.16),),
+    "hvd_lab_eaves": arch_feet(5.34,.76,.76,-2.70),
+    "hvd_forge_flue": (rectangle(0,.12,1.64,.90),),
+    "hvd_filterbench": (rectangle(0,0,2.48,1.06),),
+    "hvd_ray_case": (rectangle(0,-2.42,1.64,.62),rectangle(0,2.42,1.64,.62)),
     "hvd_drawers": (rectangle(0,.015,3.19,.91),),
     "hvd_filtergrid": (rectangle(0,0,4.51,.83),),
     "hvd_logstand": (rectangle(0,.075,2.66,1.02),),
@@ -100,6 +105,11 @@ FOOTPRINTS = {
     "hvd_flankwalls": arch_feet(5.12,3.13,3.60,.29),
     "hvd_bridgeedge": arch_feet(1.78,.24,18.10),
 }
+
+for model,((x,y),(xx,yy)) in YARD_MODELS.items():
+    dx,dy=xx-x,yy-y
+    length=hypot(dx,dy)
+    FOOTPRINTS[model] = (rectangle(dy/length*.255,-dx/length*.255,abs(dx) or .51,abs(dy) or .51),)
 
 USE_POINTS = {
     "hvd_plinth": ((0,-2.68), (0,2.68)),

@@ -59,6 +59,12 @@ void HVD_Trap(object trigger, int kind)
     SetLocalInt(trigger, "hvd_busy", HVD_Run());
     if (kind == 1) HVD_AreaMessage(area, "Praporky se napnuly. Kameny ukryjí družinu před poryvem.");
     else HVD_AreaMessage(area, "Po dlažbě běží bledá čára. Ustup z vyznačeného pruhu.");
+    if (GetLocalString(trigger, "flag") == "hvd_hall_off")
+    {
+        location span = Location(area, GetPosition(trigger), 90.0);
+        object warning = CreateObject(OBJECT_TYPE_PLACEABLE, "hvd_rayflash", span);
+        if (GetIsObjectValid(warning)) DestroyObject(warning, 2.8);
+    }
     HVD_TrapLine(trigger, VFX_IMP_SONIC);
     DelayCommand(2.8, HVD_TrapBurst(trigger, kind, HVD_Run()));
     DelayCommand(8.5, DeleteLocalInt(trigger, "hvd_busy"));
