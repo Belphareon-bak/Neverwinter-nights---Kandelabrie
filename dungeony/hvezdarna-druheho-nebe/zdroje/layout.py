@@ -95,27 +95,26 @@ def camp(art):
 
 def mountain(art):
     a = scene(art, "hvd_rim", "Výstupová římsa", "tts02",
-              "Cesta z tábora se pod průčelím dělí k hlavnímu vstupu do Zkušebny a k Chodbám clon.",
+              "Horská stezka stoupá k jediné veřejné bráně hvězdárny. Zadní svah obrůstají skalní vrstvy.",
               ambient=(91,108,149), diffuse=(175,188,219), fog=2, sky=4, music=59, wind=31)
     a.point("hvd_fork",26,11.7,90,"Rozcestí · dolní okruh 35–37")
     feature(a,"hvd_octagon","Hlavní vstup do Zkušebny",13,39.25)
-    feature(a,"hvd_headhouse","Vedlejší vchod do Chodeb clon",38,37.4)
-    a.prop(87,"Směrovník pod průčelím",27.1,13.9,action="read",
-           text="Západní cesta vede hlavním vstupem do Zkušebny. Východní schodiště patří Chodbám clon.")
+    a.prop(87,"Směrovník pod průčelím",20.4,15.6,bearing=19,action="read",
+           text="Hvězdárna je za osvětlenou bránou nad stezkou. V síni se dej vlevo do dílen, nebo vpravo k obsluze clon.")
     fixture(a,[(122,"Návětrný praporek",21,13.7,10),
-               (123,"Praporek při zdi",42,17,30),
-               (336,"Zlomený mezník",32,21,0),(174,"Sníh při severní stěně",46,33,40)])
+               (123,"Praporek při zdi",17.4,29,30),
+               (336,"Zlomený mezník",12.5,21,0)])
     lantern(a,9.8,32)
     lantern(a,16.2,32)
-    a.point("hvd_rim_cover_home",87.55,25,0)
-    a.trigger("Závětří mezi skalami","hvd_scan_rim",(82.8,23,86.15,28),"hvd_zone",
+    a.point("hvd_rim_cover_home",87.95,25,0)
+    a.trigger("Závětří mezi skalami","hvd_scan_rim",(83.0,22.0,87.0,28.0),"hvd_zone",
               secret="hvd_secret_rim")
     return a
 
 
 def halls(art):
     a = scene(art, "hvd_halls", "Chodby clon", TILESET,
-              "Příjmová síň, úzká paprsková chodba a archiv při severní obslužné trase.",
+              "Vnitřní spojka mezi Zkušebnou a horní dílnou s paprskovou chodbou, filtrovnou a archivem.",
               ambient=(79,88,118), diffuse=(148,158,200), fog=0, music=50, wind=67,
               tiles=tile_assignments("hvd_halls"))
     for i,x in enumerate((28,35,42),1):
@@ -124,22 +123,13 @@ def halls(art):
         a.trap("Pole clony " + str(i),f"hvd_hallray{i}",(x-1.20,12.62,x+1.20,17.38),
                hazard=2,flag="hvd_hall_off",axis=1)
         light(a,x,16.92,15107,1.54)
-    feature(a,"hvd_dial","Pojistka paprskové chodby",21.83,18.77,action="disarm",
+    feature(a,"hvd_dial","Pojistka paprskové chodby",19.50,19.23,action="disarm",
             tag="hvd_ray_lock",flag="hvd_hall_off",skill=15,
-            text="Uzavírá clony všech tří nástěnných vysílačů v paprskové chodbě. Rozebranou pojistku lze seřídit podle sešitu v dolní dílně nebo zneškodňováním pastí 15.")
-    a.find("hvd_book_halls",9.50,13.9,height=.88,bearing=78)
-    fixture(a,[(97,"Stůl výpravčího",9.08,14.16,90),
-               (287,"Lavice u skříní s filtry",62.70,32.8,90)])
-    for x,y in ((20.65,11.6),(19.8,45.1),(51.2,19.4),(59.7,35.9)):
-        lantern(a,x,y)
-    for x,y in ((20.9,48.3),(49.5,23.0),(61.35,26.8),(50.45,34.9)):
-        feature(a,"hvd_crate","Bedna s výměnnými filtry",x,y,cover=1)
+            text="Zavře všechny tři clony až do nové výpravy. Západku seřiď podle sešitu ze Zkušebny nebo zneškodňováním pastí 15.")
+    a.find("hvd_book_halls",11.39,22.88,height=.88,bearing=3)
     for creature,x,y in (("hvd_strhavac",31,15),("hvd_vrhac",46,15),
-                          ("hvd_spradac",54,26),("hvd_strhavac",57,34),("hvd_vrhac",16,42.4)):
+                          ("hvd_spradac",54.5,24),("hvd_strhavac",50.0,33.4),("hvd_vrhac",16,42.4)):
         a.mob(creature,x,y)
-    a.point("hvd_halls_cover_home",64.24,25,0)
-    a.trigger("U pracovních registrů","hvd_scan_halls",(60.8,23,63.6,27),"hvd_zone",
-              secret="hvd_secret_halls")
     return a
 
 
@@ -147,6 +137,10 @@ def workshops(art):
     a = scene(art, "hvd_works", "Dílny a servisní lávka", "tcm02",
               "Servisní dvůr s optickou zkouškou a dvojicí podest, mezi nimiž vede skutečný most.",
               ambient=(94, 112, 151), diffuse=(180, 192, 228), fog=1, sky=4, music=49, wind=202)
+    a.point("hvd_entry",53,15,90,"Vstupní síň · Zkušebna vlevo, Chodby clon vpravo")
+    feature(a,"hvd_wallchart","Rozpis stanovišť na severní stěně",53,17.60,action="read",
+            text="Vlevo je Zkušebna. Za dílnami pokračuje servisní lávka na horní dvůr. Vpravo jsou Chodby clon. "
+                 "Přes filtrovnu a archiv také dojdeš na horní dvůr.")
     a.point("hvd_work_lab", 17.1, 14.7, 90, "Dolní dílna · zkušebna s klíčem a zrcadlem")
     cloudbed(a, 29, 34)
     a.trap("Poryv při patě zkušebny","hvd_wind",(40,13,49,19),hazard=1)
@@ -203,21 +197,30 @@ def dome(art):
     return a
 
 
-def steps(art, flight):
+def steps(art, terrain):
     a = scene(art, "hvd_steps", "Schody do nebe", "tcm02",
-              "Tři schodiště střídaná měřicími podestami a východní nástup na Visuté ochozy.",
+              "Tři osmnáctimetrová ramena nesou podestu pozorovatelů a bouřnou podestu. Východní lávka vede na Ochozy.",
               ambient=(100,115,159), diffuse=(206,209,242), fog=1, sky=4, music=49, wind=202,
-              flight=flight)
-    feature(a,"hvd_storm_inlay","Rozeta bouřné komory",35,54.85)
-    feature(a,"hvd_sealstand","Hnízdo Pečeti křídla",45.1,56.5,action="seal",seal=2,tag="hvd_wing_seal")
-    feature(a,"hvd_gong","Ozvučnice bouřné podesty",24.75,55.3,action="chime",tag="hvd_steps_chime",
+              flight=terrain.flight)
+    profile = ZONES['steps']
+    a.fixed_tiles = True
+    a.special_tiles = {(col,row):(terrain.court if any(l <= col < r and b <= row < t
+                                                       for l,b,r,t in profile.rooms) else terrain.air,0)
+                       for row in range(a.height) for col in range(a.width)}
+    for row, columns in a.stair_columns.items():
+        for col, ident in zip(columns,terrain.wide,strict=True):
+            a.special_tiles[col,row] = ident,0
+    cloudbed(a,34,48)
+    feature(a,"hvd_storm_inlay","Rozeta bouřné komory",33,54.65)
+    feature(a,"hvd_sealstand","Hnízdo Pečeti křídla",48,57.5,action="seal",seal=2,tag="hvd_wing_seal")
+    feature(a,"hvd_gong","Ozvučnice bouřné podesty",16.15,55.4,action="chime",tag="hvd_steps_chime",
             text="Rozkmitá nejbližší viditelné větrné tělo do 18 metrů. Pro každou vlnu vydrží jeden úder.")
-    a.point("hvd_storm_center",35,54.85)
-    a.find("hvd_book_steps",27.35,15.48,height=.88,clue=2)
-    a.prop(97,"Stolek obsluhy prvního schodu",27.01,15.5,bearing=90)
-    cover(a,[(29.85,51.9),(41.15,51.9),(28.05,57.4),(42.4,58.3)],337)
-    a.mob("hvd_vir",35,54.85,seal=2,elite=1)
-    a.mob("hvd_spradac",43.65,54.26)
+    a.point("hvd_storm_center",33,54.65)
+    a.find("hvd_book_steps",15.08,15.86,height=.88,clue=2)
+    a.prop(97,"Stůl obsluhy prvního schodiště",14.9,16.0,bearing=90)
+    cover(a,[(12.4,53.4),(52.8,51.9),(53.4,58.3)],337)
+    a.mob("hvd_vir",33,54.65,seal=2,elite=1)
+    a.mob("hvd_spradac",46.65,54.26)
     a.mob("hvd_strhavac",36.7,36.8)
     a.mob("hvd_vrhac",37.4,74.5)
     return a
@@ -338,31 +341,29 @@ def study(art):
               "Pracovna s archivním stejnopisem Kotvy a zalomeným služebním výstupem k ochozům.",
               ambient=(77,83,110), diffuse=(185,164,139), fog=1, music=50, wind=68,
               tiles=tile_assignments("hvd_study"))
-    a.point("hvd_study_rim_cover_home",2.35,15,180)
-    a.point("hvd_study_halls_cover_home",2.4,55,180)
-    a.point("hvd_study_exit_cover_home",15,157.45,90)
-    feature(a,"hvd_writedesk","Pracovní stůl správkyně",26,39.3,bearing=270)
-    a.find("hvd_book_study",25.43,39.34,height=.88,bearing=265)
-    feature(a,"hvd_sealstand","Archivní pouzdro · záložní Pečeť kotvy",20.7,39.7,
+    a.point("hvd_study_rim_cover_home",2.42,15,180)
+    a.point("hvd_study_exit_cover_home",15,157.90,270)
+    feature(a,"hvd_writedesk","Pracovní stůl správkyně",25.52,38.42,bearing=270)
+    a.find("hvd_book_study",25.0,38.38,height=.88,bearing=265)
+    feature(a,"hvd_sealstand","Archivní pouzdro · záložní Pečeť kotvy",20.7,40.91,
             action="study_anchor",tag="hvd_study_anchor",
             text="Platný stejnopis Kotvy, uložený pro službu, která na horní ochozy přicházela ze štoly.")
-    a.stash(7,"Kufřík na vyřazené čočky",6.32,37.8,"hvd_study_cache",bearing=90,
+    a.stash(7,"Pouzdro soukromých map",6.32,37.25,"hvd_study_cache",bearing=90,
             text="Správkyniny náhradní čočky a drobné zásoby na cestu k ochozům.")
-    feature(a,"hvd_wallring","Vnitřní západka skalní spáry",11.16,15.82,bearing=270,
+    feature(a,"hvd_wallring","Vnitřní západka skalní spáry",8.95,11.53,bearing=180,
             action="study_latch",flag="hvd_secret_rim",tag="hvd_latch_rim")
-    feature(a,"hvd_wallring","Táhlo knihovny",4.40,57.77,bearing=0,
-            action="study_latch",flag="hvd_secret_halls",tag="hvd_latch_halls")
-    feature(a,"hvd_wallring","Závora výstupu na ochozy",12.25,153.9,bearing=90,
+    feature(a,"hvd_wallring","Závora výstupu na ochozy",12.20,153.9,bearing=90,
             action="study_latch",flag="hvd_secret_exit",tag="hvd_latch_exit",
             text="Táhlo vede za severní kamennou obložku. Odjištěná deska otevře pěší výstup na ochozy.")
     return a
 
 
-def areas(art, flight, *, test_guide=False):
+def areas(art, terrain, *, test_guide=False):
     check_plan()
     zones = [
-        camp(art), mountain(art), halls(art), workshops(art), dome(art), steps(art, flight),
-        walks(art, flight), gate(art, flight, test_guide=test_guide), summit(art, flight), study(art),
+        camp(art), mountain(art), halls(art), workshops(art), dome(art), steps(art, terrain),
+        walks(art, terrain.flight), gate(art, terrain.flight, test_guide=test_guide),
+        summit(art, terrain.flight), study(art),
     ]
     place_transitions(zones)
     return zones

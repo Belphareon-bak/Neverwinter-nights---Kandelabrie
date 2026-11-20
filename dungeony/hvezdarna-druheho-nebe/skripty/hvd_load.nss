@@ -7,6 +7,7 @@ void main()
     object area = GetFirstArea();
     while (GetIsObjectValid(area))
     {
+        if (GetTilesetResRef(area) == "tcm02") SetAreaTileBorderDisabled(area, TRUE);
         ++count;
         area = GetNextArea();
     }

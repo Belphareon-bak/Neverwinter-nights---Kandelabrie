@@ -31,8 +31,8 @@ class Threshold:
 
 # Both markers are inset from the same edge in the master floor plan.
 THRESHOLDS = {
-    f'{source}_{target}': Threshold(*join.point(source, THRESHOLD_INSET),
-                                    join.heading(source), PASSAGE_WIDTH, sign)
+    join.route(source, target): Threshold(*join.point(source, THRESHOLD_INSET),
+                                          join.heading(source), PASSAGE_WIDTH, sign)
     for join in JOINS for source, target, _, sign, _ in join.destinations()
 }
 
@@ -115,12 +115,15 @@ def place_transitions(zones):
     areas = {area.key[4:]: area for area in zones}
     for join in JOINS:
         for source, target, name, _, require in join.destinations():
-            landing = f'hvd_land_{target}_{source}'
+            route = join.route(source, target)
+            landing = 'hvd_land_' + join.route(target, source)
             areas[target].point(landing, *join.point(target, LANDING_INSET), join.heading(source))
             model = 'hvd_join_hall' if ZONES[target].interior else 'hvd_join_deck'
-            transition(areas[source], name, f'hvt_{source}_{target}', landing, require,
+            if join.label == 'S1':
+                model = 'hvd_rift_in' if target == 'study' else 'hvd_rift_out'
+            transition(areas[source], name, 'hvt_' + route, landing, require,
                        SECRET_LEVEL if join.secret else 0, model)
             if not require:
                 area = areas[source]
-                sill = THRESHOLDS[f'{source}_{target}']
+                sill = THRESHOLDS[route]
                 area.prop(area.art[model], name, sill.x, sill.y, bearing=sill.bearing)

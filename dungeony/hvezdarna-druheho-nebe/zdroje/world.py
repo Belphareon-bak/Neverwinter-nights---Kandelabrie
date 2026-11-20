@@ -85,7 +85,8 @@ class Tileset:
                     tile_pattern = self.pattern(self.rows[ident])
                     if rotation:
                         tile_pattern = tile_pattern[-rotation:] + tile_pattern[:-rotation]
-                    assert tile_pattern == pattern, (area.key, x, y, ident, tile_pattern, pattern)
+                    if not area.fixed_tiles:
+                        assert tile_pattern == pattern, (area.key, x, y, ident, tile_pattern, pattern)
                 else:
                     assert options, (area.key, x, y, pattern)
                     if pattern == ((self.border, 0),) * 4:
@@ -116,6 +117,7 @@ class Area:
     rooms: list
     purpose: str
     special_tiles: dict = field(default_factory=dict)
+    fixed_tiles: bool = False
     high_row: int = 999
     places: list = field(default_factory=list)
     waypoints: list = field(default_factory=list)

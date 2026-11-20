@@ -25,7 +25,7 @@ GILT = Material((1, .76, .37), "hvd_brass", (.36, .21, .066), shadow=0)
 BLUE = Material((.51, .68, 1), "hvd_glass", (.30, .45, .86), shadow=0)
 AMBER = Material((.98, .73, .37), "hvd_glass", (.70, .40, .10), shadow=0)
 RIFT = Material((.63, .75, 1), "hvd_glass", (.45, .54, .86), alpha=.72, shadow=0)
-FOG = Material((.70, .79, .95), "hvd_clouds", (.48, .52, .66), alpha=.88, shadow=0)
+FOG = Material((.70, .79, .95), "hvd_cloudbank", (.48, .52, .66), alpha=.88, shadow=0)
 
 
 def add(a, b):
@@ -53,15 +53,19 @@ class Mesh:
     def polygon(self, material, points, uv=None):
         self.faces[material].append((tuple(points), uv))
 
-    def box(self, material, x, y, z, w, d, h):
+    def box(self, material, x, y, z, w, d, h, *, tile_uv=None):
         bottom = [(x + dx * w / 2, y + dy * d / 2, z)
                   for dx, dy in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
         top = [add(p, (0, 0, h)) for p in bottom]
-        self.polygon(material, top)
-        self.polygon(material, list(reversed(bottom)))
+        def face(points, u, v):
+            uv = [(p[u]*tile_uv,p[v]*tile_uv) for p in points] if tile_uv is not None else None
+            self.polygon(material,points,uv)
+
+        face(top,0,1)
+        face(list(reversed(bottom)),0,1)
         for i in range(4):
             j = (i + 1) % 4
-            self.polygon(material, (bottom[i], bottom[j], top[j], top[i]))
+            face((bottom[i],bottom[j],top[j],top[i]),i%2,2)
 
     def tube(self, material, a, b, ra, rb=None, sides=16, open_ends=False):
         axis = unit(tuple(y - x for x, y in zip(a, b)))
@@ -433,7 +437,7 @@ def texture(name, size, base, seed, *, slabs=False):
     rng = random.Random(seed)
     stars = {(rng.randrange(size), rng.randrange(size)): rng.randrange(70, 158) for _ in range(280)}
     pixels = bytearray()
-    depth = 32 if name == "hvd_clouds" else 24
+    depth = 32 if name in ("hvd_clouds","hvd_cloudbank") else 24
     for y in range(size):
         for x in range(size):
             wave = sin(x * .11 + sin(y * .07) * 3) * 7 + cos(y * .27 - x * .035) * 5
@@ -452,7 +456,12 @@ def texture(name, size, base, seed, *, slabs=False):
             if depth == 32:
                 cloud = (sin(x * .038 + cos(y * .067)) + cos(y * .047 + sin(x * .069)) +
                          .55 * sin((x + y) * .072) + .37 * cos((x - y) * .103))
-                pixels.append(max(18, min(207, int(109 + 43 * cloud))))
+                opacity = max(18,min(207,int(109+43*cloud)))
+                if name == "hvd_cloudbank":
+                    radius = sqrt((2*x/(size-1)-1)**2+(2*y/(size-1)-1)**2)
+                    edge = max(0.0,min(1.0,(1-radius)/.49))
+                    opacity = int(opacity*edge*edge*(3-2*edge))
+                pixels.append(opacity)
     return struct.pack("<BBBHHBHHHHBB", 0, 0, 2, 0, 0, 0, 0, 0, size, size, depth, 8 if depth == 32 else 0) + pixels
 
 
@@ -472,6 +481,7 @@ def assets(game, scenery, additions):
         ("hvd_brass", 128, (208, 165, 93), 53),
         ("hvd_glass", 128, (99, 123, 213), 71),
         ("hvd_clouds", 256, (188, 201, 223), 83),
+        ("hvd_cloudbank", 256, (188, 201, 223), 83),
     ):
         resources[f"{name}.tga"] = texture(name, size, base, seed)
     # Original stone surfaces for the Castle Exterior chasm tiles in this module.

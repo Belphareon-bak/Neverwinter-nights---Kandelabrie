@@ -39,7 +39,9 @@ BOOKS = {
         "Rozpis údržby. Kotva je v horní dílně, Křídlo na bouřné podestě a Kopí s Lucernou "
         "na visutých ochozech. Doneseme všechny čtyři raznice do předbraní. Tři pustí světlo do optických sloupů, "
         "čtvrtá zvedne závoru u spouště. Každá směna používá vlastní rozpis, aby se vedením nedalo projít naslepo.\n\n"
-        "Správkyně znovu připomíná horní hlídce prohlížet slepá místa v režimu hledání. Služební západku pozná po hladkém okraji."),
+        "Od tábora nás cesta přivede k jediné bráně. Za ní se čeká na rozdělení služby. "
+        "Dílna a lávka jsou vlevo, obsluha clon má průchod vpravo. Správkyně připomíná horní hlídce, "
+        "že při pátrání po ztracené výstroji má prohlédnout i slepá závětří ve sněhu."),
     "hvd_book_study": ("Zápis správkyně o horní službě", 9,
         "Dnes vyjde hlídka k mostům služební štolou. Stejnopis Kotvy jsem nechala v pouzdře vedle stolu. "
         "Převod uzná jedinou Kotvu za celou směnu, ať je z dílny nebo odtud. Na mostech převezmou "
@@ -55,11 +57,11 @@ BOOKS = {
         "Závora propouští převod i se čtvrtou raznicí a vlastní clonu nemá. Spoušť táhneme až po "
         "seřízení, když všichni stojí za mosazným značením. Zkoušku vadného vedení jsem si od minule odřel do kamene."),
     "hvd_book_halls": ("Předpis obsluhy clon", 2,
-        "Při zkoušce filtru se od stěny ke stěně rozbíhá světlý pruh. Jakmile je na kameni vidět, "
-        "ustup za mosaznou rysku a počkej na doznění výboje. Pojistka visí u vstupu do paprskové chodby "
-        "v dolní příjmové síni. Poškozenou západku pomůže uvolnit návod uložený v dolní dílně.\n\n"
-        "Za třetí clonou pokračuj na sever podél skříní s filtry. Dlouhá chodba se stáčí k archivu. "
-        "Jeho západní chodba ústí na horní dvůr dílen."),
+        "Vzkaz střídající směně. Od pultu se vrať do příjmové síně. Mosazná pojistka pod svícnem "
+        "vlevo od východního oblouku sklopí všechny tři clony až do konce výpravy. Kdo nemá "
+        "zneškodňování pastí 15, přinese si Sešit o clonách a zrcadle ze zkušebního stolu v dolní dílně.\n\n"
+        "Dokud je pojistka nahoře, po každém záblesku vyčkej za příčnou ryskou nebo ve výklenku. "
+        "Za třetí clonou zahni doleva ve filtrovně. Kolem archivu dojdeš na horní dvůr dílen."),
     "hvd_book_return": ("Návratový zápis správkyně", 10,
         "Sestoupila jsem servisní lávkou a vrátila se do dolní dílny. V ohlašovně mě při výměně "
         "směn minuli. Doufám, že Ithren zahlédne můj zápis dřív, než začne hledat příčinu opakovaných záblesků. "
@@ -105,7 +107,7 @@ def items(*, test_guide=False):
          "Zachytí jeden výboj a dá družině víc času doběhnout ke cloně návratové lucerny.", 1, MIRROR_MODEL, ()),
         ("hvd_workkey", 65, "Klíč správkyně clon",
          "Otevírá zamčené pouzdro pod stříškou v dolní dílně, u západního okraje podesty. "
-         "Po příchodu z Chodeb clon tu stříšku uvidíš vlevo.", 1, 1, ()),
+         "Za jižní vstupní bránou se dej vlevo. Stříška stojí u pracovního stolu na konci podesty.", 1, 1, ()),
         ("hvd_glass", 77, "Broušené nebeské sklo", "Neporušený kus čočky z nebeského předbraní.", 0, 11, ()),
         ("hvd_brooch", 19, "Brož hvězdáře", "Chrání před mrazem a kouzlem slepoty a hluchoty.", 0, 2, (prop(23, 7, 7, 2), prop(53, 6))),
         ("hvd_cloak", 80, "Plášť dvojí oblohy", "Pomáhá přečkat výboje a vítr nad mraky.", 0, 1, (prop(1, 0, 2, 3), prop(23, 13, 7, 2))),

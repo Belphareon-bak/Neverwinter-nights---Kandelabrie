@@ -2,18 +2,24 @@
 
 import re
 import struct
+from dataclasses import dataclass
 
 from architecture import BASALT, LIMESTONE, MASONRY, PALE, SLATE, surface
-from art import BRASS, TRIM, Mesh
+from art import BRASS, TRIM, Material, Mesh
+from plan import STAIR_EDGE
 
 
 FLIGHT = "hvd_flight"
 PAVING = "hvd_flagstone"
+TERRACE = "hvd_stcourt"
+AIR = "hvd_air"
+WIDE = ("hvd_wide_l", "hvd_wide_r")
 # The original terrace tiles have their floor five metres above the tile origin.
 LOW, HIGH = 5.0, 10.0
 START, END = -4.36, 4.36
 INNER, OUTER = 3.26, 3.78
 COUNT = 20
+COURT_STONE = Material((.79,.82,.90),'hvd_paving')
 
 
 def stair_model():
@@ -53,7 +59,49 @@ def stair_model():
     return mesh
 
 
-def floor_mesh():
+@dataclass(frozen=True)
+class TerraceTiles:
+    flight: int
+    paving: int
+    court: int
+    air: int
+    wide: tuple[int, int]
+
+
+def wide_stair(side):
+    """One half of a stair, with the central joint open to the other half."""
+    mesh = Mesh()
+    inner = side*(5.0-STAIR_EDGE)
+    edge = side*5.0
+    xmin, xmax = sorted((inner, -edge))
+    center = (xmin+xmax)/2
+    run, rise = (END-START)/COUNT, (HIGH-LOW)/COUNT
+    surface(mesh, LIMESTONE, xmin,-5,xmax,START,LOW,.28)
+    surface(mesh, LIMESTONE, xmin,END,xmax,5,HIGH,.28)
+    for i in range(COUNT):
+        y = START + i*run
+        z = LOW + i*rise
+        mesh.box(MASONRY,center,y+run*.5,-3.55,xmax-xmin,run,z+3.55,tile_uv=.33)
+        mesh.box(LIMESTONE,center,y+.028,z-.048,xmax-xmin,.061,.051)
+        # The narrow gilded trim reads as a course of stone at game zoom.
+        if i in (0, 5, 10, 15):
+            mesh.trace(BRASS,(xmin,y+.12,z+.006),(xmax,y+.12,z+.006),.068)
+    mesh.box(MASONRY,center,4.68,-3.55,xmax-xmin,.64,HIGH+3.55,tile_uv=.33)
+    for i in range(10):
+        y = -4.5+i
+        z = max(LOW,min(HIGH,LOW+(y-START)*(HIGH-LOW)/(END-START)))
+        mesh.box(BASALT,(inner+edge)/2,y,-3.65,STAIR_EDGE,.999,z+4.0,tile_uv=.34)
+        mesh.box(LIMESTONE,(inner+edge)/2,y,z-1.10,STAIR_EDGE+.04,.999,.11,tile_uv=.32)
+        if i in (0, 3, 6, 9):
+            mesh.box(MASONRY,(inner+edge)/2,y,z+.29,.57,.59,.92)
+            mesh.box(LIMESTONE,(inner+edge)/2,y,z+1.18,.70,.67,.15)
+    x = inner+side*.31
+    mesh.tube(LIMESTONE,(x,-4.68,LOW+1.03),(x,4.68,HIGH+1.03),.18,sides=8)
+    mesh.tube(BRASS,(x,-4.68,LOW+1.18),(x,4.68,HIGH+1.18),.048,sides=7)
+    return mesh, floor_mesh(xmin,xmax,edge_access=False)
+
+
+def floor_mesh(xmin=-INNER, xmax=INNER, *, edge_access=True):
     vertices, triangles = [], []
 
     def vertex(x, y, z):
@@ -70,10 +118,11 @@ def floor_mesh():
         d = vertex(x0,y1,z1)
         triangles.extend(((a,b,c),(a,c,d)))
 
-    for x0,x1 in ((-5,-INNER),(-INNER,INNER),(INNER,5)):
+    edges = ((-5,xmin),(xmin,xmax),(xmax,5)) if edge_access else ((xmin,xmax),)
+    for x0,x1 in edges:
         ribbon(x0,x1,-5,START,LOW,LOW)
         ribbon(x0,x1,END,5,HIGH,HIGH)
-    ribbon(-INNER,INNER,START,END,LOW,HIGH)
+    ribbon(xmin,xmax,START,END,LOW,HIGH)
     return vertices, triangles
 
 
@@ -107,19 +156,19 @@ def floor_node(name, vertices, triangles, materials=None):
     return "\n".join(lines) + "\n"
 
 
-def set_row(number, name, upper_height):
+def set_row(number, name, upper_height, terrain="cobble"):
     return (
         f"\r\n[TILE{number}]\r\nModel={name}\r\nWalkMesh=msb01\r\n"
-        f"TopLeft=cobble\r\nTopLeftHeight={upper_height}\r\nTopRight=cobble\r\nTopRightHeight={upper_height}\r\n"
-        "BottomLeft=cobble\r\nBottomLeftHeight=0\r\nBottomRight=cobble\r\nBottomRightHeight=0\r\n"
+        f"TopLeft={terrain}\r\nTopLeftHeight={upper_height}\r\nTopRight={terrain}\r\nTopRightHeight={upper_height}\r\n"
+        f"BottomLeft={terrain}\r\nBottomLeftHeight=0\r\nBottomRight={terrain}\r\nBottomRightHeight=0\r\n"
         "Top=\r\nRight=\r\nBottom=\r\nLeft=\r\nMainLight1=1\r\nMainLight2=1\r\n"
         "SourceLight1=1\r\nSourceLight2=1\r\nAnimLoop1=1\r\nAnimLoop2=1\r\nAnimLoop3=1\r\n"
-        "Doors=0\r\nSounds=0\r\nPathNode=F\r\nOrientation=0\r\nVisibilityNode=A\r\n"
+        f"Doors=0\r\nSounds=0\r\nPathNode={'A' if terrain=='chasm' else 'F'}\r\nOrientation=0\r\nVisibilityNode=A\r\n"
         f"VisibilityOrientation=0\r\nImageMap2D=mi_{name}\r\n\r\n"
     )
 
 
-def as_tile(name, mesh, floor, is_flight=False):
+def as_tile(name, mesh, floor, is_flight=False, *, empty=False):
     node = floor_node(name, *floor).encode("ascii")
     model = mesh.mdl(name).replace(b"classification Other",b"classification Tile")
     model = model.replace(b"endmodelgeom",node+b"endmodelgeom",1)
@@ -137,22 +186,45 @@ def as_tile(name, mesh, floor, is_flight=False):
                 color = (151,164,199)
             if not is_flight and (y%16==0 or (x+8*(y//16))%20==0):
                 color = (74,88,112)
+            if empty:
+                color = (7,8,17)
             pixels.extend(color)
     return {f"{name}.mdl":model, f"{name}.wok":walk, f"mi_{name}.tga":header+pixels}
 
 
 def tile_assets(game):
     raw = game.read("tcm02","set").decode("latin-1")
+    raw = raw.replace("Border=Cobble", "Border=Chasm", 1)
+    # This is the sky outside the authored islands, including area border
+    # tiles drawn by the client beyond the editable grid.
+    raw = re.sub(r"(?m)^(Model=)(tcm02_v05_\d+)(\r?)$", rf"\g<1>{AIR}\3", raw)
     found = re.search(r"(?im)^(\[TILES\]\r?\nCount=)(\d+)",raw)
     if not found:
         raise ValueError("Castle Exterior tileset has no tile count")
     number = int(found[2])
-    raw = raw[:found.start(2)] + str(number+2) + raw[found.end(2):]
+    raw = raw[:found.start(2)] + str(number+6) + raw[found.end(2):]
     cursor = re.search(r"(?im)^\[GROUPS\]",raw).start()
-    rows = set_row(number,FLIGHT,1) + set_row(number+1,PAVING,0)
+    ids = TerraceTiles(number,number+1,number+2,number+3,(number+4,number+5))
+    rows = (set_row(ids.flight,FLIGHT,1) + set_row(ids.paving,PAVING,0) +
+            set_row(ids.court,TERRACE,0) + set_row(ids.air,AIR,0,"chasm") +
+            ''.join(set_row(i,name,1) for i,name in zip(ids.wide,WIDE,strict=True)))
     raw = raw[:cursor] + rows + raw[cursor:]
     paving = Mesh()
     surface(paving, MASONRY, -5,-5,5,5,LOW,.30)
-    flat = ([(-5,-5,LOW),(5,-5,LOW),(5,5,LOW),(-5,5,LOW)], [(0,1,2),(0,2,3)])
-    return number, number+1, {"tcm02.set":raw.encode("latin-1"),
-                              **as_tile(FLIGHT,stair_model(),floor_mesh(),True), **as_tile(PAVING,paving,flat)}
+    court = Mesh()
+    court.box(BASALT,0,0,-4.4,10,10,8.9,tile_uv=.28)
+    court.box(MASONRY,0,0,4.47,10,10,.53,tile_uv=.33)
+    surface(court,COURT_STONE,-5,-5,5,5,LOW+.004,.34)
+    triangles = [(0,1,2),(0,2,3)]
+    flat = ([(-5,-5,LOW),(5,-5,LOW),(5,5,LOW),(-5,5,LOW)], triangles)
+    void = ([(-5,-5,-32),(5,-5,-32),(5,5,-32),(-5,5,-32)], triangles, [7,7])
+    resources = {
+        "tcm02.set":raw.encode("latin-1"),
+        **as_tile(FLIGHT,stair_model(),floor_mesh(),True),
+        **as_tile(PAVING,paving,flat),
+        **as_tile(TERRACE,court,flat),
+        **as_tile(AIR,Mesh(),void,empty=True),
+    }
+    for name, side in zip(WIDE,(-1,1),strict=True):
+        resources.update(as_tile(name,*wide_stair(side),True))
+    return ids, resources

@@ -2,6 +2,8 @@
 
 from math import cos, sin, tau
 
+from architecture import CHECKPOINT_WALLS
+
 
 def rectangle(x, y, width, depth):
     return tuple((x + dx * width / 2, y + dy * depth / 2)
@@ -42,7 +44,12 @@ FOOTPRINTS = {
     "hvd_campshell": shelter(3.74),
     "hvd_shoproof": shelter(3.38),
     "hvd_crag": (rectangle(0,0,7.8,6.8),),
-    "hvd_secretrock": (rectangle(0,0,6.3,2.42),),
+    "hvd_sliprock": (rectangle(0,0,5.86,1.90),),
+    "hvd_talus": (rectangle(0,0,5.9,2.16),),
+    "hvd_serviceslab": (rectangle(0,0,5.94,.55),),
+    "hvd_entrywalls": tuple(rectangle(*wall) for wall in CHECKPOINT_WALLS),
+    "hvd_bulkhead": arch_feet(2.48,.33,.56),
+    "hvd_gateblind": (rectangle(0,-.024,5.69,.49),),
     "hvd_snowbank": (rectangle(0,0,3.15,2.0),),
     "hvd_crate": (rectangle(0,0,1.13,.75),),
     "hvd_shelf": (rectangle(0,0,2.13,.75),),
@@ -80,6 +87,8 @@ FOOTPRINTS = {
     "hvd_smithbench": (rectangle(0,0,2.76,1.16),),
     "hvd_capstan": (rectangle(0,0,2.04,1.46),),
     "hvd_writedesk": (rectangle(0,0,2.68,1.16),),
+    "hvd_drawers": (rectangle(0,.015,3.19,.91),),
+    "hvd_filtergrid": (rectangle(0,0,4.51,.83),),
     "hvd_logstand": (rectangle(0,.075,2.66,1.02),),
     "hvd_register": (rectangle(0,.04,3.31,1.77),),
     "hvd_spearrack": (rectangle(0,.12,2.55,.68),),

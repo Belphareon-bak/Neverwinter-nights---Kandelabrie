@@ -18,10 +18,11 @@ def chamber(code, height, frames):
 
 PLANS = {
     'hvd_halls': chamber('halls', 3.35,
-        ((18,1.55,0,5.7),(18,9,0,5.7),(24,15,90,4.9),
-         (48,15,90,4.9),(55.55,38.7,0,4.8),(25.5,45,90,5.6),(1.55,55,90,5.5))),
+        ((1.55,15,90,5.7),(7,15,90,5.7),(13,20.5,0,5.7),
+         (21,15,90,4.9),(47,15,90,4.9),(49.85,37.15,0,5.6),
+         (24,45,90,5.6),(1.55,55,90,5.5))),
     'hvd_study': chamber('study', 3.32,
-        ((8.5,31,0,5.5),(16.9,45.6,0,5.5),(23,58,0,5.5),(15,158.35,0,5.55))),
+        ((8.8,31,0,5.5),(17.9,42.9,0,5.5),(23,58.6,0,5.5))),
     'hvd_dome': chamber('dome', 3.85,
         ((30,1.55,0,5.8),(30,17,0,6),(13.2,26.05,90,5.9),
          (46.8,26.1,90,5.8),(30,46,0,6.4))),
@@ -161,8 +162,6 @@ def tileset(game):
         size,_,height,frames=PLANS[area]
         model,wok,cells=chamber_tile(x,y,occupied[area],height,frames,size)
         resources.update(as_tile(name,model,wok))
-        if area == 'hvd_halls' and (x, y) == (6, 2):
-            cells = [(l,b,min(r,-.8),t) for l,b,r,t in cells if l < -.8]
         resources[f'mi_{name}.tga']=minimap(cells)
         corners=''.join(f'{corner}=stone\r\n{corner}Height=0\r\n' for corner in (
             'TopLeft','TopRight','BottomLeft','BottomRight'))

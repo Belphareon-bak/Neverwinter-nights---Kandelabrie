@@ -204,6 +204,76 @@ def rock_mound(seed, snow, spread, height):
     return m
 
 
+CHECKPOINT_WALLS = (
+    (-.42,3.00,14.90,.66), (-5.87,-3.03,5.64,.62), (5.07,-3.03,3.96,.62),
+    (-3.11,-7.55,.62,9.20), (3.11,-7.55,.62,9.20),
+)
+
+
+def entry_walls():
+    m = Mesh()
+    for x,y,w,d in CHECKPOINT_WALLS:
+        m.box(BASALT,x,y,-.25,w+.12,d+.12,.67,tile_uv=.30)
+        m.box(MASONRY,x,y,.42,w,d,3.32,tile_uv=.30)
+        m.box(TRIM,x,y,2.83,w+.07,d+.07,.14)
+        m.box(LIMESTONE,x,y,3.65,w+.23,d+.23,.32)
+    for x in (-6.5,-3.05,.1,3.24,6.30):
+        m.box(BASALT,x,2.62,0,.64,.61,.45)
+        m.box(SLATE,x,2.65,.43,.39,.54,3.36)
+    for x in (-4.74,-1.56,1.70,4.78):
+        m.box(DARK,x,2.639,1.34,1.37,.16,1.22)
+        m.box(BRASS,x,2.532,1.39,1.18,.055,1.09)
+        for dx in (-.38,0,.38):
+            m.box(ICE,x+dx,2.494,1.50,.28,.025,.91)
+        m.box(LIMESTONE,x,2.46,1.22,1.47,.25,.13)
+    return m
+
+
+def cliff_course(width, height, seed):
+    """Angular layers with a continuous face, like a weathered rock ledge."""
+    m = Mesh()
+    rng = random.Random(seed)
+    rings = []
+    x_scales = (1.0,.98,.92,.87,.73)
+    for layer,z in enumerate((-.42,height*.22,height*.48,height*.77,height)):
+        width_at_level = width*x_scales[layer]/2
+        depth = (1.55,1.5,1.46,1.31,.91)[layer]
+        rings.append([(x*width_at_level + rng.uniform(-.12,.12),
+                       y*depth + rng.uniform(-.19,.19),
+                       z + rng.uniform(-.21,.21))
+                      for x,y in ((-1,-.24),(-.84,-.88),(-.19,-1),(.44,-.91),
+                                  (.98,-.51),(1,.33),(.69,.89),(-.58,.98),(-.95,.62))])
+    for band,(lower,upper) in enumerate(zip(rings,rings[1:])):
+        for i in range(len(lower)):
+            j = (i+1)%len(lower)
+            m.polygon(BASALT if (i+band)%3 else SLATE,(lower[i],lower[j],upper[j]))
+            m.polygon(SNOW if band==3 and i%3==0 else BASALT,(lower[i],upper[j],upper[i]))
+    m.polygon(SNOW,rings[-1])
+    return m
+
+
+def service_slab():
+    """Undecorated face cut into the same courses as the walls beside it."""
+    m = Mesh()
+    m.box(MASONRY,0,0,0,5.94,.55,3.34,tile_uv=.30)
+    m.box(BASALT,0,-.08,0,5.98,.55,.38)
+    m.box(TRIM,0,-.08,.38,5.98,.44,.12)
+    m.box(LIMESTONE,0,-.035,3.12,5.98,.54,.22)
+    return m
+
+
+def hall_bulkhead():
+    m = Mesh()
+    for x in (-2.48,2.48):
+        m.box(BASALT,x,0,0,.32,.57,.43)
+        m.box(MASONRY,x,0,.43,.27,.52,2.49)
+        m.box(LIMESTONE,x,0,2.86,.43,.68,.24)
+    # A flat architrave sits against the tile walls and carries conduit.
+    m.box(MASONRY,0,0,2.94,5.17,.54,.37)
+    m.box(BRASS,0,-.283,3.08,4.77,.10,.065)
+    return m
+
+
 def inset(warm=False, narrow=False):
     m = Mesh()
     w,x = (1.48, 2.49) if narrow else (2.39, 2.46)

@@ -2,7 +2,8 @@
 
 from math import cos, hypot, pi, sin, tau
 
-from architecture import BASALT, ICE, LIMESTONE, MASONRY, SLATE, WOOD, rock_mound, rosette
+from architecture import (BASALT, ICE, LIMESTONE, MASONRY, SLATE, SNOW, WOOD, cliff_course,
+                          entry_walls, hall_bulkhead, rosette, service_slab)
 from art import BRASS, CROWN, DARK, GILT, TRIM, Material, Mesh
 from plan import GATE_JOIN, OPTICS_JOIN, PASSAGE_WIDTH, THRESHOLD_INSET, TILE, WALKS, ZONES
 
@@ -42,8 +43,10 @@ def brass_rim(m, radius, spring, crown, y, material, size=.05):
 def preview_approach(m, join):
     """Use the actual landing and first stair of the next area in the aperture."""
     target = join.second
-    col, row = ZONES[target].stairs[0]
-    stair_x, stair_y = TILE*(col+.5), TILE*row
+    zone = ZONES[target]
+    _, row = zone.stairs[0]
+    left, right = next(zone.flights(row))
+    stair_x, stair_y = (left+right)/2, TILE*row
     origin, _ = join.point(target)
     approach = [(x-origin, y + THRESHOLD_INSET) for x,y in WALKS[target][0] if y < stair_y]
     approach.append((stair_x-origin, stair_y+THRESHOLD_INSET))
@@ -53,11 +56,12 @@ def preview_approach(m, join):
         for offset in (-2.66,2.66):
             m.trace(LIMESTONE,(x0+offset,y0,.07),(x1+offset,y1,.07),.20)
     x = stair_x-origin
-    for i in range(10):
-        y = stair_y + THRESHOLD_INSET + i+.5
-        z = .5*(i+1)
-        m.box(MASONRY,x,y,-.08,6.5,1.0,z+.08)
-        m.box(SLATE,x,y,z-.045,6.52,1.005,.045)
+    width = right-left
+    for i in range(20):
+        y = stair_y + THRESHOLD_INSET + (i+.5)*.5
+        z = .25*(i+1)
+        m.box(MASONRY,x,y,-.08,width,.5,z+.08)
+        m.box(LIMESTONE,x,y-.22,z-.04,width,.067,.04)
 
 
 def dome_shutter():
@@ -92,6 +96,38 @@ def adjoining_landing(*, enclosed):
                 m.box(MASONRY, edge, y, -1.48, .32, .34, 2.17)
                 m.box(TRIM, edge, y, .67, .42, .48, .12)
             m.box(LIMESTONE, edge, center, .57, .24, length, .15)
+    return m
+
+
+def service_view(outside):
+    """A rock-cut threshold continues into snow on one side and the adit on the other."""
+    m = Mesh()
+    start = THRESHOLD_INSET - .06
+    end = start + 6.25
+    m.box(SNOW if outside else MASONRY,0,(start+end)/2,-.32,5.75,end-start,.32,tile_uv=.31)
+    for side in (-1,1):
+        lower = [(side*2.8,start,0),(side*2.71,start+1.52,0),
+                 (side*2.42,start+3.41,0),(side*(2.02 if side>0 else 3.6),end,0)]
+        upper = [(x + side*.2*(i%2),y,3.47+.33*(i%3)) for i,(x,y,_) in enumerate(lower)]
+        for a,b,c,d in zip(lower,lower[1:],upper,upper[1:]):
+            m.polygon(BASALT,(a,b,d,c),[(y*.30,z*.31) for _,y,z in (a,b,d,c)])
+            m.polygon(BASALT,(c,d,b,a),[(y*.30,z*.31) for _,y,z in (c,d,b,a)])
+            m.tube(SNOW if outside else SLATE,(a[0],a[1],.11),(b[0],b[1],.13),.16,sides=6)
+    if not outside:
+        m.box(SLATE,.72,end-.12,0,4.06,.39,3.92,tile_uv=.32)
+    return m
+
+
+def stair_approach():
+    m = Mesh()
+    m.box(SLATE,0,0,.006,5.48,11.4,.022,tile_uv=.35)
+    for x in (-2.69,2.69):
+        m.trace(TRIM,(x,-5.7,.031),(x,5.7,.031),.096)
+        for y in (-5.1,-3.9,-2.7,2.7,3.9,5.1):
+            m.trace(BRASS,(x,y,.032),(x*.76,y,.032),.074)
+    for r in (.79,1.51):
+        m.ring(BRASS,r,.047,.036)
+    rosette(m,0,0,.038,.66,TRIM,8)
     return m
 
 
@@ -245,12 +281,19 @@ SCENERY = {
     'hvd_signallamp': ('Poslední lucerna s ruční clonou', last_lantern),
     'hvd_flankwalls': ('Boční opěry horské pozorovatelny', wing_walls),
     'hvd_bridgeedge': ('Zábradlí visutého ochozu', bridge_rail),
+    'hvd_entrywalls': ('Nosné zdivo vstupní síně', entry_walls),
+    'hvd_talus': ('Zasněžené vrstvy skalního hřbetu', lambda: cliff_course(6.3,5.45,271)),
+    'hvd_bulkhead': ('Kamenný rám s vedením clon', hall_bulkhead),
+    'hvd_stairaxis': ('Dlažba poledníku', stair_approach),
 }
 
 VISUALS = {
     'hvd_join_deck': ('Podesta za prahem', lambda: adjoining_landing(enclosed=False)),
     'hvd_join_hall': ('Chodba za prahem', lambda: adjoining_landing(enclosed=True)),
-    'hvd_secretrock': ('Zasněžený výčnělek', lambda: rock_mound(645, True, 3.0, 5.7)),
+    'hvd_sliprock': ('Zvětralý líc skalního hřbetu', lambda: cliff_course(5.94,5.08,622)),
+    'hvd_serviceslab': ('Kamenná vyzdívka', service_slab),
+    'hvd_rift_in': ('Pokračování do skalní štoly',lambda: service_view(False)),
+    'hvd_rift_out': ('Zasněžené závětří před štolou',lambda: service_view(True)),
     'hvd_optcover': ('Uzávěr Schodů do nebe', dome_shutter),
     'hvd_stairview': ('První schody pod září portálu', stair_portal),
     'hvd_domelight': ('Paprsek seřízeného refraktoru', dome_ray),

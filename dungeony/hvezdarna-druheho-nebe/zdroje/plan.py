@@ -3,12 +3,13 @@
 from dataclasses import dataclass
 
 
-VERSION = 12
+VERSION = 13
 TILE = 10
 THRESHOLD_INSET = 1.55
 LANDING_INSET = 5.0
 PASSAGE_WIDTH = 4.8
 SECRET_LEVEL = 38
+STAIR_EDGE = .9
 DIRECTIONS = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}
 
 
@@ -43,25 +44,35 @@ class ZonePlan:
         return (*terraces, *spans)
 
     def contains(self, x, y):
-        for row in {row for _, row in self.stairs}:
-            if TILE*row < y < TILE*(row+1):
-                return any(stair_row == row and abs(x - TILE*(col+.5)) <= 3.25
-                           for col, stair_row in self.stairs)
+        row = int(y // TILE)
+        if TILE*row < y < TILE*(row+1) and any(stair_row == row for _, stair_row in self.stairs):
+            return any(left <= x <= right for left, right in self.flights(row))
         return any(l <= x <= r and low <= y <= high for l, low, r, high in self.floor)
+
+    def flights(self, row):
+        columns = {col for col, stair_row in self.stairs if stair_row == row}
+        for first in sorted(columns):
+            if first - 1 in columns:
+                continue
+            last = first
+            while last + 1 in columns:
+                last += 1
+            inset = 1.75 if first == last else STAIR_EDGE
+            yield TILE*first + inset, TILE*(last + 1) - inset
 
 
 ZONES = {
     'camp': ZonePlan('Horský tábor', (4, 0), (5, 3), ((1, 0, 4, 3),)),
     'rim': ZonePlan('Výstupová římsa', (4, 3), (9, 4), (
-        (1, 0, 5, 3), (1, 2, 2, 4), (3, 2, 5, 4),
+        (1, 0, 5, 2), (1, 2, 4, 3), (1, 2, 2, 4),
         (5, 1, 7, 2), (6, 2, 9, 3),
     )),
     'halls': ZonePlan('Chodby clon', (6, 7), (7, 6), (
-        (8, 9, 24, 23), (15.05, 0, 20.95, 9),
-        (24, 12.55, 48, 17.45), (48, 10.5, 64.2, 38.7),
-        (53.15, 38.7, 57.95, 47.8), (25.5, 42.2, 53.15, 47.8),
-        (7, 39.5, 25.5, 59.4), (0, 52.2, 7, 57.8),
-        (64.2, 22.1, 70, 27.9),
+        (0, 12.1, 7, 17.9), (7, 10.6, 21, 20.5), (9, 20.5, 17, 24.2),
+        (21, 12.55, 47, 17.45), (30.8, 17.45, 34.1, 20.2), (38, 9.6, 41.35, 12.55),
+        (47, 11.35, 52.7, 37.15), (52.7, 18.3, 59.0, 26), (46.8, 37.15, 55, 48.2),
+        (24, 42.2, 46.8, 47.8), (9, 39.7, 24, 49.1), (7, 49.1, 19.5, 59.4),
+        (19.5, 50.6, 23.0, 57.9), (0, 52.2, 7, 57.8),
     ), interior=True),
     'works': ZonePlan('Dílny a servisní lávka', (0, 7), (6, 8), (
         (1, 1, 6, 2), (4, 0, 6, 1), (1, 5, 5, 7), (5, 5, 6, 6), (2, 7, 4, 8),
@@ -73,9 +84,10 @@ ZONES = {
         (26.8, 46, 33.2, 60), (38.3, 12.25, 48, 17),
     ), interior=True),
     'steps': ZonePlan('Schody do nebe', (0, 21), (7, 10), (
-        (1, 1, 6, 8), (0, 2, 7, 3), (0, 4, 7, 5), (0, 6, 7, 7),
-        (2, 0, 7, 1), (2, 8, 4, 9), (2, 9, 3, 10),
-    ), stairs=((2, 2), (4, 4), (3, 6))),
+        (2, 0, 7, 1), (1, 1, 5, 2), (2, 2, 4, 3),
+        (1, 3, 6, 4), (3, 4, 5, 5), (1, 5, 6, 6),
+        (2, 6, 4, 7), (1, 7, 5, 9), (2, 9, 3, 10),
+    ), stairs=((2, 2), (3, 2), (3, 4), (4, 4), (2, 6), (3, 6))),
     'walks': ZonePlan('Visuté ochozy', (7, 20), (8, 11), (
         (0, 1, 8, 2), (7, 0, 8, 1), (0, 5, 8, 6), (1, 6, 7, 7),
         (0, 7, 8, 8), (1, 8, 6, 9), (0, 9, 8, 10), (1, 10, 2, 11),
@@ -88,9 +100,10 @@ ZONES = {
         (2, 1, 5, 3), (1, 3, 6, 5), (2, 5, 5, 6), (0, 2, 7, 3), (3, 0, 4, 1),
     ), stairs=((2, 2),)),
     'study': ZonePlan('Pracovna správkyně', (13, 4), (3, 16), (
-        (0, 12.1, 11.4, 17.9), (5.4, 17.9, 11.4, 31),
-        (5, 31, 27, 44), (14, 44, 19.8, 47), (5, 47, 27, 58), (0, 52.1, 5, 57.9),
-        (20, 58, 26, 83), (26, 72, 28.8, 80), (10, 83, 26, 89),
+        (0, 12.1, 6, 17.9), (6, 11.2, 11.6, 18.3), (6, 18.3, 11.6, 31),
+        (5.2, 31, 22, 42.9), (22, 35.1, 26.5, 41.7),
+        (15, 42.9, 20.8, 52.5), (15, 52.5, 25, 58.6),
+        (20, 58.6, 26, 83), (26, 72, 28.8, 80), (10, 83, 26, 89),
         (10, 89, 16, 117), (6.5, 99, 10, 107), (10, 117, 23, 123),
         (17, 123, 23, 144), (23, 130, 28.5, 141), (12, 144, 23, 150),
         (12, 150, 18, 160),
@@ -100,6 +113,7 @@ ZONES = {
 
 @dataclass(frozen=True)
 class Join:
+    label: str
     first: str
     second: str
     edge: tuple[float, float]
@@ -108,6 +122,10 @@ class Join:
     signs: tuple[str, str]
     required: str = ''
     secret: bool = False
+    branch: str = ''
+
+    def route(self, source, target):
+        return f'{source}_{target}_{self.branch}' if self.branch else f'{source}_{target}'
 
     def heading(self, zone):
         return self.facing if zone == self.first else (self.facing + 180) % 360
@@ -123,31 +141,29 @@ class Join:
 
 
 JOINS = (
-    Join('camp', 'rim', (66, 30), 90, ('Na Výstupovou římsu', 'Zpět do tábora'),
+    Join('00', 'camp', 'rim', (66, 30), 90, ('Na Výstupovou římsu', 'Zpět do tábora'),
          ('VYSTUPOVA RIMSA', 'TABOR')),
-    Join('rim', 'halls', (78, 70), 90, ('Vedlejší vchod do Chodeb clon', 'Zpět na Výstupovou římsu'),
-         ('CHODBY CLON', 'VYSTUPOVA RIMSA')),
-    Join('halls', 'works', (60, 125), 180, ('Do dílen', 'Do chodeb clon'),
-         ('DILNY', 'CHODBY CLON')),
-    Join('works', 'rim', (53, 70), 270, ('Zpět na Výstupovou římsu', 'Hlavní vstup do Zkušebny'),
-         ('VYSTUPOVA RIMSA', 'ZKUSEBNA')),
-    Join('works', 'dome', (30, 150), 90, ('Do kopule', 'Zpět do dílen'),
+    Join('03', 'rim', 'works', (53, 70), 90, ('Hlavní vstup do Zkušebny', 'Zpět na Výstupovou římsu'),
+         ('ZKUSEBNA', 'VYSTUPOVA RIMSA')),
+    Join('01', 'works', 'halls', (60, 85), 0, ('Do Chodeb clon', 'Do Zkušebny'),
+         ('CHODBY CLON', 'ZKUSEBNA'), branch='lab'),
+    Join('02', 'halls', 'works', (60, 125), 180, ('Do horní dílny', 'Do archivu clon'),
+         ('DILNY', 'ARCHIV CLON')),
+    Join('04', 'works', 'dome', (30, 150), 90, ('Do kopule', 'Zpět do dílen'),
          ('KOPULE', 'DILNY')),
-    Join('dome', 'steps', (30, 210), 90, ('Na Schody do nebe', 'Sestoupit do kopule'),
+    Join('05', 'dome', 'steps', (30, 210), 90, ('Na Schody do nebe', 'Sestoupit do kopule'),
          ('SCHODY DO NEBE', 'KOPULE'), 'hvd_aligned'),
-    Join('steps', 'walks', (70, 215), 0, ('K visutým ochozům', 'K patě Schodů do nebe'),
+    Join('06', 'steps', 'walks', (70, 215), 0, ('K visutým ochozům', 'K patě Schodů do nebe'),
          ('OCHOZY', 'SCHODY DO NEBE')),
-    Join('steps', 'gate', (25, 310), 90, ('K západnímu vchodu Předbraní', 'Na Schody do nebe'),
+    Join('07', 'steps', 'gate', (25, 310), 90, ('K západnímu vchodu Předbraní', 'Na Schody do nebe'),
          ('PREDBRANI', 'SCHODY DO NEBE')),
-    Join('walks', 'gate', (85, 310), 90, ('K východnímu vchodu Předbraní', 'Zpět na visuté ochozy'),
+    Join('08', 'walks', 'gate', (85, 310), 90, ('K východnímu vchodu Předbraní', 'Zpět na visuté ochozy'),
          ('PREDBRANI', 'OCHOZY')),
-    Join('gate', 'top', (55, 380), 90, ('Na Poslední stupeň', 'Ústup do předbraní'),
+    Join('09', 'gate', 'top', (55, 380), 90, ('Na Poslední stupeň', 'Ústup do předbraní'),
          ('POSLEDNI STUPEN', 'PREDBRANI'), 'hvd_gate_open'),
-    Join('rim', 'study', (130, 55), 0, ('Skalní spára do Pracovny', 'Skalní spára na Výstupovou římsu'),
+    Join('S1', 'rim', 'study', (130, 55), 0, ('Skalní spára do Pracovny', 'Skalní spára na Výstupovou římsu'),
          ('PRACOVNA', 'VYSTUPOVA RIMSA'), 'hvd_secret_rim', True),
-    Join('halls', 'study', (130, 95), 0, ('Za knihovnou do Pracovny', 'Za knihovnou do Chodeb clon'),
-         ('PRACOVNA', 'CHODBY CLON'), 'hvd_secret_halls', True),
-    Join('study', 'walks', (145, 200), 90, ('Služební výstup na Visuté ochozy', 'Služební sestup do Pracovny'),
+    Join('S2', 'study', 'walks', (145, 200), 90, ('Služební výstup na Visuté ochozy', 'Služební sestup do Pracovny'),
          ('OCHOZY', 'PRACOVNA'), 'hvd_secret_exit', True),
 )
 
@@ -159,14 +175,14 @@ GATE_JOIN = next(join for join in JOINS if join.required == 'hvd_gate_open')
 # their landings and lead to the same north exit.
 WALKS = {
     'camp': (((23,16),(26.2,23.8),(26,30)),),
-    'rim': (((26,0),(26,9),(26,12)), ((26,12),(33,16),(38,22),(38,40)),
-            ((26,12),(19,17),(15,25),(13,32),(13,40))),
-    'halls': (((18,0),(18,15),(55.55,15),(55.55,45),(14,45),(14,55),(0,55)),),
-    'works': (((53,0),(53,15),(42,16.5),(25,17),(25,52),(34,55),(60,55)),
+    'rim': (((26,0),(26,9),(26,12),(19,17),(15,25),(13,32),(13,40)),),
+    'halls': (((0,15),(7,15),(16,15),(49.9,15),(49.9,43),(46.8,45),(15.5,45),(14,55),(0,55)),),
+    'works': (((53,0),(53,15),(42,15),(25,17),(25,52),(34,55),(60,55)),
+              ((53,15),(60,15)),
               ((34,55),(30,65),(30,80))),
     'dome': (((30,0),(30,19),(36,24),(36,37),(30,44),(30,60)),),
-    'steps': (((30,0),(30,7),(25,14.5),(25,32),(33,35),(45,36),(45,51.6),
-               (41,57.3),(35,59.5),(35,77),(25,85),(25,100)),
+    'steps': (((30,0),(30,7),(28,16),(28,32),(39.5,36.5),(40,53.1),
+               (30,58.0),(30,76),(25,86),(25,100)),
               ((30,7),(46,7),(57,5),(70,5))),
     'walks': (((0,15),(25,15),(25,62),(28,65),(45,66),(45,83.9),(15,85),(15,110)),
               ((25,15),(55,16),(55,62),(58,64),(56,66),(45,66))),
@@ -175,20 +191,19 @@ WALKS = {
     'top': (((35,0),(35,9),(25,15.5),(25,31.8),(32,39),(35,54)),),
 }
 SECRET_WALKS = {
-    'rim': (((33,16),(43,16),(55,15),(64.8,16),(65.4,23.5),(73,26),(80,25),(90,25)),),
-    'halls': (((55.55,25),(62.5,25),(70,25)),),
-    'study': (((0,15),(8.5,15),(8.5,38),(16.9,41),(16.9,49),(12.7,53),(23,54),(23,86),(13,86),(13,120),
-               (20,120),(20,147),(15,147),(15,160)),
-              ((0,55),(7,55),(12.7,53))),
+    'rim': (((26,12),(32,13.6),(43,14.8),(55,15),(64.2,15.7),(65.4,24.6),
+             (72.5,26),(77.2,23.7),(82,23.7),(85.4,25),(90,25)),),
+    'study': (((0,15),(8.5,15),(8.5,36),(17.8,38.8),(17.9,46),(17.9,54.8),(23,55.9),
+               (23,86),(13,86),(13,120),(20,120),(20,147),(15,147),(15,160)),),
     'walks': (((75,0),(75,13),(66,15),(55,16)),),
 }
 LANDMARKS = {
     'camp': ((23,16,'Nocleh'),),
-    'rim': ((26,12,'Rozcestí'),),
+    'rim': ((23,14.2,'Rozcestí'),),
     'halls': ((15.5,50,'Archiv'), (36,15,'Clony')),
-    'works': ((17,16,'Zkušebna'), (18,57,'Kotva')),
+    'works': ((16.8,16,'Zkušebna'), (51.5,16.9,'Vstupní síň'), (18,57,'Kotva')),
     'dome': ((30,31,'Refraktor'),),
-    'steps': ((45.1,56.5,'Křídlo'),),
+    'steps': ((48,57.5,'Křídlo'),),
     'walks': ((19,62.7,'Kopí'), (63,62.7,'Lucerna')),
     'top': ((38.15,55.5,'Lucerna'),),
     'study': ((20.7,39.7,'Záložní Kotva'),),
@@ -196,6 +211,10 @@ LANDMARKS = {
 
 
 def check_plan():
+    routes = [join.route(source, target) for join in JOINS
+              for source, target, _, _, _ in join.destinations()]
+    if len(routes) != len(set(routes)) or len(JOINS) != len({join.label for join in JOINS}):
+        raise ValueError('Every threshold needs a unique route and map label')
     occupied = set()
     for code, zone in ZONES.items():
         x, y = zone.origin

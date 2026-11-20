@@ -3,7 +3,7 @@
 from math import cos, pi, sin
 from struct import pack
 
-from architecture import BASALT, LIMESTONE, MASONRY, PARCHMENT, WOOD
+from architecture import BASALT, ICE, LIMESTONE, MASONRY, OLDWOOD, PALE, PARCHMENT, WOOD
 from art import BRASS, DARK, GILT, TRIM, Material, Mesh, arch
 
 
@@ -98,6 +98,36 @@ def writing_desk():
     m.disc(INK, (1.02, -.23, .88), (1.02, -.23, 1.03), .087, sides=8)
     m.tube(IRON, (.88, -.30, .90), (1.18, -.20, .91), .015, sides=6)
     m.polygon(PARCHMENT, ((.99, -.27, .926), (1.24, -.19, .951), (1.10, -.16, .959)))
+    return m
+
+
+def plan_drawers():
+    m = Mesh()
+    m.box(OLDWOOD,0,.04,0,3.12,.82,.22,tile_uv=.37)
+    m.box(WOOD,0,.04,.22,3.02,.77,1.18,tile_uv=.45)
+    m.box(OLDWOOD,0,.022,1.40,3.19,.91,.10)
+    for x in (-.76,.76):
+        for z in (.28,.58,.88,1.17):
+            m.box(OLDWOOD,x,-.366,z,1.36,.15,.24,tile_uv=.65)
+            m.box(BRASS,x,-.459,z+.106,.27,.071,.064)
+            m.box(PARCHMENT,x-.38,-.452,z+.081,.192,.032,.12)
+        m.tube(PARCHMENT,(x-.32,.11,1.56),(x+.45,.05,1.56),.065,sides=14)
+    return m
+
+
+def filter_grid():
+    m = Mesh()
+    m.box(BASALT,0,0,0,4.45,.80,.25,tile_uv=.34)
+    m.box(MASONRY,0,.1,.25,4.27,.49,2.71,tile_uv=.41)
+    m.box(LIMESTONE,0,0,2.91,4.51,.79,.18)
+    for i in range(5):
+        x = (i-2)*.812
+        m.box(BRASS,x,-.224,.42,.69,.18,2.16)
+        m.box(DARK,x,-.33,.50,.51,.06,1.99)
+        for j in range(2):
+            z=1.02+j*.89
+            m.disc(TRIM,(x,-.357,z),(x,-.41,z),.263,sides=12)
+            m.disc(PALE if (i+j)%2 else ICE,(x,-.410,z),(x,-.474,z),.212,sides=16)
     return m
 
 
@@ -214,6 +244,8 @@ SCENERY = {
     'hvd_smithbench': ('Stůl s přípravkem na kování obrub', smith_bench),
     'hvd_capstan': ('Buben lana pro vytažení lávky', capstan),
     'hvd_writedesk': ('Stůl správkyně s folianti', writing_desk),
+    'hvd_drawers': ('Přihrádky na hvězdné mapy', plan_drawers),
+    'hvd_filtergrid': ('Sušák optických filtrů', filter_grid),
     'hvd_planrail': ('Technické výkresy clon', plans),
     'hvd_logstand': ('Pozorovací stolec s deníkem', log_stand),
     'hvd_register': ('Přijímací místo písaře pečetí', scribe_station),

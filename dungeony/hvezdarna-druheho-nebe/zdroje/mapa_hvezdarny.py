@@ -65,10 +65,14 @@ def validate_module(path):
         for entry in git.value('TriggerList'):
             tag = entry.value('Tag')
             if tag.startswith('hvt_'):
+                if tag in triggers:
+                    raise ValueError(f'Duplicate transition {tag}')
                 triggers[tag] = code, entry
         for entry in git.value('WaypointList'):
             tag = entry.value('Tag')
             if tag.startswith('hvd_land_'):
+                if tag in landings:
+                    raise ValueError(f'Duplicate landing {tag}')
                 landings[tag] = code, entry
 
     def coordinates(entry):
@@ -83,18 +87,22 @@ def validate_module(path):
     for join in JOINS:
         sides = []
         for source, target, _, _, required in join.destinations():
-            tag = f'hvt_{source}_{target}'
-            destination = f'hvd_land_{target}_{source}'
+            tag = 'hvt_' + join.route(source, target)
+            destination = 'hvd_land_' + join.route(target, source)
             area, sill = triggers.pop(tag)
             zone, spawn = landings.pop(destination)
             settings = {row.value('Name'): row.value('Value') for row in sill.value('VarTable')}
             expected_facing = DIRECTIONS[join.heading(source)]
             facing = spawn.value('XOrientation'), spawn.value('YOrientation')
+            outline = [(vertex.value('PointX'), vertex.value('PointY')) for vertex in sill.value('Geometry')]
+            dimensions = tuple(max(axis) - min(axis) for axis in zip(*outline))
+            width = dimensions[0] if expected_facing[1] else dimensions[1]
             if (area != source or zone != target or settings.get('target') != destination
                     or settings.get('require', '') != required
                     or settings.get('minimum_level', 0) != (SECRET_LEVEL if join.secret else 0)
                     or not same(coordinates(sill), join.point(source, THRESHOLD_INSET))
                     or not same(coordinates(spawn), join.point(target, LANDING_INSET))
+                    or not isclose(width, PASSAGE_WIDTH, abs_tol=.01)
                     or not same(facing, expected_facing)):
                 raise ValueError(f'Transition or arrival disagrees with the map at {tag}')
             sides.append((sill.value('ZPosition'), spawn.value('ZPosition')))
@@ -146,8 +154,6 @@ def floor(c, code, secrets):
     zone = ZONES[code]
     boxes = zone.floor
     if not secrets:
-        if code == 'halls':
-            boxes = tuple(r for r in boxes if r[0] < 64.2)
         if code == 'rim':
             boxes = tuple(r for r in boxes if r[0] < 50)
         if code == 'walks':
@@ -174,18 +180,18 @@ def floor(c, code, secrets):
     for row in sorted({row for _, row in zone.stairs}):
         left, bottom = px(*zone.world(0, row*TILE))
         step = TILE * SCALE
-        fill(c, '#b0adc4')
-        c.rect(left, bottom, zone.size[0]*step, step, fill=1, stroke=0)
-        for col, stair_row in zone.stairs:
-            if stair_row != row:
-                continue
-            center = left + (col + .5) * step
+        if code != 'steps':
+            fill(c, '#b0adc4')
+            c.rect(left, bottom, zone.size[0]*step, step, fill=1, stroke=0)
+        for xmin, xmax in zone.flights(row):
+            edge = left + xmin*SCALE
+            span = (xmax-xmin)*SCALE
             fill(c, '#ede8ee')
-            c.rect(center - 3.25*SCALE, bottom, 6.5*SCALE, step, fill=1, stroke=0)
+            c.rect(edge, bottom, span, step, fill=1, stroke=0)
             ink(c, FRAME, .68)
             for i in range(1, 8):
                 y = bottom + i*step/8
-                c.line(center - 3.25*SCALE, y, center + 3.25*SCALE, y)
+                c.line(edge, y, edge + span, y)
 
 
 def grid(c, secrets):
@@ -239,19 +245,15 @@ def route(c, secrets):
             for walk in walks:
                 path(c, tuple(px(*ZONES[code].world(*point)) for point in walk))
         c.setDash()
-    secret_count = 0
-    for i, join in enumerate(JOINS):
+    for join in JOINS:
         if join.secret and not secrets:
             continue
-        if join.secret:
-            secret_count += 1
         x, y = px(*join.edge)
         dx, dy = DIRECTIONS[join.facing]
         span = (PASSAGE_WIDTH / 2 + .6) * SCALE
         ink(c, PAPER, 5.4)
         c.line(x-dy*span,y+dx*span,x+dy*span,y-dx*span)
         color = HIDDEN if join.secret else DOOR
-        label = f'S{secret_count}' if join.secret else f'{i:02}'
         ink(c, color, 2.4)
         c.line(x-dy*span,y+dx*span,x+dy*span,y-dx*span)
         arrow(c, x+dx*13, y+dy*13, dx, dy, color)
@@ -260,17 +262,17 @@ def route(c, secrets):
         fill(c, PAPER)
         ink(c, color, 1.0)
         c.circle(bx, by, 8.3, fill=1, stroke=1)
-        text(c, bx, by-3.1, label, 8.3, color=color, bold=True, align='center')
+        text(c, bx, by-3.1, join.label, 8.3, color=color, bold=True, align='center')
 
 
 def captions(c, secrets):
     detail = {
         'camp': (1.45, True, 'Zásoby a jediná stezka na římsu'),
-        'rim': (4.1, True, 'Vstup do Zkušebny a vedlejší vchod'),
-        'halls': (9.4, True, 'Paprsková chodba a archiv'),
-        'works': (11.4, False, 'Zkušebna, most a Pečeť kotvy'),
+        'rim': (4.1, True, 'Jediná veřejná brána do Zkušebny'),
+        'halls': (9.4, True, 'Z jižní síně do horní dílny'),
+        'works': (11.4, False, 'Vstupní T, zkušebna, most a Kotva'),
         'dome': (17.7, False, 'Refraktor mezi oběma okruhy'),
-        'steps': (25.3, False, 'Tři ramena a bouřná podesta'),
+        'steps': (25.3, False, 'Tři ramena široká 18,2 m, dvě mezipodesty'),
         'walks': (25.3, True, 'Dva mosty a horní výstup'),
         'gate': (33.3, True, 'Místo, kde se obě ramena setkají'),
         'top': (40.6, True, 'Ithren a návratová lucerna'),
@@ -300,7 +302,7 @@ def captions(c, secrets):
             x, y = px(*ZONES[code].world(x, y))
             fill(c, INK)
             c.circle(x, y, 2.0, fill=1, stroke=0)
-            shift = 10 if code == 'halls' and label == 'Clony' else -12
+            shift = 11 if label in ('Clony', 'Vstupní síň') else -12
             text(c,x,y+shift,label,8.8,bold=True,align='center')
 
 
@@ -317,7 +319,7 @@ def draw(target, module, fonts, secrets):
     fill(c, PAPER)
     c.rect(0, 0, *SIZE, stroke=0, fill=1)
     text(c, 43, 1765, 'Hvězdárna druhého nebe', 32, bold=True)
-    subtitle = 'Dva výstupové okruhy a služební průchody' if secrets else 'Dva výstupové okruhy'
+    subtitle = 'Dva okruhy · vstupní síň · služební štola' if secrets else 'Dva okruhy a vstupní síň'
     text(c, 44, 1735, subtitle, 15, color=MUTED)
     text(c, 1060, 1772, f'V{VERSION:02}', 13, color=DOOR, bold=True, align='right')
     arrow(c, 1050, 1739, 0, 1, INK)
@@ -333,7 +335,7 @@ def draw(target, module, fonts, secrets):
     route(c,secrets)
     captions(c,secrets)
     for y, color, name, levels, line in (
-        (346, ROUTE, 'Dolní okruh', '35–37', 'Římsa, Chodby clon a Dílny'),
+        (346, ROUTE, 'Dolní okruh', '35–37', 'Dílny a Chodby clon uvnitř hvězdárny'),
         (1336, HIGH_ROUTE, 'Horní okruh', '38–40', 'Schody a Ochozy vedou k bráně'),
     ):
         text(c,43,y,name,16,color=color,bold=True)
@@ -344,7 +346,7 @@ def draw(target, module, fonts, secrets):
     text(c,43,49,'1 čtvereček = 1 × 1 v Toolsetu = 10 × 10 m',11.6,bold=True)
     text(c,43,28,'00–09   Obousměrné přechody na společné hraně',10.2,color=DOOR)
     if secrets:
-        text(c,510,28,'S1–S3   Skryté služební průchody 38+',10.2,color=HIDDEN)
+        text(c,510,28,'S1 a S2   Skryté služební průchody 38+',10.2,color=HIDDEN)
     text(c,1060,49,'05  Seřídit refraktor',10.2,color=MUTED,align='right')
     text(c,1060,28,'09  Otevřít Bránu tří paprsků',10.2,color=MUTED,align='right')
     c.showPage()

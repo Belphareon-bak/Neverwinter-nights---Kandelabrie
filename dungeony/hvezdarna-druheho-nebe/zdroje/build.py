@@ -32,7 +32,7 @@ from world import Tileset, object_fields, variables
 HERE = Path(__file__).resolve().parent
 MODULE_NAME = "Hvezdarna druheho nebe.mod"
 CHARACTER_NAME = "Radan Hvezdar.bic"
-HAK_NAME = "hvd_obs_v12"
+HAK_NAME = f"hvd_obs_v{VERSION}"
 TEXT_ENCODING = "cp1250"
 
 
@@ -127,15 +127,15 @@ def build(game_path, compiler, directory, scripts, *, test_guide=False):
     art.update(architecture_textures())
     sky_ids, skies = sky_assets(game)
     art.update(skies)
-    flight, paving, stairs = tile_assets(game)
+    terrace_tiles, stairs = tile_assets(game)
     art.update(stairs)
     art.update(interior_tiles(game))
-    zones = areas(appearances, flight, test_guide=test_guide)
+    zones = areas(appearances, terrace_tiles, test_guide=test_guide)
     dress_areas(zones)
     for zone in zones:
         if zone.lighting["SkyBox"][1]:
             zone.lighting["SkyBox"] = bite(sky_ids["rim" if zone.key in ("hvd_camp", "hvd_rim", "hvd_works") else "upper"])
-    tiles = {key: Tileset(game, key, art.get(f"{key}.set"), paving if key == "tcm02" else None)
+    tiles = {key: Tileset(game, key, art.get(f"{key}.set"), terrace_tiles.paving if key == "tcm02" else None)
              for key in {area.tileset for area in zones}}
     for name, creature in creatures().items():
         resources[f"{name}.utc"] = gff_encode("UTC", creature, TEXT_ENCODING)

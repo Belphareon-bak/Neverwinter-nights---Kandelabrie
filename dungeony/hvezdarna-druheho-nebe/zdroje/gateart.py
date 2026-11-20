@@ -225,6 +225,24 @@ def zenith_gate():
     return m
 
 
+def closed_gate():
+    m = Mesh()
+    contour = [(2.53*cos(i*pi/32),2.82+2.53*sin(i*pi/32)) for i in range(33)]
+    contour.extend(((-2.53,0),(2.53,0)))
+    for y,face in ((.045,contour),(-.276,contour[::-1])):
+        m.polygon(BASALT,[(x,y,z) for x,z in face],[(x*.39,z*.39) for x,z in face])
+    arch(m,2.48,2.82,-.29,.15,.20,TRIM,masonry=True)
+    for x in (-1.73,-.88,0,.88,1.73):
+        height = 2.82+(2.48**2-x*x)**.5
+        m.box(BRASS,x,-.294,.17,.078,.08,height-.28)
+    for z in (.30,2.19,3.30):
+        m.box(MASONRY,0,-.293,z,4.89,.16,.14)
+    m.disc(DARK,(0,-.39,2.5),(0,-.48,2.5),.73,sides=20)
+    m.disc(BRASS,(0,-.47,2.5),(0,-.54,2.5),.64,sides=20)
+    rosette(m,0,-.569,2.5,.47,PALE,9)
+    return m
+
+
 def gate_models():
     scenery={
         'hvd_gate_pod': ('Optický sloup s paticí',post),
@@ -235,6 +253,7 @@ def gate_models():
     }
     visuals={
         'hvd_zenith':('Brána tří paprsků',zenith_gate),
+        'hvd_gateblind':('Uzavřené ostění Brány tří paprsků',closed_gate),
         'hvd_clamp_down':('Spuštěná závora',lambda:clamp_bar(False)),
         'hvd_clamp_up':('Zvednutá závora',lambda:clamp_bar(True)),
     }
