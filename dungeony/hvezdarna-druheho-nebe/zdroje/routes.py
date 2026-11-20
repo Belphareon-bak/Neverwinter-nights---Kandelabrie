@@ -53,7 +53,7 @@ THRESHOLDS = {
     'eave_steps': Threshold(25, 11.80, 270, 3.80, 'PATA SCHODU'),
     'eave_up': Threshold(25, 80.45, 90, 3.80, 'BOURNA PODESTA'),
     'walks_steps': Threshold(40, 11.56, 270, 4.95, 'BOURNA PODESTA'),
-    'walks_gate': Threshold(40, 68.00, 90, 4.95, 'PREDBRANI'),
+    'walks_gate': Threshold(45, 87.38, 90, 4.95, 'PREDBRANI'),
     'gate_walks': Threshold(35, 12.00, 270, 4.95, 'OCHOZY'),
     'gate_dome': Threshold(56.15, 22, 0, 3.80, 'KOPULE'),
     'gate_top': Threshold(35, 53.51, 90, 4.28, 'POSLEDNI STUPEN'),

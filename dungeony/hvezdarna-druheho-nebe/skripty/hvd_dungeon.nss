@@ -188,9 +188,6 @@ void HVD_Optics(object player)
     {
         HVD_OpenPassage("hvd_aligned");
         HVD_AreaMessage(GetArea(player), "Ve skle se potkaly obě oblohy. Schody do nebe jsou průchodné.");
-        HVD_MarkLine(GetArea(player), GetPosition(GetObjectByTag("hvd_refractor")),
-                     GetPosition(GetWaypointByTag("hvd_optic_gate")), VFX_IMP_PULSE_COLD);
-        HVD_Reveal("hvd_optic_gate");
     }
     else
     {

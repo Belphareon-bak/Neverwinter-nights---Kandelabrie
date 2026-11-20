@@ -200,7 +200,7 @@ def ray(slot, index):
 
 def zenith_gate():
     m=Mesh()
-    daybreak=Material((.60,.78,1.0),'hvd_glass',(.35,.55,.91),alpha=.68)
+    daybreak=Material((.60,.78,1.0),'hvd_glass',(.20,.36,.65),alpha=.30)
     inner=Material((.76,.92,1.0),'hvd_glass',(.63,.78,.95),alpha=.87)
     contour=[(2.19*cos(i*pi/32),-.105,3+2.19*sin(i*pi/32)) for i in range(33)]
     contour.extend(((-2.19,-.105,.13),(2.19,-.105,.13)))

@@ -156,8 +156,6 @@ void HVD_CloseShutter(object player)
         SetObjectVisualTransform(boss, OBJECT_VISUAL_TRANSFORM_SCALE, 1.0);
         SetLocalInt(boss, "hvd_managed", TRUE);
     }
-    object lamp = GetObjectByTag("hvd_last_lamp");
-    if (GetIsObjectValid(lamp)) SetPlaceableIllumination(lamp, FALSE);
     HVD_OpenRewardStores();
     HVD_Reveal("hvd_summit_exit");
     HVD_AreaMessage(GetArea(player), "Odraz utichl. Ithren vidí prázdnou podestu a pomáhá zavřít horní bránu.");

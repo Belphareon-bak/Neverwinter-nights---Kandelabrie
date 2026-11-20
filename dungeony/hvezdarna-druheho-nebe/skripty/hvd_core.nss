@@ -99,13 +99,6 @@ void HVD_RefreshThresholds(string flag = "")
     }
 }
 
-void HVD_OpenPassage(string flag)
-{
-    if (GetLocalInt(HVD_Module(), flag)) return;
-    SetLocalInt(HVD_Module(), flag, TRUE);
-    HVD_RefreshThresholds(flag);
-}
-
 void HVD_PlacePart(string part, string resource, string anchor, float heading)
 {
     object mount = GetObjectByTag(anchor);
@@ -143,9 +136,14 @@ void HVD_Reveal(string marker)
     location entrance = GetLocation(point);
     ApplyEffectAtLocation(DURATION_TYPE_INSTANT, EffectVisualEffect(VFX_FNF_MYSTICAL_EXPLOSION, FALSE, 0.85),
                           entrance);
-    string resource = marker == "hvd_final_gate" ? "hvd_zenith" : "hvd_gateway";
+    string resource = "hvd_gateway";
+    if (marker == "hvd_optic_gate") resource = "hvd_stairview";
+    if (marker == "hvd_final_gate") resource = "hvd_zenith";
     object portal = CreateObject(OBJECT_TYPE_PLACEABLE, resource, entrance);
-    if (GetIsObjectValid(portal)) SetLocalObject(module, marker, portal);
+    if (!GetIsObjectValid(portal)) return;
+    SetLocalObject(module, marker, portal);
+    if (marker == "hvd_final_gate")
+        HVD_PlacePart("hvd_beyond_gate", "hvd_topview", marker, 0.0);
 }
 
 void HVD_Extinguish(string marker)
@@ -153,6 +151,27 @@ void HVD_Extinguish(string marker)
     object portal = GetLocalObject(HVD_Module(), marker);
     if (GetIsObjectValid(portal)) DestroyObject(portal);
     DeleteLocalObject(HVD_Module(), marker);
+}
+
+void HVD_UpdateLastLight()
+{
+    string appearance = GetLocalInt(HVD_Module(), "hvd_won") ? "hvd_lampclosed" : "hvd_lampray";
+    HVD_PlacePart("hvd_last_light", appearance, "hvd_signal_home", 0.0);
+}
+
+void HVD_OpenPassage(string flag)
+{
+    if (GetLocalInt(HVD_Module(), flag)) return;
+    SetLocalInt(HVD_Module(), flag, TRUE);
+    HVD_RefreshThresholds(flag);
+    if (flag == "hvd_aligned")
+    {
+        HVD_Extinguish("hvd_opt_lock");
+        HVD_PlacePart("hvd_dome_ray", "hvd_domelight", "hvd_refractor", 0.0);
+        HVD_Reveal("hvd_optic_gate");
+    }
+    if (flag == "hvd_shortcut") HVD_Extinguish("hvd_short_cover");
+    if (flag == "hvd_won") HVD_UpdateLastLight();
 }
 
 void HVD_ResetHidden()
@@ -167,6 +186,8 @@ void HVD_ResetHidden()
     HVD_PlacePart("hvd_dome_cover","hvd_stonepanel","hvd_dome_secret",0.0);
     HVD_PlacePart("hvd_eave_cover","hvd_stonepanel","hvd_eave_secret",0.0);
     HVD_PlacePart("hvd_eavetop_cover","hvd_stonepanel","hvd_eavetop_door",0.0);
+    HVD_PlacePart("hvd_opt_lock","hvd_optcover","hvd_optic_gate",0.0);
+    HVD_PlacePart("hvd_short_cover","hvd_optcover","hvd_short_lock",0.0);
 }
 
 void HVD_UpdateHallLights()
@@ -629,7 +650,9 @@ void HVD_NewRun()
         DeleteLocalInt(module, HVD_SealKey(index));
     }
     HVD_Extinguish("hvd_optic_gate");
+    HVD_Extinguish("hvd_dome_ray");
     HVD_Extinguish("hvd_final_gate");
+    HVD_Extinguish("hvd_beyond_gate");
     HVD_Extinguish("hvd_summit_exit");
     HVD_Extinguish("hvd_socket_mirror");
     HVD_Extinguish("hvd_lab_light");
@@ -637,6 +660,7 @@ void HVD_NewRun()
     HVD_ResetGate();
     HVD_TurnOptics();
     HVD_ResetHidden();
+    HVD_UpdateLastLight();
     HVD_RefreshThresholds();
     HVD_ResetBoss();
     HVD_ResetStores();

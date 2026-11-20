@@ -4,6 +4,7 @@ from math import cos, radians, sin
 
 from aurora import bite, flt, integer
 from furnishings import SCENERY as ROOM_FURNISHINGS
+from lightart import SCENERY as LINK_SCENERY
 from world import color
 
 
@@ -46,7 +47,7 @@ NAMES = {
     "hvd_eavearch": "Klenutá opěra servisní lávky",
     "hvd_beactower": "Signální věž visutých ochozů",
 }
-NAMES.update((model, name) for model, (name, _) in ROOM_FURNISHINGS.items())
+NAMES.update((model, name) for model, (name, _) in (ROOM_FURNISHINGS | LINK_SCENERY).items())
 
 STUDY = (
     (97, "Stůl k měření", 0, 0, 0, 0),
@@ -213,16 +214,13 @@ def mountain(s):
         s.put("hvd_rubble",x + .35,y - 2.0,direction=d - 18)
     s.signpost(37.65, 42.4, "blue")
     s.signpost(52.6, 26.75, "amber")
-    s.put("hvd_bluebann", 57.9, 21.12, lift=.75, direction=90)
-    # Flat forecourt and two attached wings close the vestibule against the rock.
+    for x in (51.95,56.40):
+        s.put("hvd_skywalk",x,24,direction=270)
     s.put("hvd_landing",40.0,50.0)
-    for x in (33.15,46.85):
-        s.put("hvd_wallfoot",x,49.8,direction=90)
-        s.put("hvd_window",x,54.6)
-        s.put("hvd_wallpanel",x,56.09,direction=90)
-        s.put("hvd_bluebann",x,54.18,lift=.65)
-        s.put("hvd_sconce",x - .88,54.31,lift=2.3)
-        s.lamp(x - .88,54.03,2.76,"amber")
+    s.put("hvd_flankwalls",40,55.65)
+    for x in (34.88,45.12):
+        s.put("hvd_sconce",x,54.4,lift=2.36)
+        s.lamp(x,54.04,2.76,"amber")
     for x,y,d in ((29.0,48.6,15),(30.6,52.1,94),(48.4,49.1,26),(49.1,54.7,84)):
         s.put("hvd_rubble",x,y,direction=d)
 
@@ -307,14 +305,14 @@ def dome(s):
     s.area.lighting.update(FogClipDist=flt(61.0),MoonAmbientColor=color(92,103,142),
                            MoonDiffuseColor=color(189,191,223))
     for x,y,angle,item,light in (
-        (21.25,21.90,180,'chart','amber'),(35.3,17.12,180,None,'blue'),
-        (13.30,33.65,90,None,'blue'),(13.30,39.2,90,None,'blue'),
+        (13.31,32.31,90,'chart','amber'),(35.3,17.12,180,None,'blue'),
+        (13.30,39.2,90,None,'blue'),
         (23.01,45.90,0,None,'blue'),(36.44,45.90,0,'chart','blue'),
         (46.70,34.10,270,None,'blue'),(46.70,40.0,270,None,'amber'),
         (41.45,12.35,180,None,'blue'),
     ):
         s.wall(x,y,angle,item,light,built=True)
-    s.put(383,20.02,22.46,lift=.88,name='Svíce u pozorovacího deníku')
+    s.put(383,13.91,33.32,lift=.88,name='Svíce u pozorovacího deníku')
     s.put(287,45.86,35.52,direction=270,name='Lavice při pozorovacím sále')
     s.put('hvd_lectern',15.34,36.45,direction=90,name='Pult měření polohy hvězd')
     s.put('hvd_openbook',15.29,36.45,direction=90,lift=1.14,name='Rozložený hvězdný katalog')
@@ -376,12 +374,17 @@ def walks(s):
         s.sky(x,22.55,tint)
         s.sky(x,49.55,tint)
         s.bridge(x,tint)
+        s.put('hvd_bridgeedge',x,35,base=5)
         for y in (17.4,54.1):
             s.put('hvd_skywalk',x,y)
         for px,y in ((x-3.55,20.68),(x+3.55,20.68),(x-3.55,50.3),(x+3.55,50.3)):
             s.put('hvd_hangpier',px,y)
     for x,count in ((13.0,2),(31.8,4),(62.4,2)):
         s.rail(x,20.86,count,4.91,0,0,5)
+    for x in (13.35,46.70):
+        s.rail(x,11.05,5,4.90,0,0,5)
+    for x in (11.08,68.88):
+        s.rail(x,13.58,2,0,4.88,90,5)
     for x,y,d in ((11.6,56.2,90),(11.6,61.08,90),(68.8,53.2,90),(37.7,55.8,90),
                   (47.1,54.9,90),(20.9,65.9,0),(25.8,65.9,0),(56.4,65.9,0)):
         s.put('hvd_skyrail',x,y,direction=d)
@@ -394,10 +397,16 @@ def walks(s):
     s.put(178,15.18,59.84,direction=90,name='Lavice pro údržbu zbroje')
     s.put('hvd_wicktable',61.21,63.42)
     s.put('hvd_skyrail',68.0,59.63,direction=90)
-    s.sky(40,68,'amber')
-    s.put('hvd_skywalk',40,64.7)
-    s.rail(30.0,67.7,2,4.90,0,0,5)
-    s.rail(45.1,67.7,2,4.90,0,0,5)
+    for y in (64.8,68.15):
+        s.put('hvd_skywalk',45,y,base=5)
+    s.rail(14.0,69.1,6,4.90,0,0,5)
+    s.rail(51.44,69.1,4,4.90,0,0,5)
+    s.put('hvd_skywalk',45,82.95,base=10)
+    s.sky(45,87.42,'amber',10)
+    for x in (31.05,58.95):
+        s.rail(x,82.45,2,0,4.89,90,10)
+    for x in (35.0,55.0):
+        s.put('hvd_skyrail',x,88.5,base=10)
     s.clouds([(6,34,-9,55),(38,31,-10,88),(72,39,-9,126),(34,56,-8,9)],
              [(11,40,-12,29),(40,41,-12,110),(73,38,-13,91)])
 
@@ -444,7 +453,7 @@ def summit(s):
         s.rail(x,39.1,3,0,4.9,90,10)
         s.bay(x,49.4,shade,angle,10)
     for x in (21,49):
-        s.bay(x,55.9,'amber',base=10)
+        s.bay(x,58.0,'amber',base=10)
         s.put('hvd_hangpier',x,58.85,base=10)
     for y in (16.04,33.7,38.6,43.5,48.4,53.3):
         z=5 if y<20 else 10
