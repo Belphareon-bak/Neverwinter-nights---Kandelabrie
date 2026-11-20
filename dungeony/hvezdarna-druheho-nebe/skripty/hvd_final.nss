@@ -138,7 +138,7 @@ void HVD_CloseShutter(object player)
     object module = HVD_Module();
     if (GetLocalInt(module, "hvd_won"))
     {
-        SendMessageToPC(player, "Volání utichlo. Z posledního stupně vede cesta na římsu.");
+        SendMessageToPC(player, "Lucerna je zavřená. Sestup vede přes Předbraní.");
         return;
     }
     if (!GetLocalInt(module, "hvd_shutter"))
@@ -157,9 +157,6 @@ void HVD_CloseShutter(object player)
         SetLocalInt(boss, "hvd_managed", TRUE);
     }
     HVD_OpenRewardStores();
-    HVD_Reveal("hvd_summit_exit");
-    HVD_AreaMessage(GetArea(player), "Odraz utichl. Ithren vidí prázdnou podestu a pomáhá zavřít horní bránu.");
-    if (GetLocalInt(module, "hvd_notes"))
-        HVD_AreaMessage(GetArea(player), "Z návratového zápisu lze vyčíst, kudy správkyně bezpečně sestoupila.");
-    HVD_AreaMessage(GetArea(player), "U lucerny může každý člen zvolit jednu odměnu. Za ní vede cesta k noclehu.");
+    HVD_AreaMessage(GetArea(player), "Odraz utichl. Ithren uvolnil schránky poslední hlídky.");
+    HVD_AreaMessage(GetArea(player), "Vyber si u lucerny jednu odměnu a sestup přes Předbraní.");
 }

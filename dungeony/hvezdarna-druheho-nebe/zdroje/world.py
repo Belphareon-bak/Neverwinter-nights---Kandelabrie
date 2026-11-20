@@ -190,11 +190,11 @@ class Area:
         self.trigger(name, tag, bounds, "hvd_zone", **settings)
         return self
 
-    def transition(self, name, tag, bounds, target, *, require="", flag=""):
-        if require or flag:
+    def transition(self, name, tag, bounds, target, *, require="", minimum_level=0):
+        if require:
             # Closed paths stay unmarked until their reveal. Walking into them
             # invokes the progression check instead of the engine's default jump.
-            self.trigger(name, tag, bounds, "hvd_travel", target=target, require=require, flag=flag)
+            self.trigger(name, tag, bounds, "hvd_travel", target=target, require=require, minimum_level=minimum_level)
         else:
             trigger = self.trigger(name, tag, bounds, "hvd_travel", target=target)
             trigger.fields.update(Cursor=bite(1), Type=integer(1), LinkedTo=string(target),

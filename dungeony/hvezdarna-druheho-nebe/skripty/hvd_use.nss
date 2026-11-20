@@ -8,6 +8,25 @@ void main()
     if (!HVD_IsPlayer(player)) return;
     string operation = GetLocalString(target, "action");
 
+    if (operation == "study_latch" || operation == "study_anchor")
+    {
+        if (GetHitDice(player) < HVD_SecretLevel())
+        {
+            SendMessageToPC(player, "Služební vybavení je přístupné od " + IntToString(HVD_SecretLevel()) + ". úrovně.");
+            return;
+        }
+        if (operation == "study_anchor") HVD_Seal(player, 1);
+        else
+        {
+            string flag = GetLocalString(target, "flag");
+            if (!GetLocalInt(module, flag))
+            {
+                HVD_OpenPassage(flag);
+                HVD_AreaMessage(GetArea(player), "Západka povolila a uvolnila služební průchod.");
+            }
+        }
+        return;
+    }
     if (operation == "recap")
     {
         HVD_Recap(player);
@@ -66,48 +85,6 @@ void main()
     if (operation == "read")
     {
         SendMessageToPC(player, GetDescription(target));
-        return;
-    }
-    if (operation == "study_pin")
-    {
-        if (!GetLocalInt(module,"hvd_study_open"))
-        {
-            HVD_OpenPassage("hvd_study_open");
-            HVD_Extinguish("hvd_study_cover");
-            HVD_AreaMessage(GetArea(player),"Povolila západka. V bočním výklenku zajela skříň do zdiva.");
-        }
-        return;
-    }
-    if (operation == "study_turn")
-    {
-        if (!GetLocalInt(module,"hvd_study_link"))
-        {
-            HVD_OpenPassage("hvd_study_link");
-            HVD_Extinguish("hvd_comm_cover");
-            HVD_Extinguish("hvd_dome_cover");
-            HVD_AreaMessage(GetArea(player),"Převod stáhl obě zadní clony. Z průchodu je vidět slabé světlo refraktoru.");
-        }
-        return;
-    }
-    if (operation == "eave_pin")
-    {
-        if (!GetLocalInt(module,"hvd_eave_open"))
-        {
-            HVD_OpenPassage("hvd_eave_open");
-            HVD_Extinguish("hvd_eave_cover");
-            HVD_Extinguish("hvd_eavetop_cover");
-            HVD_AreaMessage(GetArea(player),"Protizávaží vyzdvihlo západní kryt. Pod schody se ukázal servisní průlez.");
-        }
-        return;
-    }
-    if (operation == "eave_brake")
-    {
-        if (!GetLocalInt(module,"hvd_eave_safe"))
-        {
-            SetLocalInt(module,"hvd_eave_safe",TRUE);
-            ApplyEffectAtLocation(DURATION_TYPE_INSTANT,EffectVisualEffect(VFX_IMP_PULSE_COLD),GetLocation(target));
-            HVD_AreaMessage(GetArea(player),"Klapka se zaklesla. Vítr teď uniká kamenným kanálem pod lávkou.");
-        }
         return;
     }
     if (operation == "testbeam")

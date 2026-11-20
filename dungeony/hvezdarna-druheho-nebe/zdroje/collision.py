@@ -21,9 +21,8 @@ def shelter(offset):
 
 
 FOOTPRINTS = {
-    "hvd_octagon": (*arch_feet(3.09,.98,1.04,-6), *arch_feet(2.31,1.49,.40,-3.46),
-                    *arch_feet(1.80,.39,2.75,-2.01), rectangle(0,-.63,3.98,.36),
-                    *arch_feet(5.78,.56,5.65,.1), rectangle(0,6.0,5.6,.5)),
+    "hvd_octagon": (*arch_feet(3.43,.79,1.04,-6), *arch_feet(3.43,.79,1.04,6),
+                    *arch_feet(3.60,.70,8.4), *arch_feet(5.78,.56,5.65,.1)),
     "hvd_plinth": (ring(1.99),),
     "hvd_dial": (ring(.71),),
     "hvd_console": (ring(.71),),
@@ -43,6 +42,7 @@ FOOTPRINTS = {
     "hvd_campshell": shelter(3.74),
     "hvd_shoproof": shelter(3.38),
     "hvd_crag": (rectangle(0,0,7.8,6.8),),
+    "hvd_secretrock": (rectangle(0,0,6.3,2.42),),
     "hvd_snowbank": (rectangle(0,0,3.15,2.0),),
     "hvd_crate": (rectangle(0,0,1.13,.75),),
     "hvd_shelf": (rectangle(0,0,2.13,.75),),
@@ -71,7 +71,7 @@ FOOTPRINTS = {
     "hvd_gate_pod": (ring(.91),),
     "hvd_clamp_pod": (ring(.91),),
     "hvd_gatepull": (ring(.73),),
-    "hvd_arc_cabinet": (rectangle(0,-.03,4.92,.54),),
+    "hvd_arc_cabinet": (rectangle(0,-.03,5.94,.55),),
     "hvd_lab_source": (ring(.78),),
     "hvd_gong": (rectangle(0,.14,2.24,.79),),
     "hvd_workroof": (rectangle(0,1.78,6.9,.48), *arch_feet(3.18,1.03,1.08,-.70),
@@ -89,7 +89,6 @@ FOOTPRINTS = {
     "hvd_optcover": (rectangle(0,.06,5.85,.33),),
     "hvd_signallamp": (ring(.88),),
     "hvd_flankwalls": arch_feet(5.12,3.13,3.60,.29),
-    "hvd_quarry": arch_feet(2.96,1.03,2.73,.49),
     "hvd_bridgeedge": arch_feet(1.78,.24,18.10),
 }
 

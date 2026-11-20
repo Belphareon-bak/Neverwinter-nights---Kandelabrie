@@ -93,6 +93,15 @@ void HVD_RefreshThresholds(string flag = "")
                 DestroyObject(sill);
                 DeleteLocalObject(marker, "hvd_sill");
             }
+            string view = GetLocalString(marker, "view");
+            object continuation = GetLocalObject(marker, "hvd_view");
+            if (open && view != "" && !GetIsObjectValid(continuation))
+                SetLocalObject(marker, "hvd_view", CreateObject(OBJECT_TYPE_PLACEABLE, view, GetLocation(marker)));
+            if (!open && GetIsObjectValid(continuation))
+            {
+                DestroyObject(continuation);
+                DeleteLocalObject(marker, "hvd_view");
+            }
             SetMapPinEnabled(marker, open);
         }
         marker = GetObjectByTag("hvd_route", ++index);
@@ -159,6 +168,22 @@ void HVD_UpdateLastLight()
     HVD_PlacePart("hvd_last_light", appearance, "hvd_signal_home", 0.0);
 }
 
+void HVD_SecretCover(string part, string flag, string model)
+{
+    if (GetLocalInt(HVD_Module(), flag)) HVD_Extinguish(part);
+    else HVD_PlacePart(part, model, part + "_home", 0.0);
+}
+
+void HVD_RefreshSecretCovers()
+{
+    HVD_SecretCover("hvd_rim_cover", "hvd_secret_rim", "hvd_secretrock");
+    HVD_SecretCover("hvd_study_rim_cover", "hvd_secret_rim", "hvd_stonepanel");
+    HVD_SecretCover("hvd_halls_cover", "hvd_secret_halls", "hvd_arc_cabinet");
+    HVD_SecretCover("hvd_study_halls_cover", "hvd_secret_halls", "hvd_stonepanel");
+    HVD_SecretCover("hvd_study_exit_cover", "hvd_secret_exit", "hvd_stonepanel");
+    HVD_SecretCover("hvd_walks_cover", "hvd_secret_exit", "hvd_stonepanel");
+}
+
 void HVD_OpenPassage(string flag)
 {
     if (GetLocalInt(HVD_Module(), flag)) return;
@@ -170,24 +195,35 @@ void HVD_OpenPassage(string flag)
         HVD_PlacePart("hvd_dome_ray", "hvd_domelight", "hvd_refractor", 0.0);
         HVD_Reveal("hvd_optic_gate");
     }
-    if (flag == "hvd_shortcut") HVD_Extinguish("hvd_short_cover");
+    if (GetStringLeft(flag, 11) == "hvd_secret_") HVD_RefreshSecretCovers();
+    if (flag == "hvd_gate_open") HVD_Extinguish("hvd_gate_cover");
     if (flag == "hvd_won") HVD_UpdateLastLight();
 }
 
-void HVD_ResetHidden()
+int HVD_SecretLevel()
 {
-    object module = HVD_Module();
-    DeleteLocalInt(module,"hvd_study_open");
-    DeleteLocalInt(module,"hvd_study_link");
-    DeleteLocalInt(module,"hvd_eave_open");
-    DeleteLocalInt(module,"hvd_eave_safe");
-    HVD_PlacePart("hvd_study_cover","hvd_arc_cabinet","hvd_study_secret",0.0);
-    HVD_PlacePart("hvd_comm_cover","hvd_stonepanel","hvd_comm_secret",0.0);
-    HVD_PlacePart("hvd_dome_cover","hvd_stonepanel","hvd_dome_secret",0.0);
-    HVD_PlacePart("hvd_eave_cover","hvd_stonepanel","hvd_eave_secret",0.0);
-    HVD_PlacePart("hvd_eavetop_cover","hvd_stonepanel","hvd_eavetop_door",0.0);
+    return GetLocalInt(HVD_Module(), "hvd_secret_level");
+}
+
+int HVD_CanSearchSecret(object player)
+{
+    return GetHitDice(player) >= HVD_SecretLevel() && GetActionMode(player, ACTION_MODE_DETECT);
+}
+
+void HVD_InspectSecret(object player, string flag)
+{
+    if (flag == "" || GetLocalInt(HVD_Module(), flag) || !HVD_CanSearchSecret(player)) return;
+    HVD_OpenPassage(flag);
+    if (flag == "hvd_secret_rim")
+        HVD_AreaMessage(GetArea(player), "Pod prsty ucítíš hladký okraj. Zasněžený výčnělek povolí a odkryje spáru.");
+    else
+        HVD_AreaMessage(GetArea(player), "Na hřbetu registru nahmatáš západku. Knihovna se odklopí do servisní chodby.");
+}
+
+void HVD_ResetOpticalDoors()
+{
     HVD_PlacePart("hvd_opt_lock","hvd_optcover","hvd_optic_gate",0.0);
-    HVD_PlacePart("hvd_short_cover","hvd_optcover","hvd_short_lock",0.0);
+    HVD_PlacePart("hvd_gate_cover","hvd_optcover","hvd_final_gate",0.0);
 }
 
 void HVD_UpdateHallLights()
@@ -633,8 +669,9 @@ void HVD_NewRun()
     DeleteLocalInt(module, "hvd_dial1");
     DeleteLocalInt(module, "hvd_dial2");
     DeleteLocalInt(module, "hvd_gate_open");
-    DeleteLocalInt(module, "hvd_shortcut");
-    DeleteLocalInt(module, "hvd_work_link");
+    DeleteLocalInt(module, "hvd_secret_rim");
+    DeleteLocalInt(module, "hvd_secret_halls");
+    DeleteLocalInt(module, "hvd_secret_exit");
     DeleteLocalInt(module, "hvd_hall_off");
     DeleteLocalInt(module, "hvd_lab_trial");
     DeleteLocalInt(module, "hvd_chest_off");
@@ -653,13 +690,13 @@ void HVD_NewRun()
     HVD_Extinguish("hvd_dome_ray");
     HVD_Extinguish("hvd_final_gate");
     HVD_Extinguish("hvd_beyond_gate");
-    HVD_Extinguish("hvd_summit_exit");
     HVD_Extinguish("hvd_socket_mirror");
     HVD_Extinguish("hvd_lab_light");
     HVD_UpdateHallLights();
     HVD_ResetGate();
     HVD_TurnOptics();
-    HVD_ResetHidden();
+    HVD_ResetOpticalDoors();
+    HVD_RefreshSecretCovers();
     HVD_UpdateLastLight();
     HVD_RefreshThresholds();
     HVD_ResetBoss();

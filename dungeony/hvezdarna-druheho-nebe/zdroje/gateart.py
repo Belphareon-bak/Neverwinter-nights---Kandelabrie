@@ -5,11 +5,12 @@ from struct import pack
 
 from architecture import BASALT, LIMESTONE, MASONRY, PALE, SLATE, pillar, rosette
 from art import BRASS, DARK, GILT, TRIM, Material, Mesh, arch, star
+from plan import GATE_JOIN, THRESHOLD_INSET
 
 
 SOCKETS = ((27.8,29.45), (31.75,32.15), (41.0,29.45))
 SHUTTER = (39.35,36.7)
-GATE = (35.0,53.3)
+GATE = GATE_JOIN.point('gate', THRESHOLD_INSET)
 GATE_HEIGHT = 10.0
 SEAL_MODELS = (241, 242, 243, 244)
 

@@ -2,8 +2,10 @@
 
 > Návrh dungeonu pro **Neverwinter Nights: Enhanced Edition / Kandelábrii**. Hratelná samostatná verze a návod ke spuštění jsou v [adresáři modulů](moduly/README.md).
 >
-> **Doporučené úrovně:** 35–40 (spodní část 35–38, horní část 38–40). **Typ:** průzkumný a bojový dungeon s příběhem, prostředím, logickou hádankou a závěrečným bossem.
+> **Doporučené úrovně:** 35–40 (dolní okruh 35–37, horní okruh 38–40). **Typ:** průzkumný a bojový dungeon s příběhem, prostředím, logickou hádankou a závěrečným bossem.
 >
+
+Aktuální v12 začíná samostatným Horským táborem a staví oba okruhy na společné dlaždicové síti. Podrobný postup skutečným modulem je v návodu ke spuštění. [Mapa pro hráče](podklady/mapa-hvezdarny.png) · [Stavební plán včetně tajných cest](podklady/mapa-hvezdarny.pdf)
 
 [Brána tří paprsků v NWN:EE](podklady/brana-tri-paprsku.jpg) · [Prohlídka oblastí z v7](podklady/nahledy.jpg)
 

@@ -1,45 +1,38 @@
 # Hvězdárna druhého nebe
 
-Samostatný modul pro **Neverwinter Nights: Enhanced Edition** a postavy na **35.–40. úrovni**. Cesta vede od noclehu pod zasněženou kopulí přes dílny až na nebeské předbraní, kde hlídka stále odpovídá na odraz návratové lucerny. [Návrh a příběh](../README.md)
-
-Ve verzi 11 jde po seřízení sledovat paprsek od objektivu kopule až k otevřenému portálu. Za ním i za Bránou tří paprsků jsou vidět první stupně následující trasy. Nad Ithrenovým stanovištěm vede zlatý odraz z optické věže přímo k návratové lucerně. Oba visuté mosty mají zábradlí a do Předbraní se vystupuje z horní podesty. [Ithren a lucerna](../podklady/ithren-lucerna-v11.jpg) · [Pohled na Schody z kopule](../podklady/schody-kopule-v11.jpg)
-
-Ve verzi 10 jsou směrové přechody vyznačené kamennou hranou a jménem cíle v dlažbě i v mapě. Po odjištění zkratek se stejný znak objeví v jejich průchodu. Pracovnu určuje písařský stůl a výkresy clon, dílny mají vlastní náčiní a na ochozech se liší výbava kopiníků a světlonoše. [Přechod k Předbraní](../podklady/predbrani-prah-v10.jpg) · [Pracovna](../podklady/pracovna-v10.jpg)
-
-Pracovna má předsíň, souvislé stěny a zadní servisní průlez. V dolní dílně je pouzdro se zrcadlem přístupné od zkušebního stolu mimo zpáteční přechod. [Pracovna ve hře](../podklady/pracovna-v9.jpg)
-
-Bránu rozsvěcí soustava tří optických sloupů a závora se čtvrtou pečetí. Každá výprava má vlastní sestavu pečetí a clon. [Brána tří paprsků v klientu](../podklady/brana-tri-paprsku.jpg)
-
-Schody do nebe stoupají po třech širokých ramenech s převýšením 15 metrů. Kryté dílny, servisní kupole, měřicí podesty, visuté ochozy se signální věží a dvůr před branou patří k jednomu provozu. V chodbách a kopuli jsou čočky, mapy a lampy zasazené do stěn. Při průzkumu lze najít dvě vedlejší trasy, vlastní klapky a menší zásoby. [Prohlídka oblastí z v7](../podklady/nahledy.jpg)
+Samostatný modul pro **Neverwinter Nights: Enhanced Edition** a postavy na **35.–40. úrovni**. Verze 12 staví dva výstupové okruhy kolem pozorovací Kopule. Nová výprava začíná v Horském táboře. Jediná stezka vede na Výstupovou římsu, kde se cesta rozdělí k hlavnímu vstupu do Zkušebny a k vedlejšímu vchodu do Chodeb clon. Nad Kopulí je cesta rozdělená mezi zalomená schodiště a dvojici visutých mostů. Obě horní ramena se setkají u dvora pečetí. [Původní návrh a příběh](../README.md)
 
 ## Spuštění
 
-Při přechodu z dřívější verze vyměň `.mod` i `.hak` a založ novou výpravu z nabídky **New → Local**.
-
-1. Modul [Hvezdarna druheho nebe.mod](<Hvezdarna druheho nebe.mod>) patří do herní složky `modules` a [hvd_observatory.hak](hvd_observatory.hak) do `hak`. HAK obsahuje originální modely a materiály hvězdárny.
-2. V klientu vyber **New → Local → Hvezdarna druheho nebe → Play**. Použij vlastní postavu nebo [Radana Hvězdáře na 38. úrovni](<Radan Hvezdar.bic>). Soubor `.bic` patří do `localvault`.
-3. V noclehu seber ze stolu **Rozpis nebeské hlídky** a otevři ho v inventáři přes **Prohlédnout** (**Examine**). Do hvězdárny vystoupej po cestě k prahu mezi zdmi průčelí. Do zjeveného světelného oblouku se vstupuje chůzí.
+1. [Modul](<Hvezdarna druheho nebe.mod>) patří do složky `modules` a [hvd_obs_v12.hak](hvd_obs_v12.hak) do složky `hak` v profilu Neverwinter Nights.
+2. Založ novou výpravu přes **New → Local → Hvezdarna druheho nebe → Play**. Použij vlastní postavu nebo [Radana Hvězdáře na 38. úrovni](<Radan Hvezdar.bic>). Soubor `.bic` patří do `localvault`.
+3. V noclehu seber ze stolu **Rozpis nebeské hlídky**. V inventáři ho otevři přes **Prohlédnout** (**Examine**).
 
 ## Mapa průchodů
 
-Mapa spojuje všech deset oblastí. Čísla u spojení odpovídají konkrétním prahům v půdorysech. Zlatá vede po hlavní trase, modrá označuje odbočky a zkratky a růžová návrat po uzavření lucerny. [Mapa a půdorysy v PDF](../podklady/mapa-hvezdarny.pdf) · [Přehled v PNG](../podklady/mapa-hvezdarny.png)
+Všechny oblasti jsou na jednom půdorysu se společným směrem na sever. Jeden čtvereček je **1 × 1 v Toolsetu**, tedy **10 × 10 m**. Čísla 00–09 označují prahy na společných hranách. Vedle každého půdorysu jsou jeho rozměry. [Hráčská mapa](../podklady/mapa-hvezdarny.png) · [Úplný půdorys včetně tajných cest](../podklady/mapa-hvezdarny-vsechny-lokace.png) · [Tiskové PDF](../podklady/mapa-hvezdarny.pdf)
 
 ## Cesta hvězdárnou
 
-| Oblast | Co na místě hledat |
-| --- | --- |
-| Výstupová římsa | Nocleh ve skalním závětří, stůl s rozpisem hlídky a vyhrnutá cesta na předpolí |
-| Chodby clon | Příjmová síň, odbočka k dílnám a samostatná zděná chodba se třemi výbojovými poli |
-| Dílny a servisní lávka | Optická zkušebna, kovárna a most k údržbářské kupoli s Pečetí kotvy |
-| Kopule | Refraktor uprostřed, pracovní kouty při obvodu a dva pevné podstavce s pohyblivými ukazateli |
-| Schody do nebe | Tři ramena schodů, rozpis u paty, orloj na měřicí podestě a stanoviště Křídla ve větrných vírech |
-| Visuté ochozy | Dva ohrazené mosty, stanoviště Kopí a Lucerny a horní výstup do předbraní |
-| Předbraní | Tři optické sloupy, závora převodu a široké schodiště k Bráně tří paprsků |
-| Poslední stupeň | Tři výseče, odrazová věž, stanoviště Ithrena a návratová lucerna |
+- **Dolní okruh · 35–37.** Z rozcestí na Výstupové římse vede hlavní vstup do Zkušebny. Od optiky vystoupej po servisní lávce na horní dvůr dílen. Z něj se můžeš přes archiv a Chodby clon vrátit na rozcestí. Z horní dílny vede zároveň samostatný severní vstup do Kopule. Na horní podestě vyzvedni **Pečeť kotvy**.
+- **Kopule.** Seřiď dva podstavce a zkontroluj obraz v refraktoru. Modrý paprsek od objektivu rozsvítí severní průchod ke Schodům do nebe.
+- **Horní okruh · 38–40.** Od paty schodů stoupá západní trasa po třech střídavě položených schodištích přes bouřnou podestu s **Pečetí křídla**. Východní trasa vede na dva Visuté ochozy. Tam hlídka drží **Pečeť kopí** a **Pečeť lucerny**. Obě ramena vystoupají o 15 metrů ke svému vstupu do Předbraní a spojí se u optického dvora.
+- **Předbraní a Poslední stupeň.** Přesuň čtyři pečetě do inventářů sloupů a závory. Páčkami nastav v každém sloupu jiný znak. Rozpis v táboře, zápis na schodech a protokol u písaře určují sestavu. Po otevření brány pokračuj na Poslední stupeň. Po sklopení clony u Ithrenovy lucerny si vyber odměnu a sestup přes Předbraní.
 
-V kopuli se po seřízení otáčí objektiv a mosazné ukazatele na pevných stupnicích. Do předbraní dones všechny čtyři pečetě. Otevři inventář každého sloupu i závory a přesuň do něj jednu raznici. Páčkami na bocích sloupů nastav Srpek, Hvězdu a Slunce. Rozpis u noclehu, zápis na schodech a protokol na stole v předbraní určují sestavu. Nakonec zatáhni za spoušť u paty schodiště. Pult nové výpravy obnoví zápisy, obsah kontejnerů a stav mechanismů.
+V dolní dílně je u zkušebního stolu příruční schránka s klíčem. Otevře správkynino pouzdro pod stejným přístřeškem. Přenosné zrcadlo ze zkušebny pomůže při závěrečném výboji. Na Posledním stupni je patice vpravo od nástupu, pod úrovní horní podesty.
 
-V dolní dílně hledej příruční schránku s klíčem u pracovního stolu. Klíč otevře správkynino pouzdro pod stejným přístřeškem při západním okraji. Přenosné zrcadlo má své pouzdro v téže zkušebně. Pasuje do patice vpravo pod schody na Posledním stupni a pomůže při závěrečném výboji. Kořist ber z inventářů truhlic. Běžné zásoby a poklady jsou společné pro družinu.
+### Služební průchody pro úrovně 38 a vyšší
+
+Tuto část si rozbal při zkoušení tajných cest.
+
+<details>
+<summary>Hledání Pracovny a výstupu na Visuté ochozy</summary>
+
+- Na římse obejdi zasněžené výčnělky na východním konci. V závětří u slepé skalní stěny použij režim **Hledání**. Druhý vstup odhalí Hledání u registrů ve východním křídle Chodeb clon.
+- V Pracovně je u stolu archivní stejnopis Pečeti kotvy. Pouzdro vydá stejnou raznici jako Dílny a pro celou výpravu platí jedna Kotva. Ze stolu lze sebrat zápis správkyně.
+- Odjisti páku na severním konci služební chodby a dojdi pěšky na Visuté ochozy. Křídlo získáš přes západní návrat na Schody do nebe. Kopí a Lucerna jsou u horních mostních podest. Pro bránu stále potřebuješ všechny čtyři pečetě a stopy v zápisech.
+
+</details>
 
 ### Ovládání v dolní části
 
@@ -47,29 +40,34 @@ V dolní dílně hledej příruční schránku s klíčem u pracovního stolu. K
 - **Spoušť zkušební optiky** u pracovního stolu vyšle paprsek přes pevné zrcadlo. Odraz na měřicí stupnici na chvíli rozsvítí polohy západní a východní clony pro seřízení v kopuli.
 - **Ozvučnice servisní lávky** stojí na horní podestě u výstupu z mostu. Jednou za vlnu zasáhne nejbližšího viditelného větrného elementála v dosahu 18 metrů za 64 bodů zvukového poškození před úpravou odolností. Úder naprázdno ji nevyčerpá.
 
-## Úpravy a sestavení
+## Návrh a sestavení
 
-Půdorysy, přechody a interaktivní objekty jsou v [layout.py](../zdroje/layout.py). Výzdobu jednotlivých lokací určuje [dressing.py](../zdroje/dressing.py). Vlastní modely, textury a oblohu sestavují [art.py](../zdroje/art.py), [architecture.py](../zdroje/architecture.py) a [skies.py](../zdroje/skies.py). Schodiště, pochozí povrch a jejich kolize sestavuje [flights.py](../zdroje/flights.py). Tvary kolizí a body použití pro vlastní architekturu jsou v [collision.py](../zdroje/collision.py). Pečetě, jejich ikony, clony a paprsky sestavuje [gateart.py](../zdroje/gateart.py). Stavební dlaždice interiérů sestavuje [interiors.py](../zdroje/interiors.py). Modely zkušební optiky, nástěnných vysílačů a ozvučnice vznikají v [workart.py](../zdroje/workart.py). Polohu a vzhled prahů určuje [routes.py](../zdroje/routes.py). Efekty a výhledy za portály sestavuje [lightart.py](../zdroje/lightart.py). Mapu z exportovaného modulu kreslí [mapa_hvezdarny.py](../zdroje/mapa_hvezdarny.py). Modely knih a vybavení jednotlivých provozů sestavuje [furnishings.py](../zdroje/furnishings.py). Texty knih, předměty a stvůry jsou v [content.py](../zdroje/content.py). [NWScriptové zdroje](../skripty/) jsou také uvnitř modulu. Čeština používá `cp1250`.
+Společnou síť, rozměry, půdorysy a směry určuje [plan.py](../zdroje/plan.py). Podle něj vznikají dlaždice a přechody v [layout.py](../zdroje/layout.py), [interiors.py](../zdroje/interiors.py) a [routes.py](../zdroje/routes.py). Výzdobu podest a chodeb skládá [dressing.py](../zdroje/dressing.py). [Kreslič mapy](../zdroje/mapa_hvezdarny.py) umí ověřit rozměry, prahy, polohu a natočení příchodů i návaznost výšek v hotovém modulu.
 
 ```bash
 python3 ../zdroje/build.py --game "/cesta/k/Neverwinter Nights/game" \
   --compiler /cesta/k/nwn_script_comp --scripts ../skripty --output ./build
+python3 ../zdroje/mapa_hvezdarny.py --module "./build/Hvezdarna druheho nebe.mod" \
+  --output ./build/mapa-hvezdarny.pdf
 ```
 
-Sestavení čte dlaždice, přechody a statické herní zdroje ze základní instalace. HAK doplňuje dvě dlaždice do `tcm02.set` a přidává interiérovou sadu `hvd_interior.set`. Při importu do Kandelábrie je třeba zachovat návaznost vlastních položek na `placeables.2da`, převzít interiérovou sadu a sloučit obě nové dlaždice s cílovou sadou. [Kompilátor NWScriptu](https://github.com/niv/neverwinter.nim/releases/tag/2.3.2)
-
+Sestavení čte základní herní prostředky z místní instalace. HAK doplňuje dlaždice do `tcm02.set` a přidává interiérovou sadu `hvd_interior.set`. Kreslič mapy používá ReportLab a písmo DejaVu Sans. Pro PNG potřebuje také Poppler. Přepínač `--player-map` kreslí hráčskou mapu bez tajných cest. [Kompilátor NWScriptu](https://github.com/niv/neverwinter.nim/releases/tag/2.3.2)
 
 ## Zkušební list
 
-Přepínač `--test-guide` při sestavení přidá schránku **TEST · Pouzdro s řešením brány**. Stojí vlevo po příchodu do předbraní, kousek před pultem pro výměnu pečetí. Zkušební list se bere do inventáře a čte přes **Prohlédnout** (**Examine**). Obsahuje přesnou sestavu právě rozehrané výpravy. Každá nová výprava doplní nový list. Běžné sestavení vzniká bez tohoto přepínače a navazuje na stejný HAK.
+Přepínač `--test-guide` při sestavení přidá schránku **TEST · Pouzdro s řešením brány**. Stojí na jižním dvoře Předbraní u pultu pro výměnu pečetí. Zkušební list se bere do inventáře a čte přes **Prohlédnout** (**Examine**). Obsahuje přesnou sestavu právě rozehrané výpravy. Každá nová výprava doplní nový list. Běžné sestavení vzniká bez tohoto přepínače a navazuje na stejný HAK.
 
 ## Ověření ve hře
 
-Ve zkušební výpravě v klientu NWN:EE jsem ověřil seřízení refraktoru, stálý paprsek a příchod na Schody do nebe. Zlatý odraz na Posledním stupni zhasl po sklopení clony a v nové výpravě se obnovil. Postava prošla oběma mosty na ochozech, vystoupala o 5 m na horní podestu a prošla patnácti dotčenými směrovými přechody.
+V klientu NWN:EE jsem prošel oběma okruhy včetně obou mostů a zkontroloval všech 26 směrů průchodu. Postava na 38. úrovni našla oba skryté vstupy v režimu Hledání, vyzvedla jednu platnou Kotvu a došla služební chodbou na Ochozy. Postava na 37. úrovni zůstala ve výchozí lokaci i po jeho odkrytí. Ověřil jsem chybný a platný stav refraktoru i brány, příchod na Poslední stupeň, sklopení clony a obnovu zakrytí při nové výpravě. Chůzi jsem ověřoval v připraveném stavu výpravy a clonu zkoušel v okamžiku, kdy je po střetu přístupná.
 
-V klientu NWN:EE prošla postava všemi 29 směrovými přechody až po vstupu na označený práh. Ověřil jsem polohu před prahem i místo příchodu. Deset podmíněných průchodů získalo značku po otevření a nová výprava je opět skryla.
+Pásma obtížnosti jsou vodítkem při návrhu okruhů. Jejich herní vyvážení má vlastní zkušební výpravu.
 
-Ve verzi 9 prošla postava v klientu NWN:EE všemi 10 oblastmi a 29 směrovými přechody. Obchůzka zahrnula 150 kontrolních míst, vždy s pohledem vlevo a vpravo.
+[Rozcestí](../podklady/v12-rozcesti.jpg) · [Horní schodiště](../podklady/v12-schodiste.jpg) · [Kopule](../podklady/v12-kopule.jpg) · [Ithren](../podklady/v12-ithren.jpg)
+
+### Starší verze
+
+[Ithren a paprsek ve verzi 11](../podklady/ithren-lucerna-v11.jpg)
 
 ### Ověření brány ve verzi 8
 

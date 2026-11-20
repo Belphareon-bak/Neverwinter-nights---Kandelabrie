@@ -19,6 +19,7 @@ from flights import tile_assets
 from gateart import gate_models, seal_assets
 from furnishings import SCENERY as FURNISHINGS, book_assets
 from lightart import SCENERY as LINK_SCENERY, VISUALS as LINK_VISUALS
+from plan import SECRET_LEVEL, VERSION
 from routes import route_assets
 from interiors import tileset as interior_tiles
 from layout import areas
@@ -31,7 +32,7 @@ from world import Tileset, object_fields, variables
 HERE = Path(__file__).resolve().parent
 MODULE_NAME = "Hvezdarna druheho nebe.mod"
 CHARACTER_NAME = "Radan Hvezdar.bic"
-HAK_NAME = "hvd_observatory"
+HAK_NAME = "hvd_obs_v12"
 TEXT_ENCODING = "cp1250"
 
 
@@ -49,14 +50,14 @@ def metadata(zones, test_guide):
     start = next(marker for marker in zones[0].waypoints if marker.value("Tag") == "hvd_start")
     info = Record(
         Mod_ID=(VOID, uuid.uuid5(uuid.NAMESPACE_URL, "local:nwn/hvezdarna-druheho-nebe").bytes),
-        Mod_Creator_ID=integer(0), Mod_Version=dword(11), Expansion_Pack=word(3),
+        Mod_Creator_ID=integer(0), Mod_Version=dword(VERSION), Expansion_Pack=word(3),
         Mod_Name=loc("Hvězdárna druhého nebe"),
         Mod_Tag=string("HVEZDARNA"), Mod_Hak=string(""),
         Mod_HakList=lst([Record(8, Mod_Hak=string(HAK_NAME))]), Mod_CustomTlk=string(""),
         Mod_Description=loc("Horská výprava pro úrovně 35–40. Větrní elementálové, Schody do nebe, "
                             "proměnlivá soustava čtyř pečetí a poslední služba solara Ithrena. "
                             "Pro samostatnou zkoušku se hodí Radan Hvězdář (38)."),
-        Mod_IsSaveGame=bite(0), Mod_Entry_Area=ref("hvd_rim"),
+        Mod_IsSaveGame=bite(0), Mod_Entry_Area=ref(zones[0].key),
         Mod_Entry_X=start.fields["XPosition"], Mod_Entry_Y=start.fields["YPosition"],
         Mod_Entry_Z=start.fields["ZPosition"], Mod_Entry_Dir_X=start.fields["XOrientation"],
         Mod_Entry_Dir_Y=start.fields["YOrientation"],
@@ -66,8 +67,10 @@ def metadata(zones, test_guide):
         Mod_Area_list=lst([Record(6, Area_Name=ref(zone.key)) for zone in zones]),
         **{event: ref(script) for event, script in scripts.items()},
     )
+    settings = {"hvd_secret_level": SECRET_LEVEL}
     if test_guide:
-        info.fields["VarTable"] = variables(hvd_test_guide=1)
+        settings["hvd_test_guide"] = 1
+    info.fields["VarTable"] = variables(**settings)
     return info
 
 
@@ -131,7 +134,7 @@ def build(game_path, compiler, directory, scripts, *, test_guide=False):
     dress_areas(zones)
     for zone in zones:
         if zone.lighting["SkyBox"][1]:
-            zone.lighting["SkyBox"] = bite(sky_ids["rim" if zone.key in ("hvd_rim", "hvd_works") else "upper"])
+            zone.lighting["SkyBox"] = bite(sky_ids["rim" if zone.key in ("hvd_camp", "hvd_rim", "hvd_works") else "upper"])
     tiles = {key: Tileset(game, key, art.get(f"{key}.set"), paving if key == "tcm02" else None)
              for key in {area.tileset for area in zones}}
     for name, creature in creatures().items():

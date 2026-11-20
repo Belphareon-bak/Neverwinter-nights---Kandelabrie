@@ -154,12 +154,12 @@ def star(mesh, x, y, z, r, mat, facets=8):
 def observatory():
     m = Mesh()
     wall, radius, sectors = 4.4, 6.1, 16
-    # Raised lower plinth. The south bay stays open at the entrance.
+    # Raised lower plinth. The two bays form a through vestibule.
     for i in range(sectors):
         a, b = -pi / 2 + (i - .5) * tau / sectors, -pi / 2 + (i + .5) * tau / sectors
         def corner(theta, r, z):
             return (r * cos(theta), r * sin(theta), z)
-        if i not in (15, 0, 1):
+        if i not in (15, 0, 1, 7, 8, 9):
             for z0, z1, r, material in ((0, .42, 6.35, TRIM), (.42, 3.8, radius, STONE),
                                         (3.8, 4.12, 6.27, TRIM), (4.12, wall, 6.43, DARK)):
                 m.polygon(material, (corner(a, r, z0), corner(b, r, z0),
@@ -184,21 +184,18 @@ def observatory():
     m.tube(BRASS, (-1.35, 0, 9.67), (1.35, 0, 9.67), .06, sides=8)
     for x in (-1.37, 1.37):
         m.disc(AMBER, (x, 0, 9.55), (x, 0, 9.79), .15, sides=10)
-    arch(m, 2.63, 2.35, -6.0, .55, 1.0, TRIM, masonry=True)
-    arch(m, 2.68, 2.35, -6.56, .083, .09, BRASS)
-    for x in (-3.4, 3.4):
-        m.box(DARK, x, -5.85, 0, .55, .75, 2.8)
-        m.box(TRIM, x, -5.85, 2.8, .79, .98, .24)
-    # Recess the actual threshold between the walls of the vestibule.
-    for side in (-1, 1):
-        m.box(DARK, 2.31 * side, -3.46, 0, 1.49, .35, 4.45)
-        m.box(STONE, 1.80 * side, -2.01, 0, .40, 2.75, 3.57)
-    m.box(DARK, 0, -3.46, 3.47, 3.15, .35, .98)
-    m.box(Material((.047, .058, .077), "hvd_rough"), 0, -.63, 0, 3.98, .35, 3.60)
-    m.box(DARK, 0, -2.0, 3.43, 3.58, 2.77, .16)
-    m.box(TRIM, 0, -1.98, -.05, 3.13, 2.94, .09)
-    arch(m, 1.58, 1.85, -3.83, .18, .21, BRASS)
-    m.box(TRIM, 0, -4.24, 0, 5.45, 1.55, .18)
+    for direction in (-1,1):
+        y = direction * 6.0
+        arch(m, 2.74, 2.35, y, .55, 1.0, TRIM, masonry=True)
+        arch(m, 2.78, 2.35, y + direction*.53, .083, .09, BRASS)
+        for x in (-3.43,3.43):
+            m.box(DARK, x, y, 0, .58, .82, 2.80)
+            m.box(TRIM, x, y, 2.8, .79, .98, .24)
+    for side in (-1,1):
+        m.box(STONE,side*3.6,0,0,.70,8.4,3.62)
+        m.box(TRIM,side*3.29,0,3.22,.35,8.2,.16)
+    m.box(DARK, 0, 0, 3.53, 6.0, 8.3, .26)
+    m.box(TRIM, 0, 0, -.065, 5.78, 12.4, .075)
     return m
 
 

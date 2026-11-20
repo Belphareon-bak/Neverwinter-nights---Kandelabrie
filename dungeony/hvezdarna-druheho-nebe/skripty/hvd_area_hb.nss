@@ -1,11 +1,12 @@
 #include "hvd_final"
 
-object PlayerOnTrigger(object trigger)
+object PlayerOnTrigger(object trigger, int searching)
 {
     object player = GetFirstPC();
     while (GetIsObjectValid(player))
     {
-        if (HVD_IsPlayer(player) && HVD_InBox(trigger, player)) return player;
+        if (HVD_IsPlayer(player) && HVD_InBox(trigger, player) &&
+            (!searching || HVD_CanSearchSecret(player))) return player;
         player = GetNextPC();
     }
     return OBJECT_INVALID;
@@ -25,12 +26,14 @@ void main()
     {
         object next = GetNextObjectInArea(OBJECT_SELF, OBJECT_TYPE_TRIGGER);
         int kind = GetLocalInt(trigger, "hazard");
-        if (kind)
+        string secret = GetLocalString(trigger, "secret");
+        if (kind || secret != "")
         {
-            object player = PlayerOnTrigger(trigger);
+            object player = PlayerOnTrigger(trigger, secret != "");
             if (GetIsObjectValid(player))
             {
-                if (kind == 3) HVD_BossStart(player);
+                if (secret != "") HVD_InspectSecret(player, secret);
+                else if (kind == 3) HVD_BossStart(player);
                 else HVD_Trap(trigger, kind);
             }
         }

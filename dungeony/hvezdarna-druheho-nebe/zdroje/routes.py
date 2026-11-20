@@ -6,6 +6,7 @@ from struct import pack
 from architecture import BASALT, LIMESTONE
 from art import GILT, Material, Mesh
 from aurora import bite
+from plan import JOINS, LANDING_INSET, PASSAGE_WIDTH, SECRET_LEVEL, THRESHOLD_INSET, ZONES
 
 
 @dataclass(frozen=True)
@@ -28,37 +29,11 @@ class Threshold:
         return self.x - dx, self.y - dy, self.x + dx, self.y + dy
 
 
-# A sill sits between actual jambs, with its inscription on the approach side.
+# Both markers are inset from the same edge in the master floor plan.
 THRESHOLDS = {
-    'rim_halls': Threshold(40, 57.10, 90, 3.15, 'CHODBY CLON'),
-    'rim_works': Threshold(57.58, 24, 0, 5.20, 'DILNY'),
-    'halls_study': Threshold(22.9, 58.87, 90, 4.00, 'PRACOVNA'),
-    'halls_rim': Threshold(17.775, 7.90, 270, 4.25, 'NOCLEH'),
-    'halls_works': Threshold(4.62, 44.90, 180, 3.50, 'DILNY'),
-    'halls_dome': Threshold(55.55, 42.32, 90, 4.10, 'KOPULE'),
-    'works_halls': Threshold(25, 10.92, 270, 4.50, 'CHODBY CLON'),
-    'works_dome': Threshold(25, 61.34, 90, 4.00, 'KOPULE'),
-    'works_rim': Threshold(39.63, 15, 0, 5.25, 'NOCLEH'),
-    'dome_study': Threshold(48.43, 14.65, 0, 3.55, 'PRACOVNA'),
-    'dome_halls': Threshold(30, 14.38, 270, 5.10, 'CHODBY CLON'),
-    'dome_works': Threshold(10.03, 26.05, 180, 4.85, 'DILNY'),
-    'dome_steps': Threshold(30, 47.05, 90, 5.00, 'SCHODY DO NEBE'),
-    'dome_short': Threshold(51.12, 26.08, 0, 4.80, 'PREDBRANI'),
-    'steps_dome': Threshold(35, 11.35, 270, 4.95, 'KOPULE'),
-    'steps_walks': Threshold(35, 80, 90, 4.95, 'OCHOZY'),
-    'steps_eave': Threshold(14.31, 16.65, 180, 3.08, 'SPODNI RIMSA'),
-    'steps_eaveup': Threshold(56.68, 54, 0, 4.35, 'SPODNI RIMSA'),
-    'study_halls': Threshold(8.475, 4.31, 270, 3.03, 'CHODBY CLON'),
-    'study_dome': Threshold(17.25, 23.77, 90, 3.17, 'KOPULE'),
-    'eave_steps': Threshold(25, 11.80, 270, 3.80, 'PATA SCHODU'),
-    'eave_up': Threshold(25, 80.45, 90, 3.80, 'BOURNA PODESTA'),
-    'walks_steps': Threshold(40, 11.56, 270, 4.95, 'BOURNA PODESTA'),
-    'walks_gate': Threshold(45, 87.38, 90, 4.95, 'PREDBRANI'),
-    'gate_walks': Threshold(35, 12.00, 270, 4.95, 'OCHOZY'),
-    'gate_dome': Threshold(56.15, 22, 0, 3.80, 'KOPULE'),
-    'gate_top': Threshold(35, 53.51, 90, 4.28, 'POSLEDNI STUPEN'),
-    'top_gate': Threshold(35, 11.75, 270, 4.95, 'PREDBRANI'),
-    'top_rim': Threshold(35, 58.70, 90, 4.95, 'NOCLEH'),
+    f'{source}_{target}': Threshold(*join.point(source, THRESHOLD_INSET),
+                                    join.heading(source), PASSAGE_WIDTH, sign)
+    for join in JOINS for source, target, _, sign, _ in join.destinations()
 }
 
 NAMES = {route: f'hvd_sill{index:02}' for index, route in enumerate(THRESHOLDS)}
@@ -121,16 +96,31 @@ def route_assets():
     return appearances, textures
 
 
-def transition(area, name, tag, target, *, require='', flag=''):
+def transition(area, name, tag, target, require, minimum_level, view):
     route = tag.removeprefix('hvt_')
     sill = THRESHOLDS[route]
-    area.transition(name, tag, sill.bounds, target, require=require, flag=flag)
+    area.transition(name, tag, sill.bounds, target, require=require, minimum_level=minimum_level)
     asset = NAMES[route]
     if not require:
         area.prop(area.art[asset], name, sill.x, sill.y, bearing=sill.bearing)
     # The waypoint gives the real destination on the map, at the same location as the sill.
     # CreateObject takes a compass facing. The static placeable bearing is offset by 90 degrees.
     area.point('hvd_route', sill.x, sill.y, sill.facing, f'Přechod · {name}',
-               required=require, resource=asset)
+               required=require, resource=asset, view=view if minimum_level else "")
     if require:
         area.waypoints[-1].fields['MapNoteEnabled'] = bite(0)
+
+
+def place_transitions(zones):
+    areas = {area.key[4:]: area for area in zones}
+    for join in JOINS:
+        for source, target, name, _, require in join.destinations():
+            landing = f'hvd_land_{target}_{source}'
+            areas[target].point(landing, *join.point(target, LANDING_INSET), join.heading(source))
+            model = 'hvd_join_hall' if ZONES[target].interior else 'hvd_join_deck'
+            transition(areas[source], name, f'hvt_{source}_{target}', landing, require,
+                       SECRET_LEVEL if join.secret else 0, model)
+            if not require:
+                area = areas[source]
+                sill = THRESHOLDS[f'{source}_{target}']
+                area.prop(area.art[model], name, sill.x, sill.y, bearing=sill.bearing)

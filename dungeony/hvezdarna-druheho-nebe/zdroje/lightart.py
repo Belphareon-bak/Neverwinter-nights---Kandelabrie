@@ -1,21 +1,20 @@
 """Optical paths and architectural glimpses beyond the observatory's thresholds."""
 
-from math import cos, pi, sin, tau
+from math import cos, hypot, pi, sin, tau
 
-from architecture import BASALT, ICE, LIMESTONE, MASONRY, SLATE, WOOD, rosette
-from art import BRASS, CROWN, DARK, GILT, TRIM, Material, Mesh, arch
+from architecture import BASALT, ICE, LIMESTONE, MASONRY, SLATE, WOOD, rock_mound, rosette
+from art import BRASS, CROWN, DARK, GILT, TRIM, Material, Mesh
+from plan import GATE_JOIN, OPTICS_JOIN, PASSAGE_WIDTH, THRESHOLD_INSET, TILE, WALKS, ZONES
 
 
 REFRACTOR = (30.0, 31.0)
-STAIR_PORTAL = (30.0, 46.11)
+STAIR_PORTAL = OPTICS_JOIN.point('dome', THRESHOLD_INSET)
 LAST_TOWER = (16.0, 54.8, 4.0)
 LAST_LANTERN = (38.15, 55.5)
 LAST_LANTERN_HEIGHT = 10.0
 TOWER_LENS = (2.92, 0.0, 8.38)
 LANTERN_GLASS = (0.0, 0.0, 2.24)
 
-NIGHT = Material((.18, .24, .43), 'hvd_clouds', (.10, .14, .25))
-VOID = Material((.043, .057, .070), 'hvd_rough')
 COLD = Material((.59, .86, 1.0), 'hvd_raylight', (.43, .76, .96), alpha=.89)
 PALE_MIST = Material((.53, .80, 1.0), 'hvd_raylight', (.25, .51, .85), alpha=.22)
 GOLD = Material((1.0, .80, .43), 'hvd_raylight', (.93, .66, .25), alpha=.90)
@@ -40,23 +39,25 @@ def brass_rim(m, radius, spring, crown, y, material, size=.05):
         m.tube(material,a,b,size,sides=7)
 
 
-def preview_steps(m, *, start, run, width, rise, count, base=0, sky=True):
-    """A far-side continuation, placed beyond the area-change trigger."""
-    for i in range(count):
-        y = start+(i+.5)*run
-        z = base+rise*(i+1)
-        m.box(MASONRY,0,y,-.12,width,run+.007,z+.12)
-        m.box(SLATE,0,y,z-.055,width+.12,run+.008,.055)
-        for side in (-1,1):
-            x = side*(width/2+.11)
-            m.box(LIMESTONE,x,y,z-.025,.23,run+.02,.21)
-            m.tube(GILT,(x,y-run/2,z+.13),(x,y+run/2,z+.13),.024,sides=6)
-            if i in (0,count-1):
-                m.box(MASONRY,x,y,z,.36,.30,.59)
-                m.box(TRIM,x,y,z+.55,.41,.34,.105)
-    if sky:
-        end = start+run*count+.07
-        aperture(m,width*.69,2.56,3.92,end,NIGHT,foot=base+rise*count-.02)
+def preview_approach(m, join):
+    """Use the actual landing and first stair of the next area in the aperture."""
+    target = join.second
+    col, row = ZONES[target].stairs[0]
+    stair_x, stair_y = TILE*(col+.5), TILE*row
+    origin, _ = join.point(target)
+    approach = [(x-origin, y + THRESHOLD_INSET) for x,y in WALKS[target][0] if y < stair_y]
+    approach.append((stair_x-origin, stair_y+THRESHOLD_INSET))
+    for (x0,y0), (x1,y1) in zip(approach,approach[1:]):
+        m.polygon(SLATE,((x0-2.72,y0,.012),(x0+2.72,y0,.012),
+                         (x1+2.72,y1,.012),(x1-2.72,y1,.012)))
+        for offset in (-2.66,2.66):
+            m.trace(LIMESTONE,(x0+offset,y0,.07),(x1+offset,y1,.07),.20)
+    x = stair_x-origin
+    for i in range(10):
+        y = stair_y + THRESHOLD_INSET + i+.5
+        z = .5*(i+1)
+        m.box(MASONRY,x,y,-.08,6.5,1.0,z+.08)
+        m.box(SLATE,x,y,z-.045,6.52,1.005,.045)
 
 
 def dome_shutter():
@@ -74,13 +75,60 @@ def dome_shutter():
     return m
 
 
+def adjoining_landing(*, enclosed):
+    """Draw the first part of the neighboring floor beyond an ordinary threshold."""
+    m = Mesh()
+    start, length = THRESHOLD_INSET, 7.4
+    half = PASSAGE_WIDTH / 2 + .35
+    center = start + length / 2
+    m.box(MASONRY, 0, center, -.24, 2 * half, length, .23)
+    m.box(SLATE, 0, center, -.025, 2 * half, length, .034)
+    for edge in (-half, half):
+        if enclosed:
+            m.box(MASONRY, edge, center, -.01, .26, length, 3.28)
+            m.box(LIMESTONE, edge, center, .03, .39, length, .29)
+        else:
+            for y in (start + 1.9, start + 5.1):
+                m.box(MASONRY, edge, y, -1.48, .32, .34, 2.17)
+                m.box(TRIM, edge, y, .67, .42, .48, .12)
+            m.box(LIMESTONE, edge, center, .57, .24, length, .15)
+    return m
+
+
+def mountain_roads():
+    m = Mesh()
+    origin = (26, 12)
+    for road in WALKS['rim']:
+        normals = []
+        for (x, y), (nx, ny) in zip(road, road[1:]):
+            length = hypot(nx-x, ny-y)
+            normals.append(((y-ny)/length, (nx-x)/length))
+        sides = []
+        for i, (x, y) in enumerate(road):
+            left = normals[max(0,i-1)]
+            right = normals[min(i,len(normals)-1)]
+            mx,my = left[0]+right[0], left[1]+right[1]
+            scale = 2.32/(mx*right[0]+my*right[1])
+            x,y = x-origin[0],y-origin[1]
+            sides.append(((x+mx*scale,y+my*scale,.037),(x-mx*scale,y-my*scale,.037)))
+        for (a,b),(c,d) in zip(sides,sides[1:]):
+            vertices = (a,b,d,c)
+            m.polygon(SLATE,vertices,[(x*.37,y*.37) for x,y,_ in vertices])
+            if hypot(a[0],a[1])>4 or hypot(c[0],c[1])>4:
+                m.trace(LIMESTONE,a,c,.064)
+                m.trace(LIMESTONE,b,d,.064)
+    m.disc(SLATE,(0,0,.032),(0,0,.052),2.74,sides=12)
+    m.disc(TRIM,(0,0,.048),(0,0,.073),.44,sides=10)
+    return m
+
+
 def stair_portal():
     m = Mesh()
     brass_rim(m,2.77,2.17,3.78,-.025,PALE_MIST,.13)
     brass_rim(m,2.75,2.17,3.79,-.048,COLD,.039)
     m.disc(BRASS,(0,.01,3.94),(0,-.28,3.94),.27,sides=12)
     m.disc(COLD,(0,-.255,3.94),(0,-.307,3.94),.16,sides=16)
-    preview_steps(m,start=1.31,run=.52,width=4.24,rise=.197,count=6)
+    preview_approach(m,OPTICS_JOIN)
     return m
 
 
@@ -96,7 +144,7 @@ def dome_ray():
 
 def gate_preview():
     m = Mesh()
-    preview_steps(m,start=1.42,run=.72,width=3.98,rise=.194,count=6,sky=False)
+    preview_approach(m,GATE_JOIN)
     return m
 
 
@@ -175,24 +223,6 @@ def wing_walls():
     return m
 
 
-def quarry_mouth():
-    m = Mesh()
-    for x in (-2.96,2.96):
-        m.box(BASALT,x,.49,-.48,1.20,2.78,.81)
-        m.box(MASONRY,x,.49,.23,.91,2.62,2.02)
-        m.box(LIMESTONE,x,-.69,1.97,1.08,.43,.31)
-    arch(m,2.52,1.90,-.67,.55,.43,MASONRY,masonry=True)
-    arch(m,2.51,1.90,1.56,.51,.36,BASALT)
-    aperture(m,2.52,1.90,4.43,1.79,VOID,foot=.03)
-    for i in range(12):
-        a,b=pi*i/12,pi*(i+1)/12
-        x0,x1=3.01*cos(a),3.01*cos(b)
-        z0,z1=1.90+3.01*sin(a),1.90+3.01*sin(b)
-        m.polygon(MASONRY,((x0,-.47,z0),(x0,1.75,z0),(x1,1.75,z1),(x1,-.47,z1)))
-    preview_steps(m,start=-.87,run=.43,width=4.45,rise=.136,count=5,sky=False)
-    return m
-
-
 def bridge_rail():
     m = Mesh()
     # Native bridge tiles level off across the crown. This rail carries that profile.
@@ -210,14 +240,17 @@ def bridge_rail():
 
 
 SCENERY = {
+    'hvd_rim_roads': ('Dlážděné rozcestí', mountain_roads),
     'hvd_lighttower': ('Věž návratového objektivu', last_tower),
     'hvd_signallamp': ('Poslední lucerna s ruční clonou', last_lantern),
     'hvd_flankwalls': ('Boční opěry horské pozorovatelny', wing_walls),
-    'hvd_quarry': ('Ostění servisní cesty ve skále', quarry_mouth),
     'hvd_bridgeedge': ('Zábradlí visutého ochozu', bridge_rail),
 }
 
 VISUALS = {
+    'hvd_join_deck': ('Podesta za prahem', lambda: adjoining_landing(enclosed=False)),
+    'hvd_join_hall': ('Chodba za prahem', lambda: adjoining_landing(enclosed=True)),
+    'hvd_secretrock': ('Zasněžený výčnělek', lambda: rock_mound(645, True, 3.0, 5.7)),
     'hvd_optcover': ('Uzávěr Schodů do nebe', dome_shutter),
     'hvd_stairview': ('První schody pod září portálu', stair_portal),
     'hvd_domelight': ('Paprsek seřízeného refraktoru', dome_ray),

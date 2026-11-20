@@ -34,6 +34,9 @@ def archive_case():
     for x in (-1.28,1.27):
         m.box(WOOD,x,-.235,.19,1.80,.16,.61)
         m.box(BRASS,x,-.34,.42,.12,.07,.05)
+    for x in (-2.68,2.68):
+        m.box(WOOD,x,-.015,0,.57,.50,3.18)
+    m.box(DARK,0,-.055,3.01,5.95,.54,.30)
     return m
 
 

@@ -6,49 +6,29 @@ from struct import pack
 from architecture import BASALT, LIMESTONE, MASONRY, surface
 from art import TRIM, Material, Mesh, arch
 from flights import as_tile
+from plan import ZONES
 
 
 TILESET = 'hvd_interior'
-# World-space footprints. Touching rectangles share the open width of their common edge.
-HALLS = (
-    (8,9,24,23), (15.2,6.5,20.35,9), (13,23,17.8,39.5), (24,12.55,48,17.45),
-    (48,10.5,64.2,38.7), (53.1,38.7,58,44.5), (7,39.5,25.5,55.6),
-    (3.2,42.7,7,47.1), (20.45,55.6,25.35,60.8),
-)
-DOME = (
-    (13.2,21.8,46.8,42.2), (18.3,17,41.7,21.8), (18.3,42.2,41.7,46),
-    (27,12.2,33,17), (8.2,23.1,13.2,29), (46.8,23.2,52.9,29), (26.8,46,33.2,51),
-    (38.3,12.25,50.4,17),
-)
-STUDY = (
-    (3.15,8.2,15.1,21.0), (6.6,3.1,10.35,8.2), (15.1,16.1,19.25,21.0),
-    (15.25,21.0,19.25,25.0),
-)
+# Frames share the width of an actual corridor and appear on its walkmesh.
+def chamber(code, height, frames):
+    zone = ZONES[code]
+    return zone.size, zone.rooms, height, frames
 
-# Frames are part of the tile model and share the jambs of a real opening.
-# Each row is center, angle and clear opening.
+
 PLANS = {
-    'hvd_halls': ((7,7), HALLS, 3.35,
-                  ((17.775,9,0,5.15),(15.4,23,0,4.8),(24,15,90,4.9),
-                   (48,15,90,4.9),(15.4,39.5,0,4.8),(7,44.9,90,4.4),(55.55,38.7,0,4.9))),
-    'hvd_dome': ((6,6), DOME, 3.85,
-                 ((30,17,0,6),(13.2,26.05,90,5.9),(46.8,26.1,90,5.8),
-                  (30,46,0,6.4))),
-    'hvd_study': ((2,3), STUDY, 3.13,
-                  ((8.475,8.2,0,3.75),(15.1,18.55,90,4.90))),
-}
-
-ENDS = {
-    'hvd_halls': ((17.775,6.57,180,3.85),(3.27,44.9,90,3.58),(55.55,44.43,0,3.85),
-                  (22.9,60.73,0,3.90)),
-    'hvd_dome': ((30,12.27,180,4.2),(8.27,26.05,90,4.15),(52.83,26.1,270,4.15),
-                 (30,50.93,0,4.25),(50.33,14.65,270,3.45)),
-    'hvd_study': ((8.475,3.17,180,3.03),(17.25,24.93,0,3.09)),
+    'hvd_halls': chamber('halls', 3.35,
+        ((18,1.55,0,5.7),(18,9,0,5.7),(24,15,90,4.9),
+         (48,15,90,4.9),(55.55,38.7,0,4.8),(25.5,45,90,5.6),(1.55,55,90,5.5))),
+    'hvd_study': chamber('study', 3.32,
+        ((8.5,31,0,5.5),(16.9,45.6,0,5.5),(23,58,0,5.5),(15,158.35,0,5.55))),
+    'hvd_dome': chamber('dome', 3.85,
+        ((30,1.55,0,5.8),(30,17,0,6),(13.2,26.05,90,5.9),
+         (46.8,26.1,90,5.8),(30,46,0,6.4))),
 }
 
 FLOOR = Material((.65,.65,.64),'hvd_paving')
 WALL = Material((.69,.69,.70),'hvd_ashlar',shadow=1)
-PASSAGE = Material((.105,.12,.145),'hvd_rough')
 
 
 def tile_assignments(key):
@@ -92,14 +72,10 @@ def masonry(mesh,a,b,height):
                  width if dy else 2*protrusion,t)
 
 
-def frame(mesh,x,y,angle,width,height,passage=False):
+def frame(mesh,x,y,angle,width,height):
     details=Mesh()
     radius=width*.5-.025
     arch(details,radius,2.25,0,.23,.49,TRIM,masonry=True)
-    if passage:
-        shade=[(radius*cos(pi*i/18),.025,2.25+radius*sin(pi*i/18)) for i in range(19)]
-        shade.extend(((-radius,.025,.03),(radius,.025,.03)))
-        details.polygon(PASSAGE,shade)
     for sign in (-1,1):
         details.box(BASALT,sign*(radius+.105),0,0,.27,.59,.28)
         details.box(LIMESTONE,sign*(radius+.115),0,2.10,.31,.65,.15)
@@ -111,7 +87,7 @@ def frame(mesh,x,y,angle,width,height,passage=False):
                                    for u,v,z in verts],uv)
 
 
-def chamber_tile(tx,ty,occupied,height,frames,ends):
+def chamber_tile(tx,ty,occupied,height,frames,size):
     mesh=Mesh()
     vertices=[]
     index={}
@@ -144,14 +120,16 @@ def chamber_tile(tx,ty,occupied,height,frames,ends):
             if adjacent in occupied:
                 continue
             a,b=corners[k],corners[(k+1)%4]
+            w,h=size
+            on_set_edge = ((a[0]==b[0] and a[0]+cx in (0,10*w))
+                           or (a[1]==b[1] and a[1]+cy in (0,10*h)))
+            if on_set_edge:
+                continue
             masonry(mesh,a,b,height)
             quad(((*b,0),(*a,0),(*a,height),(*b,height)),2)
     for x,y,angle,width in frames:
         if int(x//10)==tx and int(y//10)==ty:
             frame(mesh,x-cx,y-cy,angle,width,height)
-    for x,y,angle,width in ends:
-        if int(x//10)==tx and int(y//10)==ty:
-            frame(mesh,x-cx,y-cy,angle,width,height,passage=True)
     if not room_cells:
         quad(((-5,-5,-10),(5,-5,-10),(5,5,-10),(-5,5,-10)),7)
     return mesh,(vertices,faces,materials),room_cells
@@ -180,9 +158,11 @@ def tileset(game):
     resources={}
     for i,(area,x,y) in enumerate(indices):
         name=f'hvd_i{i:02d}'
-        _,_,height,frames=PLANS[area]
-        model,wok,cells=chamber_tile(x,y,occupied[area],height,frames,ENDS[area])
+        size,_,height,frames=PLANS[area]
+        model,wok,cells=chamber_tile(x,y,occupied[area],height,frames,size)
         resources.update(as_tile(name,model,wok))
+        if area == 'hvd_halls' and (x, y) == (6, 2):
+            cells = [(l,b,min(r,-.8),t) for l,b,r,t in cells if l < -.8]
         resources[f'mi_{name}.tga']=minimap(cells)
         corners=''.join(f'{corner}=stone\r\n{corner}Height=0\r\n' for corner in (
             'TopLeft','TopRight','BottomLeft','BottomRight'))

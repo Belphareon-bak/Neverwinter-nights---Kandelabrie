@@ -4,6 +4,12 @@ void main()
 {
     object player = GetEnteringObject();
     if (!HVD_IsPlayer(player)) return;
+    string secret = GetLocalString(OBJECT_SELF, "secret");
+    if (secret != "")
+    {
+        HVD_InspectSecret(player, secret);
+        return;
+    }
     int kind = GetLocalInt(OBJECT_SELF, "hazard");
     if (kind == 3) HVD_BossStart(player);
     else HVD_Trap(OBJECT_SELF, kind);

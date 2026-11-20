@@ -1,339 +1,375 @@
-"""Draw the route overview and local plans for an exported Hvězdárna module."""
+"""Draw the north-up Toolset plan and verify a built module against it."""
 
 from argparse import ArgumentParser
-from collections import defaultdict
-from dataclasses import dataclass
-from math import atan2, cos, hypot, radians, sin
+from math import isclose
 from pathlib import Path
+from subprocess import run
+from tempfile import TemporaryDirectory
 
 from reportlab.lib.colors import HexColor
-from reportlab.lib.pagesizes import A3, landscape
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
 
 from aurora import TYPE, erf_index, gff_decode
-from interiors import PLANS
-from layout import areas
-from routes import THRESHOLDS
+from plan import (DIRECTIONS, JOINS, LANDING_INSET, LANDMARKS, PASSAGE_WIDTH, SECRET_LEVEL,
+                  SECRET_WALKS, THRESHOLD_INSET, TILE, VERSION, WALKS, ZONES, check_plan)
 
-
-WIDTH, HEIGHT = landscape(A3)
-BG = '#10222d'
-PANEL = '#193440'
-RULE = '#31505b'
-TEXT = '#f0f2eb'
-SUB = '#afc4cb'
-GOLD = '#eed08d'
-BLUE = '#83cbd6'
-RETURN = '#e7a696'
-MAIN = ('rim', 'halls', 'works', 'dome', 'steps', 'walks', 'gate', 'top')
-TITLES = {
-    'rim': ('Výstupová římsa', 'Nocleh a rozpis hlídky'),
-    'halls': ('Chodby clon', 'Příjmová síň, paprsková chodba a archiv'),
-    'works': ('Dílny', 'Dolní dílna, servisní lávka a Pečeť kotvy'),
-    'dome': ('Kopule', 'Refraktor a clony'),
-    'steps': ('Schody do nebe', 'Tři ramena a bouřná podesta'),
-    'walks': ('Visuté ochozy', 'Dvě ramena a horní výstup k bráně'),
-    'gate': ('Předbraní', 'Dvůr pečetí a Brána tří paprsků'),
-    'top': ('Poslední stupeň', 'Ithren a návratová lucerna'),
-    'study': ('Pracovna správkyně', 'Skrytá komora za archivem'),
-    'eave': ('Římsa pod schody', 'Spodní servisní lávka se dvěma vstupy'),
+PAPER = '#f5f2e9'
+INK = '#211f2e'
+MUTED = '#57546a'
+GRID = '#c7c3ca'
+FRAME = '#777287'
+ROUTE = '#805008'
+ROUTE_BED = '#f0d595'
+HIGH_ROUTE = '#513d82'
+HIGH_BED = '#d6c6f2'
+DOME_ROUTE = '#20596c'
+DOME_BED = '#a9d6d9'
+DOOR = '#194c67'
+WALL = '#858394'
+HIDDEN = '#286852'
+FLOORS = {
+    'camp': '#d8e2e3', 'rim': '#d8e2e3', 'halls': '#e4d8bd', 'works': '#d7dbe4', 'dome': '#e4d8bd',
+    'steps': '#dcd8ec', 'walks': '#d7dcea', 'gate': '#ded8e8', 'top': '#e2d8e7',
+    'study': '#cfdfd3',
 }
 
-# Both directions carry the same number on the overview and on the floor plans.
-LINKS = (
-    ('rim_halls','halls_rim'), ('halls_works','works_halls'), ('works_dome','dome_works'),
-    ('dome_steps','steps_dome'), ('steps_walks','walks_steps'), ('walks_gate','gate_walks'),
-    ('gate_top','top_gate'), ('halls_dome','dome_halls'), ('works_rim','rim_works'),
-    ('halls_study','study_halls'), ('study_dome','dome_study'), ('steps_eave','eave_steps'),
-    ('steps_eaveup','eave_up'), ('gate_dome','dome_short'), ('top_rim',),
-)
-REQUIREMENTS = {
-    'hvd_aligned': 'Seřídit refraktor v kopuli',
-    'hvd_gate_open': 'Otevřít Bránu tří paprsků',
-    'hvd_work_link': 'Odjistit z dílen',
-    'hvd_study_open': 'Uvolnit západku v archivu',
-    'hvd_study_link': 'Odjistit z pracovny',
-    'hvd_eave_open': 'Uvolnit táhlo pod opěrou schodů',
-    'hvd_shortcut': 'Odjistit z Předbraní',
-    'hvd_won': 'Uzavřít lucernu po střetu s Ithrenem',
-}
+SCALE = 3.56
+ZERO = (235, 85)
+SIZE = (1105, 1810)
 
 
-@dataclass(frozen=True)
-class Passage:
-    source: str
-    target: str
-    x: float
-    y: float
-    required: str
+def px(x, y):
+    return ZERO[0] + x * SCALE, ZERO[1] + y * SCALE
 
 
-def read_module(path):
+def validate_module(path):
     resources = erf_index(path)
 
-    def read(name, kind):
+    def record(name, kind):
         return gff_decode(resources[name, TYPE[kind]], 'cp1250')
 
-    info = read('module', 'ifo')
-    names = [a.value('Area_Name') for a in info.value('Mod_Area_list')]
-    waypoints, triggers = {}, {}
-    for name in names:
-        area = name.removeprefix('hvd_')
-        git = read(name, 'git')
-        for spot in git.value('WaypointList'):
-            waypoints[spot.value('Tag')] = area
+    info = record('module', 'ifo')
+    if info.value('Mod_Version') != VERSION:
+        raise ValueError(f'Expected a version {VERSION} module')
+    keys = {area.value('Area_Name') for area in info.value('Mod_Area_list')}
+    if keys != {f'hvd_{code}' for code in ZONES}:
+        raise ValueError('The module has different areas from the Toolset plan')
+    triggers, landings = {}, {}
+    for key in keys:
+        code = key[4:]
+        area, git = record(key, 'are'), record(key, 'git')
+        if (area.value('Width'), area.value('Height')) != ZONES[code].size:
+            raise ValueError(f'Wrong Toolset dimensions for {code}')
         for entry in git.value('TriggerList'):
             tag = entry.value('Tag')
             if tag.startswith('hvt_'):
-                triggers[tag[4:]] = area, entry
-    if set(triggers) != {key for link in LINKS for key in link}:
-        raise ValueError('The map and module have different sets of threshold tags')
-    passages = {}
-    for key, (area, entry) in triggers.items():
-        settings = {v.value('Name'): v.value('Value') for v in entry.value('VarTable')}
-        x,y = entry.value('XPosition'),entry.value('YPosition')
-        sill = THRESHOLDS[key]
-        if hypot(sill.x-x,sill.y-y) > .01:
-            raise ValueError(f'Use the mapping sources for this module version: {key}')
-        passages[key] = Passage(area,waypoints[settings['target']],x,y,settings.get('require',''))
-    for a,b in (link for link in LINKS if len(link) == 2):
-        if passages[a].target != passages[b].source or passages[b].target != passages[a].source:
-            raise ValueError(f'Expected reciprocal routes: {a} and {b}')
-    return info.value('Mod_Version'), passages
+                triggers[tag] = code, entry
+        for entry in git.value('WaypointList'):
+            tag = entry.value('Tag')
+            if tag.startswith('hvd_land_'):
+                landings[tag] = code, entry
+
+    def coordinates(entry):
+        return entry.value('XPosition'), entry.value('YPosition')
+
+    def same(a, b):
+        return all(isclose(x, y, abs_tol=.01) for x, y in zip(a, b))
+
+    if info.value('Mod_Entry_Area') != 'hvd_camp':
+        raise ValueError('The starting area must be the camp')
+    elevations = {'camp': 0.0}
+    for join in JOINS:
+        sides = []
+        for source, target, _, _, required in join.destinations():
+            tag = f'hvt_{source}_{target}'
+            destination = f'hvd_land_{target}_{source}'
+            area, sill = triggers.pop(tag)
+            zone, spawn = landings.pop(destination)
+            settings = {row.value('Name'): row.value('Value') for row in sill.value('VarTable')}
+            expected_facing = DIRECTIONS[join.heading(source)]
+            facing = spawn.value('XOrientation'), spawn.value('YOrientation')
+            if (area != source or zone != target or settings.get('target') != destination
+                    or settings.get('require', '') != required
+                    or settings.get('minimum_level', 0) != (SECRET_LEVEL if join.secret else 0)
+                    or not same(coordinates(sill), join.point(source, THRESHOLD_INSET))
+                    or not same(coordinates(spawn), join.point(target, LANDING_INSET))
+                    or not same(facing, expected_facing)):
+                raise ValueError(f'Transition or arrival disagrees with the map at {tag}')
+            sides.append((sill.value('ZPosition'), spawn.value('ZPosition')))
+        first, second = sides
+        if not same(first, second[::-1]):
+            raise ValueError(f'Uneven landing at {join.first} / {join.second}')
+        level = elevations[join.first] + first[0] - first[1]
+        if not isclose(elevations.setdefault(join.second, level), level, abs_tol=.01):
+            raise ValueError(f'The two paths to {join.second} finish at different heights')
+    if triggers or landings:
+        raise ValueError('The module contains transitions outside the drawing')
 
 
-def text(c, x, y, value, size=12, color=TEXT, bold=False, centered=False):
-    c.setFont('MapBold' if bold else 'MapText', size)
-    c.setFillColor(HexColor(color))
-    (c.drawCentredString if centered else c.drawString)(x,y,value)
+def ink(c, color, width=1):
+    c.setStrokeColor(HexColor(color))
+    c.setLineWidth(width)
 
 
 def fill(c, color):
     c.setFillColor(HexColor(color))
 
 
-def stroke(c, color, width):
-    c.setStrokeColor(HexColor(color))
-    c.setLineWidth(width)
+def text(c, x, y, content, size, *, color=INK, bold=False, align='left'):
+    fill(c, color)
+    c.setFont('Bold' if bold else 'Regular', size)
+    draw = {'left': c.drawString, 'center': c.drawCentredString, 'right': c.drawRightString}[align]
+    draw(x, y, content)
 
 
-def page(c, title, sub, index, version):
-    fill(c,BG)
-    c.rect(0,0,WIDTH,HEIGHT,fill=1,stroke=0)
-    text(c,47,HEIGHT-61,title,31,bold=True)
-    text(c,48,HEIGHT-85,sub,12,SUB)
-    text(c,WIDTH-185,HEIGHT-59,f'VERZE {version}   /   {index:02}–03',11,GOLD,True)
-    stroke(c,RULE,.8)
-    c.line(46,HEIGHT-99,WIDTH-46,HEIGHT-99)
-
-
-def badge(c, x, y, label, color):
-    fill(c,BG)
-    stroke(c,color,1)
-    c.circle(x,y,9.0,fill=1,stroke=1)
-    text(c,x,y-3.3,label,8.2,color,True,True)
-
-
-def arrow(c, tail, head, color):
-    phi = atan2(head[1]-tail[1],head[0]-tail[0])
-    x,y = head
-    p = c.beginPath()
-    p.moveTo(x,y)
-    for a in (phi-.49,phi+.49):
-        p.lineTo(x-8*cos(a),y-8*sin(a))
-    p.close()
-    fill(c,color)
-    c.drawPath(p,fill=1,stroke=0)
-
-
-def connection(c, points, color, marker, badge_position, *, onward_only=False):
-    stroke(c,color,2.0 if color==GOLD else 1.45)
-    if color != GOLD:
-        c.setDash(5,3)
-    p=c.beginPath()
-    p.moveTo(*points[0])
+def path(c, points):
+    line = c.beginPath()
+    line.moveTo(*points[0])
     for point in points[1:]:
-        p.lineTo(*point)
-    c.drawPath(p)
-    c.setDash()
-    arrow(c,points[-2],points[-1],color)
-    if not onward_only:
-        arrow(c,points[1],points[0],color)
-    badge(c,*badge_position,marker,color)
+        line.lineTo(*point)
+    c.drawPath(line)
 
 
-def overview(c, version):
-    page(c,'Hvězdárna druhého nebe',
-         'Mapa spojení mezi lokacemi. Čísla vedou ke stejným prahům v půdorysech.',1,version)
-    cx, west, east = 596,481,711
-    rows={key:121+83*i for i,key in enumerate(MAIN)}
-    for i,(a,b) in enumerate(zip(MAIN,MAIN[1:]),1):
-        y,y2=rows[a]+24,rows[b]-24
-        connection(c,((cx,y),(cx,y2)),GOLD,f'{i:02}',(cx,(y+y2)/2))
-    text(c,612,411,'Seřídit refraktor',10,GOLD)
-    text(c,612,661,'Otevřít Bránu tří paprsků',10,GOLD)
-    connections=(
-        ('08',((481,204),(448,204),(448,370),(481,370)),(448,259)),
-        ('09',((711,287),(778,287),(778,121),(711,121)),(778,170)),
-        ('10',((481,191),(404,191),(404,287),(382,287)),(404,228)),
-        ('11',((382,313),(404,313),(404,383),(481,383)),(404,349)),
-        ('12',((481,442),(415,442),(415,450),(382,450)),(433,442)),
-        ('13',((481,467),(415,467),(415,476),(382,476)),(433,467)),
-        ('14',((711,619),(863,619),(863,370),(711,370)),(863,541)),
-    )
-    for marker, points, pos in connections:
-        connection(c,points,BLUE,marker,pos)
-    connection(c,((711,702),(1091,702),(1091,105),(711,105)),RETURN,'15',(1091,541),onward_only=True)
-    for x,y,label in (
-        (790,166,'Otevřít z dílen'),(197,373,'08  Chodbami přímo do kopule'),
-        (197,357,'Pečeť kotvy je v dílnách.'),(879,539,'Otevřít z Předbraní'),
-        (899,522,'do kopule a zpět'),(916,574,'Po střetu návrat do noclehu'),
-        (197,250,'10  Otevřít z archivu'),(197,236,'11  Odjistit v pracovně'),
-        (197,410,'12  Vstup u paty schodů'),(197,396,'13  Vstup z bouřné podesty'),
+def arrow(c, x, y, dx, dy, color):
+    tip = c.beginPath()
+    tip.moveTo(x, y)
+    for sign in (1, -1):
+        tip.lineTo(x - 6 * dx + sign * 3 * dy, y - 6 * dy - sign * 3 * dx)
+    tip.close()
+    fill(c, color)
+    c.drawPath(tip, stroke=0, fill=1)
+
+
+def floor(c, code, secrets):
+    zone = ZONES[code]
+    boxes = zone.floor
+    if not secrets:
+        if code == 'halls':
+            boxes = tuple(r for r in boxes if r[0] < 64.2)
+        if code == 'rim':
+            boxes = tuple(r for r in boxes if r[0] < 50)
+        if code == 'walks':
+            boxes = tuple(r for r in boxes if r[:2] != (70, 0))
+    xs = sorted({v for l, _, r, _ in boxes for v in (l, r)})
+    ys = sorted({v for _, lo, _, hi in boxes for v in (lo, hi)})
+    cells = {}
+    for i, (l, r) in enumerate(zip(xs, xs[1:])):
+        for j, (b, t) in enumerate(zip(ys, ys[1:])):
+            if any(left <= (l+r)/2 <= right and low <= (b+t)/2 <= high
+                   for left, low, right, high in boxes):
+                cells[i, j] = l, b, r, t
+    fill(c, FLOORS[code])
+    for l, b, r, t in cells.values():
+        c.rect(*px(*zone.world(l, b)), (r-l)*SCALE, (t-b)*SCALE, fill=1, stroke=0)
+    ink(c, WALL, .8)
+    for (i, j), (l, b, r, t) in cells.items():
+        for neighbor, p, q in (
+            ((i-1,j), (l,b), (l,t)), ((i+1,j), (r,b), (r,t)),
+            ((i,j-1), (l,b), (r,b)), ((i,j+1), (l,t), (r,t)),
+        ):
+            if neighbor not in cells:
+                c.line(*px(*zone.world(*p)), *px(*zone.world(*q)))
+    for row in sorted({row for _, row in zone.stairs}):
+        left, bottom = px(*zone.world(0, row*TILE))
+        step = TILE * SCALE
+        fill(c, '#b0adc4')
+        c.rect(left, bottom, zone.size[0]*step, step, fill=1, stroke=0)
+        for col, stair_row in zone.stairs:
+            if stair_row != row:
+                continue
+            center = left + (col + .5) * step
+            fill(c, '#ede8ee')
+            c.rect(center - 3.25*SCALE, bottom, 6.5*SCALE, step, fill=1, stroke=0)
+            ink(c, FRAME, .68)
+            for i in range(1, 8):
+                y = bottom + i*step/8
+                c.line(center - 3.25*SCALE, y, center + 3.25*SCALE, y)
+
+
+def grid(c, secrets):
+    for code, zone in ZONES.items():
+        if code == 'study' and not secrets:
+            continue
+        x, y = px(*zone.world(0, 0))
+        w, h = zone.size
+        step = TILE * SCALE
+        ink(c, GRID, .40)
+        for col in range(1, w):
+            c.line(x + col*step, y, x + col*step, y + h*step)
+        for row in range(1, h):
+            c.line(x, y + row*step, x + w*step, y + row*step)
+        ink(c, FRAME, .85)
+        c.setDash(3, 2)
+        c.rect(x, y, w*step, h*step)
+        c.setDash()
+        # Height dimension line is outside the area. The halls share their
+        # western boundary with the workshops, so their dimension is east.
+        east = code in ('halls', 'walks')
+        edge = x+w*step if east else x
+        dim = edge+11 if east else edge-11
+        for yy in (y, y+h*step):
+            c.line(edge, yy, dim, yy)
+            c.line(dim-3, yy-3, dim+3, yy+3)
+        c.line(dim, y, dim, y+h*step)
+        c.saveState()
+        c.translate(dim-4, y+h*step*.5)
+        c.rotate(90)
+        text(c, 0, 0, str(h), 9, color=MUTED, align='center')
+        c.restoreState()
+
+
+def route(c, secrets):
+    for code, walks in WALKS.items():
+        if code == 'dome':
+            bed, line = DOME_BED, DOME_ROUTE
+        elif code in ('camp', 'rim', 'halls', 'works'):
+            bed, line = ROUTE_BED, ROUTE
+        else:
+            bed, line = HIGH_BED, HIGH_ROUTE
+        for color, width in ((bed, 8.0), (line, 2.2)):
+            ink(c, color, width)
+            for walk in walks:
+                path(c, tuple(px(*ZONES[code].world(*point)) for point in walk))
+    if secrets:
+        ink(c, HIDDEN, 2.25)
+        c.setDash(5,3)
+        for code, walks in SECRET_WALKS.items():
+            for walk in walks:
+                path(c, tuple(px(*ZONES[code].world(*point)) for point in walk))
+        c.setDash()
+    secret_count = 0
+    for i, join in enumerate(JOINS):
+        if join.secret and not secrets:
+            continue
+        if join.secret:
+            secret_count += 1
+        x, y = px(*join.edge)
+        dx, dy = DIRECTIONS[join.facing]
+        span = (PASSAGE_WIDTH / 2 + .6) * SCALE
+        ink(c, PAPER, 5.4)
+        c.line(x-dy*span,y+dx*span,x+dy*span,y-dx*span)
+        color = HIDDEN if join.secret else DOOR
+        label = f'S{secret_count}' if join.secret else f'{i:02}'
+        ink(c, color, 2.4)
+        c.line(x-dy*span,y+dx*span,x+dy*span,y-dx*span)
+        arrow(c, x+dx*13, y+dy*13, dx, dy, color)
+        arrow(c, x-dx*13, y-dy*13, -dx, -dy, color)
+        bx, by = x + 21*dy, y - 21*dx
+        fill(c, PAPER)
+        ink(c, color, 1.0)
+        c.circle(bx, by, 8.3, fill=1, stroke=1)
+        text(c, bx, by-3.1, label, 8.3, color=color, bold=True, align='center')
+
+
+def captions(c, secrets):
+    detail = {
+        'camp': (1.45, True, 'Zásoby a jediná stezka na římsu'),
+        'rim': (4.1, True, 'Vstup do Zkušebny a vedlejší vchod'),
+        'halls': (9.4, True, 'Paprsková chodba a archiv'),
+        'works': (11.4, False, 'Zkušebna, most a Pečeť kotvy'),
+        'dome': (17.7, False, 'Refraktor mezi oběma okruhy'),
+        'steps': (25.3, False, 'Tři ramena a bouřná podesta'),
+        'walks': (25.3, True, 'Dva mosty a horní výstup'),
+        'gate': (33.3, True, 'Místo, kde se obě ramena setkají'),
+        'top': (40.6, True, 'Ithren a návratová lucerna'),
+        'study': (14.35, True, 'Archiv a služební výstup 38+'),
+    }
+    for code, (row, east, description) in detail.items():
+        if code == 'study' and not secrets:
+            continue
+        zone = ZONES[code]
+        x, y = px((zone.origin[0] + (zone.size[0] if east else 0))*TILE, row*TILE)
+        if code in ('rim', 'halls') and secrets:
+            x = px(160,0)[0]
+        label_x = 824 if east else 43
+        ink(c, FRAME, .65)
+        if east:
+            c.line(x+4,y,label_x-12,y)
+        else:
+            c.line(label_x,y-35,x-14,y-35)
+        text(c,label_x,y+8,zone.title,14.5,bold=True)
+        w,h = zone.size
+        text(c,label_x,y-10,f'{w} × {h} dlaždic  ·  {w*TILE} × {h*TILE} m',10.7,color=DOOR,bold=True)
+        text(c,label_x,y-26,description,9.6,color=MUTED)
+    for code, markers in LANDMARKS.items():
+        if code == 'study' and not secrets:
+            continue
+        for x, y, label in markers:
+            x, y = px(*ZONES[code].world(x, y))
+            fill(c, INK)
+            c.circle(x, y, 2.0, fill=1, stroke=0)
+            shift = 10 if code == 'halls' and label == 'Clony' else -12
+            text(c,x,y+shift,label,8.8,bold=True,align='center')
+
+
+def draw(target, module, fonts, secrets):
+    for name, font in (('Regular','DejaVuSans.ttf'),('Bold','DejaVuSans-Bold.ttf')):
+        pdfmetrics.registerFont(TTFont(name, str(fonts/font)))
+    check_plan()
+    if module:
+        validate_module(module)
+    c = Canvas(str(target), pagesize=SIZE, invariant=1)
+    c.setTitle('Hvězdárna druhého nebe — plán v dlaždicích')
+    c.setLineCap(1)
+    c.setLineJoin(1)
+    fill(c, PAPER)
+    c.rect(0, 0, *SIZE, stroke=0, fill=1)
+    text(c, 43, 1765, 'Hvězdárna druhého nebe', 32, bold=True)
+    subtitle = 'Dva výstupové okruhy a služební průchody' if secrets else 'Dva výstupové okruhy'
+    text(c, 44, 1735, subtitle, 15, color=MUTED)
+    text(c, 1060, 1772, f'V{VERSION:02}', 13, color=DOOR, bold=True, align='right')
+    arrow(c, 1050, 1739, 0, 1, INK)
+    ink(c, INK, .9)
+    c.line(1050, 1722, 1050, 1736)
+    text(c,1050,1745,'S',10,bold=True,align='center')
+    ink(c, GRID, 1)
+    c.line(43, 1712, 1060, 1712)
+    for code in ZONES:
+        if code != 'study' or secrets:
+            floor(c,code,secrets)
+    grid(c,secrets)
+    route(c,secrets)
+    captions(c,secrets)
+    for y, color, name, levels, line in (
+        (346, ROUTE, 'Dolní okruh', '35–37', 'Římsa, Chodby clon a Dílny'),
+        (1336, HIGH_ROUTE, 'Horní okruh', '38–40', 'Schody a Ochozy vedou k bráně'),
     ):
-        text(c,x,y,label,10,SUB)
-    nodes = [(key,cx,y,230) for key,y in rows.items()] + [('study',275,300,214),('eave',275,463,214)]
-    for key,x,y,w in nodes:
-        fill(c,PANEL)
-        stroke(c,GOLD if key in ('rim','top') else RULE,1)
-        c.roundRect(x-w/2,y-24,w,48,7,fill=1,stroke=1)
-        title,detail=TITLES[key]
-        text(c,x,y+3,title,15,bold=True,centered=True)
-        text(c,x,y-13,detail,9.0,SUB,centered=True)
-    stroke(c,RULE,.75)
-    c.line(46,75,WIDTH-46,75)
-    for i,(label,color) in enumerate((('Trasa výpravy',GOLD),('Odbočka nebo zkratka',BLUE),
-                                       ('Jednosměrný návrat',RETURN))):
-        x=48+241*i
-        stroke(c,color,2)
-        c.line(x,53,x+30,53)
-        text(c,x+38,49,label,11,TEXT)
-    text(c,807,48,'Přehled spojení je schematický.',10,SUB)
+        text(c,43,y,name,16,color=color,bold=True)
+        text(c,43,y-29,levels,21,color=color,bold=True)
+        text(c,43,y-49,line,9.3,color=MUTED)
+    ink(c, GRID, 1)
+    c.line(43, 70, 1060, 70)
+    text(c,43,49,'1 čtvereček = 1 × 1 v Toolsetu = 10 × 10 m',11.6,bold=True)
+    text(c,43,28,'00–09   Obousměrné přechody na společné hraně',10.2,color=DOOR)
+    if secrets:
+        text(c,510,28,'S1–S3   Skryté služební průchody 38+',10.2,color=HIDDEN)
+    text(c,1060,49,'05  Seřídit refraktor',10.2,color=MUTED,align='right')
+    text(c,1060,28,'09  Otevřít Bránu tří paprsků',10.2,color=MUTED,align='right')
     c.showPage()
-
-
-def floor(c, plan, x0, y0, scale):
-    if plan.key in PLANS:
-        rooms=PLANS[plan.key][1]
-    else:
-        rooms=[tuple(v*10 for v in rect) for rect in plan.rooms]
-        for (x,y),(tile,_) in plan.special_tiles.items():
-            if tile in (895,818):
-                rooms.append((x*10+3.05,y*10,x*10+6.95,(y+1)*10))
-    xs=sorted({edge for left,_,right,_ in rooms for edge in (left,right)})
-    ys=sorted({edge for _,low,_,high in rooms for edge in (low,high)})
-    cells={}
-    for i,(left,right) in enumerate(zip(xs,xs[1:])):
-        for j,(low,high) in enumerate(zip(ys,ys[1:])):
-            mid_x,mid_y=(left+right)/2,(low+high)/2
-            if any(l<mid_x<r and b<mid_y<t for l,b,r,t in rooms):
-                cells[i,j]=(left,low,right,high)
-    def pixel(x,y):
-        return x0+x*scale,y0+y*scale
-    fill(c,'#567781' if plan.key in PLANS else '#506b72')
-    for left,low,right,high in cells.values():
-        c.rect(*pixel(left,low),(right-left)*scale,(high-low)*scale,stroke=0,fill=1)
-    stroke(c,'#93acb0',.76)
-    for (i,j),(l,b,r,t) in cells.items():
-        for other,a,z in (((i-1,j),(l,b),(l,t)),((i+1,j),(r,b),(r,t)),
-                          ((i,j-1),(l,b),(r,b)),((i,j+1),(l,t),(r,t))):
-            if other not in cells:
-                c.line(*pixel(*a),*pixel(*z))
-    for row, columns in plan.stair_columns.items():
-        fill(c,'#293e49')
-        c.rect(*pixel(0,row*10),plan.width*10*scale,10*scale,stroke=0,fill=1)
-        for col in columns:
-            x=col*10+5
-            fill(c,'#607d89')
-            c.rect(*pixel(x-3.25,row*10),6.5*scale,10*scale,stroke=0,fill=1)
-            stroke(c,'#b4c7c8',.5)
-            for i in range(1,7):
-                y=row*10+i*10/7
-                c.line(*pixel(x-3.25,y),*pixel(x+3.25,y))
-    return pixel
-
-
-def atlas(c, plans, passages, keys, index, version):
-    page(c,'Půdorysy a směry',
-         'Sever je nahoře. Šipka míří z lokace přes práh. Kruh označuje spojení z hlavní mapy.',index,version)
-    cols,card_w,card_h=3,348,323
-    ids={key:f'{i:02}' for i, link in enumerate(LINKS,1) for key in link}
-    # Keep labels next to their exits when two doors share a small room.
-    shifts={'halls_study':(13,7),'dome_steps':(0,5),'works_rim':(9,-3),'gate_top':(0,7),
-            'steps_eaveup':(11,-2),'dome_study':(14,-7),'top_rim':(0,9)}
-    for i,key in enumerate(keys):
-        plan=plans[key]
-        x=48+(i%cols)*375
-        y=49+(1-i//cols)*348
-        fill(c,PANEL); stroke(c,RULE,.8)
-        c.roundRect(x,y,card_w,card_h,8,stroke=1,fill=1)
-        text(c,x+13,y+298,TITLES[key][0],16,bold=True)
-        text(c,x+13,y+279,TITLES[key][1],9.8,SUB)
-        scale=min(264/(plan.width*10),171/(plan.height*10))
-        p=floor(c,plan,x+(card_w-plan.width*10*scale)/2,y+102,scale)
-        local=[(tag,door) for tag,door in passages.items() if door.source==key]
-        for tag,door in local:
-            facing=radians(THRESHOLDS[tag].facing)
-            dx,dy=cos(facing),sin(facing)
-            px,py=p(door.x,door.y)
-            color=GOLD if not door.required else BLUE
-            stroke(c,color,2)
-            c.line(px-dy*4,py+dx*4,px+dy*4,py-dx*4)
-            tip=(px+dx*12,py+dy*12)
-            c.line(px,py,*tip)
-            arrow(c,(px,py),tip,color)
-            xx,yy=shifts.get(tag,(0,0))
-            badge(c,px+dx*18+xx-dy*7,py+dy*18+yy+dx*7,ids[tag],color)
-        if key=='rim':
-            px,py=p(23,16)
-            fill(c,GOLD)
-            c.circle(px,py,3.25,fill=1,stroke=0)
-            text(c,px+7,py-3,'Start',8,GOLD)
-        stroke(c,SUB,.8)
-        c.line(x+15,y+112,x+15+10*scale,y+112)
-        text(c,x+15,y+119,'10 m',7.6,SUB)
-        text(c,x+card_w-30,y+252,'N ↑',8.5,SUB)
-        for n,(tag,door) in enumerate(local):
-            label=TITLES[door.target][0]
-            if tag=='eave_steps': label='Pata Schodů do nebe'
-            if tag=='eave_up': label='Bouřná podesta'
-            if tag.startswith('steps_eave'): label='Spodní římsa · '+('horní' if tag.endswith('up') else 'dolní')+' vstup'
-            text(c,x+13,y+83-n*15,ids[tag],9.5,BLUE if door.required else GOLD,True)
-            text(c,x+39,y+83-n*15,label,9.5)
-            if door.required:
-                text(c,x+card_w-19,y+83-n*15,'*',10,BLUE)
-    x=798
-    text(c,x,339,'Podmínky přechodů',17,bold=True)
-    text(c,x,320,'* Platí ve směru označeném v půdorysu.',10,SUB)
-    for n,(flag,label) in enumerate(REQUIREMENTS.items()):
-        links=sorted({ids[tag] for tag,door in passages.items() if door.required==flag})
-        if links:
-            y=293-22*n
-            text(c,x,y,' / '.join(links),10,BLUE,True)
-            text(c,x+50,y,label,10,TEXT)
-    c.showPage()
-
-
-def main():
-    parser=ArgumentParser(description=__doc__)
-    parser.add_argument('--module',required=True,type=Path)
-    parser.add_argument('--output',required=True,type=Path)
-    parser.add_argument('--font-dir',type=Path,default=Path('/usr/share/fonts/truetype/dejavu'))
-    args=parser.parse_args()
-    for name,file in (('MapText','DejaVuSans.ttf'),('MapBold','DejaVuSans-Bold.ttf')):
-        pdfmetrics.registerFont(TTFont(name,str(args.font_dir/file)))
-    version,passages=read_module(args.module)
-    plans={zone.key[4:]:zone for zone in areas(defaultdict(int),99000)}
-    args.output.parent.mkdir(parents=True,exist_ok=True)
-    c=Canvas(str(args.output),pagesize=(WIDTH,HEIGHT),invariant=1)
-    c.setTitle('Hvězdárna druhého nebe — mapa průchodů')
-    overview(c,version)
-    atlas(c,plans,passages,('rim','halls','works','dome','study'),2,version)
-    atlas(c,plans,passages,('steps','walks','gate','top','eave'),3,version)
     c.save()
 
 
-if __name__=='__main__':
+def main():
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument('--module', type=Path, help='verify the plan against an exported module')
+    parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--font-dir', type=Path, default=Path('/usr/share/fonts/truetype/dejavu'))
+    parser.add_argument('--player-map', action='store_true', help='omit the hidden routes')
+    args = parser.parse_args()
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    if args.output.suffix == '.pdf':
+        draw(args.output, args.module, args.font_dir, not args.player_map)
+    elif args.output.suffix == '.png':
+        with TemporaryDirectory() as work:
+            pdf = Path(work)/'pudorys.pdf'
+            draw(pdf, args.module, args.font_dir, not args.player_map)
+            run(['pdftoppm', '-singlefile', '-scale-to', '5700', '-png',
+                 str(pdf), str(args.output.with_suffix(''))], check=True)
+    else:
+        parser.error('output must be a PDF or PNG')
+
+
+if __name__ == '__main__':
     main()

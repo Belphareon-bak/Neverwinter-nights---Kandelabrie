@@ -38,7 +38,14 @@ BOOKS = {
     "hvd_book_camp": ("Rozpis nebeské hlídky", 3,
         "Rozpis údržby. Kotva je v horní dílně, Křídlo na bouřné podestě a Kopí s Lucernou "
         "na visutých ochozech. Doneseme všechny čtyři raznice do předbraní. Tři pustí světlo do optických sloupů, "
-        "čtvrtá zvedne závoru u spouště. Každá směna používá vlastní rozpis, aby se vedením nedalo projít naslepo."),
+        "čtvrtá zvedne závoru u spouště. Každá směna používá vlastní rozpis, aby se vedením nedalo projít naslepo.\n\n"
+        "Správkyně znovu připomíná horní hlídce prohlížet slepá místa v režimu hledání. Služební západku pozná po hladkém okraji."),
+    "hvd_book_study": ("Zápis správkyně o horní službě", 9,
+        "Dnes vyjde hlídka k mostům služební štolou. Stejnopis Kotvy jsem nechala v pouzdře vedle stolu. "
+        "Převod uzná jedinou Kotvu za celou směnu, ať je z dílny nebo odtud. Na mostech převezmou "
+        "Kopí a Lucernu. Pro Křídlo se od paty mostů vrátí západním průchodem na Schody do nebe.\n\n"
+        "Rozpis leží v táboře, zápis seřizovače u paty schodů a protokol u písaře v Předbraní. "
+        "Severní závoru štoly po službě vždy vrať do kamene."),
     "hvd_book_steps": ("Zápis seřizovače na schodech", 7,
         "Na spodním stolku zůstala poznámka z poslední zkoušky. Při měření se díváme od nástupu "
         "k bráně. Po levé ruce máme západní sloup, po pravé východní. Písmenům na starých štítcích "
@@ -51,15 +58,8 @@ BOOKS = {
         "Při zkoušce filtru se od stěny ke stěně rozbíhá světlý pruh. Jakmile je na kameni vidět, "
         "ustup za mosaznou rysku a počkej na doznění výboje. Pojistka visí u vstupu do paprskové chodby "
         "v dolní příjmové síni. Poškozenou západku pomůže uvolnit návod uložený v dolní dílně.\n\n"
-        "Z kalibračních tabulek se v archivu zvedá prach i ve dnech bez větru. Správkyně v posledním hlášení "
-        "prosila, aby hlídka nepodkládala mosaznou zarážku pod jejich rámem."),
-    "hvd_book_study": ("Zápis z kalibrační komory", 9,
-        "Zkusila jsem na severní stěně srovnat obě štěrbiny. Mezi komorou a kopulí jsou dvě clony "
-        "na jediném převodu. Mosazný uzávěr u skříně je stáhne zároveň. Do kopule se pak vracím "
-        "úzkým průlezem v pravém rohu. Po zalomení průlezu narazím na zadní stěnu kopule.\n\n"
-        "Při kontrole prvního schodu jsem se vyhnula hlídce po spodním můstku. Za západní opěrou "
-        "visí protizávaží krytu. Před přechodem lávky vždy zajisti malou větrnou klapku. "
-        "Pod obloukem se proud stáčí do prostoru, kde člověk nemá kam uhnout."),
+        "Za třetí clonou pokračuj na sever podél skříní s filtry. Dlouhá chodba se stáčí k archivu. "
+        "Jeho západní chodba ústí na horní dvůr dílen."),
     "hvd_book_return": ("Návratový zápis správkyně", 10,
         "Sestoupila jsem servisní lávkou a vrátila se do dolní dílny. V ohlašovně mě při výměně "
         "směn minuli. Doufám, že Ithren zahlédne můj zápis dřív, než začne hledat příčinu opakovaných záblesků. "
@@ -74,11 +74,12 @@ BOOKS = {
         "stupni vpravo od příchodu, ještě pod prvním schodištěm. Zrcadlo tam umí jednou zachytit druhý "
         "z Ithrenových závěrečných výbojů a přidá čas na sklopení clony."),
     "hvd_book_dome": ("Deník hvězdárny", 4,
-        "Po Čase potíží jsme nad horskou římsou dokončili průchod pro návrat služební hlídky. "
+        "Po Čase potíží jsme k pozorovacímu sálu připojili obě křídla výstupové cesty. "
         "Ze zdejší kopule lze vidět dvě oblohy. Čistá část skla ukazuje naši horu a prasklina vrací "
         "světlo poslední lucerny z předbraní.\n\n"
         "Má-li se průchod ukázat celý, musejí se obrazy spojit. Dílenské nastavení je vyznačené u "
-        "obou podstavců. Až se světlo srovná, vystoupej severním obloukem za objektivem."),
+        "obou podstavců. Až se světlo srovná, vystoupej severním obloukem za objektivem. U prvních schodů se cesta dělí. "
+        "Po schodech najdeš Křídlo, na východ přes mosty Kopí a Lucernu. Obě ramena vedou do předbraní."),
     "hvd_book_top": ("Plán poslední hlídky", 6,
         "Hlídka vystupuje k lucerně ve třech výsečích. Před výbojem se na podlaze vyznačí dráha. "
         "Z té ustup za kamennou clonu nebo do sousední výseče. Zkušební zrcadlo pasuje do "
