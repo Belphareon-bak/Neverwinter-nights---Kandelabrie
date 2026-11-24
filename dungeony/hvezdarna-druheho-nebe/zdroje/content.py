@@ -233,6 +233,8 @@ def creatures():
             traits["nature_caster_level"] = 40
         spells = (114, 169) if role == 3 else ()
         save_bonus = 5 if role in (1, 2, 3) else 0
+        if key == "hvd_vir":
+            save_bonus = 8
         result[key] = Record(
             TemplateResRef=ref(key), Tag=string(key), FirstName=loc(name), LastName=loc(""),
             Description=loc(description), Race=bite(16 if elemental else 20),
