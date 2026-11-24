@@ -10,16 +10,20 @@ from plan import GATE_JOIN, OPTICS_JOIN, PASSAGE_WIDTH, THRESHOLD_INSET, TILE, W
 
 REFRACTOR = (30.0, 31.0)
 STAIR_PORTAL = OPTICS_JOIN.point('dome', THRESHOLD_INSET)
-LAST_TOWER = (16.0, 54.8, 4.0)
+LAST_TOWER = (14.9, 46.5, 10.0)
 LAST_LANTERN = (38.15, 55.5)
 LAST_LANTERN_HEIGHT = 10.0
 TOWER_LENS = (2.92, 0.0, 8.38)
 LANTERN_GLASS = (0.0, 0.0, 2.24)
+LANTERN_TURN = (30.0, 52.02)
+LANTERN_SINK = (30.0, 58.85, 13.0)
 
 COLD = Material((.59, .86, 1.0), 'hvd_raylight', (.43, .76, .96), alpha=.89)
 PALE_MIST = Material((.53, .80, 1.0), 'hvd_raylight', (.25, .51, .85), alpha=.22)
 GOLD = Material((1.0, .80, .43), 'hvd_raylight', (.93, .66, .25), alpha=.90)
 GOLD_MIST = Material((1.0, .71, .30), 'hvd_raylight', (.71, .42, .16), alpha=.21)
+VIOLET = Material((.98,.36,1), 'hvd_raylight', (.90,.28,1), alpha=.94)
+VIOLET_MIST = Material((.95,.36,1), 'hvd_raylight', (.76,.23,.89), alpha=.24)
 
 
 def aperture(m, radius, spring, crown, y, material, foot=.02):
@@ -118,6 +122,36 @@ def service_view(outside):
     return m
 
 
+ADIT_CENTER = (75,2.68)
+
+
+def service_mouth():
+    """A real stone collar around the rock-cut service exit."""
+    mesh=Mesh()
+    for side in (-1,1):
+        x=side*2.86
+        mesh.box(BASALT,x,-.06,-.48,.65,5.28,.84,tile_uv=.33)
+        mesh.box(MASONRY,x,-.03,.35,.54,5.13,2.86,tile_uv=.35)
+        mesh.box(LIMESTONE,x,-2.51,.15,.73,.48,3.11,tile_uv=.34)
+        mesh.box(TRIM,x,-2.34,2.75,.77,.68,.30)
+    mesh.box(MASONRY,0,-.03,3.16,6.31,5.28,.52,tile_uv=.32)
+    mesh.box(SNOW,0,.02,3.66,6.16,4.96,.19,tile_uv=.28)
+    mesh.box(BASALT,0,-2.63,3.08,6.44,.33,.30,tile_uv=.35)
+    for x,z in ((-1.6,3.22),(0,3.22),(1.6,3.22)):
+        rosette(mesh,x,-2.815,z,.099,BRASS,4)
+    return mesh
+
+
+def service_rock_door():
+    mesh = Mesh()
+    mesh.box(BASALT,0,0,-.07,5.25,.54,3.24,tile_uv=.30)
+    face = ((-2.62,-.267,0),(-1.19,-.42,0),(.58,-.36,0),(2.62,-.267,0))
+    for i,(a,b) in enumerate(zip(face,face[1:])):
+        mesh.polygon((MASONRY,BASALT,LIMESTONE)[i],
+                     (a,b,(b[0],b[1],3.12),(a[0],a[1],3.12)))
+    return mesh
+
+
 def stair_approach():
     m = Mesh()
     m.box(SLATE,0,0,.006,5.48,11.4,.022,tile_uv=.35)
@@ -131,10 +165,10 @@ def stair_approach():
     return m
 
 
-def mountain_roads():
+def mountain_roads(zone='rim'):
     m = Mesh()
-    origin = (26, 12)
-    for road in WALKS['rim']:
+    origin = (26,12) if zone=='rim' else (27,16)
+    for road in WALKS[zone]:
         normals = []
         for (x, y), (nx, ny) in zip(road, road[1:]):
             length = hypot(nx-x, ny-y)
@@ -153,8 +187,9 @@ def mountain_roads():
             if hypot(a[0],a[1])>4 or hypot(c[0],c[1])>4:
                 m.trace(LIMESTONE,a,c,.064)
                 m.trace(LIMESTONE,b,d,.064)
-    m.disc(SLATE,(0,0,.032),(0,0,.052),2.74,sides=12)
-    m.disc(TRIM,(0,0,.048),(0,0,.073),.44,sides=10)
+    if zone=='rim':
+        m.disc(SLATE,(0,0,.032),(0,0,.052),2.74,sides=12)
+        m.disc(TRIM,(0,0,.048),(0,0,.073),.44,sides=10)
     return m
 
 
@@ -225,14 +260,14 @@ def last_lantern():
     return m
 
 
-def lantern_ray():
+def lantern_ray(color=GOLD, mist=GOLD_MIST):
     m = Mesh()
     source = (LAST_TOWER[0]+TOWER_LENS[0]-LAST_LANTERN[0],
               LAST_TOWER[1]-LAST_LANTERN[1],LAST_TOWER[2]+TOWER_LENS[2]-LAST_LANTERN_HEIGHT)
-    m.tube(GOLD,source,LANTERN_GLASS,.062,.13,sides=14,open_ends=True)
-    m.tube(GOLD_MIST,source,LANTERN_GLASS,.29,.40,sides=16,open_ends=True)
-    m.box(GOLD,0,0,1.914,.61,.61,.70)
-    m.disc(GOLD_MIST,(0,0,1.76),(0,0,2.74),.50,sides=14)
+    m.tube(color,source,LANTERN_GLASS,.062,.13,sides=14,open_ends=True)
+    m.tube(mist,source,LANTERN_GLASS,.29,.40,sides=16,open_ends=True)
+    m.box(color,0,0,1.914,.61,.61,.70)
+    m.disc(mist,(0,0,1.76),(0,0,2.74),.50,sides=14)
     return m
 
 
@@ -242,6 +277,52 @@ def lantern_closed():
     for y in (-.26,.26):
         m.box(TRIM,-.428,y,2.12,.068,.083,.35)
     m.box(DARK,0,-.367,1.88,.68,.066,.77)
+    return m
+
+
+def lantern_diverted():
+    m = lantern_closed()
+    source = tuple(a+b for a,b in zip(LAST_TOWER,TOWER_LENS))
+    sink = (*LAST_LANTERN,LAST_LANTERN_HEIGHT+LANTERN_GLASS[2])
+    t = (LANTERN_TURN[0]-source[0]) / (sink[0]-source[0])
+    crossing = tuple(a+t*(b-a) for a,b in zip(source,sink))
+    origin = (*LAST_LANTERN,LAST_LANTERN_HEIGHT)
+    start, turn, end = (tuple(a-b for a,b in zip(point,origin))
+                        for point in (source,crossing,LANTERN_SINK))
+    for a,b in ((start,turn),(turn,end)):
+        m.tube(GOLD,a,b,.067,.094,sides=12,open_ends=True)
+        m.tube(GOLD_MIST,a,b,.25,.33,sides=12,open_ends=True)
+    return m
+
+
+def return_deflector():
+    m = Mesh()
+    m.box(BASALT,0,0,0,1.25,1.02,.24)
+    for x in (-.48,.48):
+        m.box(MASONRY,x,.12,.23,.25,.34,4.54,tile_uv=.42)
+        m.box(BRASS,x,.12,4.77,.31,.40,.17)
+    m.box(TRIM,0,.12,4.80,1.28,.41,.20)
+    m.disc(BRASS,(0,.05,4.66),(0,-.083,4.66),.73,sides=20)
+    m.disc(ICE,(0,-.08,4.66),(0,-.14,4.66),.62,sides=20)
+    m.tube(BRASS,(.37,-.21,1.22),(.55,-.54,1.68),.064,sides=8)
+    return m
+
+
+def return_sink():
+    m = Mesh()
+    m.box(BASALT,0,.06,0,1.70,.90,.30)
+    m.box(MASONRY,0,.12,.3,1.32,.59,2.7,tile_uv=.41)
+    m.box(TRIM,0,.10,2.9,1.56,.82,.26)
+    m.disc(BRASS,(0,.06,3.00),(0,-.23,3.00),.52,sides=20)
+    m.disc(DARK,(0,-.23,3.00),(0,-.267,3.00),.41,sides=20)
+    return m
+
+
+def watch_lintel():
+    m = Mesh()
+    m.box(MASONRY,0,0,5.48,.78,16.09,.45,tile_uv=.35)
+    m.box(LIMESTONE,0,0,5.89,.98,16.23,.19,tile_uv=.31)
+    m.box(BRASS,0,0,6.08,.45,16.09,.047,tile_uv=.35)
     return m
 
 
@@ -277,14 +358,19 @@ def bridge_rail():
 
 SCENERY = {
     'hvd_rim_roads': ('Dlážděné rozcestí', mountain_roads),
+    'hvd_camp_path': ('Dlážděná stezka výpravy', lambda: mountain_roads('camp')),
     'hvd_lighttower': ('Věž návratového objektivu', last_tower),
     'hvd_signallamp': ('Poslední lucerna s ruční clonou', last_lantern),
+    'hvd_letout': ('Odkláněcí zrcadlo lucerny', return_deflector),
+    'hvd_lightdump': ('Světlotěsný záchyt', return_sink),
+    'hvd_watchroof': ('Překlad sloupové síně', watch_lintel),
     'hvd_flankwalls': ('Boční opěry horské pozorovatelny', wing_walls),
     'hvd_bridgeedge': ('Zábradlí visutého ochozu', bridge_rail),
     'hvd_entrywalls': ('Nosné zdivo vstupní síně', entry_walls),
     'hvd_talus': ('Zasněžené vrstvy skalního hřbetu', lambda: cliff_course(6.3,5.45,271)),
     'hvd_bulkhead': ('Kamenný rám s vedením clon', hall_bulkhead),
     'hvd_stairaxis': ('Dlažba poledníku', stair_approach),
+    'hvd_adit_mouth': ('Kamenné ústí služební štoly',service_mouth),
 }
 
 VISUALS = {
@@ -294,10 +380,13 @@ VISUALS = {
     'hvd_serviceslab': ('Kamenná vyzdívka', service_slab),
     'hvd_rift_in': ('Pokračování do skalní štoly',lambda: service_view(False)),
     'hvd_rift_out': ('Zasněžené závětří před štolou',lambda: service_view(True)),
+    'hvd_walks_rock': ('Zasazená skalní deska',service_rock_door),
     'hvd_optcover': ('Uzávěr Schodů do nebe', dome_shutter),
     'hvd_stairview': ('První schody pod září portálu', stair_portal),
     'hvd_domelight': ('Paprsek seřízeného refraktoru', dome_ray),
     'hvd_topview': ('Schody za Bránou tří paprsků', gate_preview),
     'hvd_lampray': ('Trvalý odraz u poslední lucerny', lantern_ray),
     'hvd_lampclosed': ('Sklopená clona poslední lucerny', lantern_closed),
+    'hvd_lampdivert': ('Odraz mimo poslední lucernu', lantern_diverted),
+    'hvd_lampguard': ('Purpurové světlo ochranné lucerny', lambda: lantern_ray(VIOLET,VIOLET_MIST)),
 }

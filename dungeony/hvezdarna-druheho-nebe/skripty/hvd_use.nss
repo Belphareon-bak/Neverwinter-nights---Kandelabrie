@@ -8,9 +8,15 @@ void main()
     if (!HVD_IsPlayer(player)) return;
     string operation = GetLocalString(target, "action");
 
-    if (operation == "study_latch" || operation == "study_anchor")
+    if (operation == "service_cross")
     {
-        if (GetHitDice(player) < HVD_SecretLevel())
+        if (GetDistanceBetween(player, target) <= 3.3) HVD_Travel(player, target);
+        return;
+    }
+    if (operation == "study_latch" || operation == "study_anchor" ||
+        operation == "rim_latch" || operation == "walk_latch")
+    {
+        if (operation != "study_latch" && GetHitDice(player) < HVD_SecretLevel())
         {
             SendMessageToPC(player, "Služební vybavení je přístupné od " + IntToString(HVD_SecretLevel()) + ". úrovně.");
             return;
@@ -69,17 +75,33 @@ void main()
     }
     if (operation == "mount")
     {
-        HVD_Mount(player);
+        if (GetLocalInt(module, "hvd_repair_done")) HVD_LanternStatus(player);
+        else if (HVD_Mount(player)) HVD_DivertLamp(player);
         return;
     }
-    if (operation == "shutter")
+    if (operation == "lantern")
     {
-        HVD_CloseShutter(player);
+        HVD_LanternStatus(player);
         return;
     }
-    if (operation == "boss")
+    if (operation == "divert")
     {
-        HVD_BossStart(player);
+        HVD_DivertLamp(player);
+        return;
+    }
+    if (operation == "repair_turn")
+    {
+        HVD_TurnRepair(player, GetLocalInt(target, "mirror"));
+        return;
+    }
+    if (operation == "repair_door")
+    {
+        HVD_RepairDoorHint(player);
+        return;
+    }
+    if (operation == "repair_outlet")
+    {
+        HVD_RepairOutletHint(player);
         return;
     }
     if (operation == "read")
@@ -92,14 +114,14 @@ void main()
         HVD_TestOptics(player);
         return;
     }
+    if (operation == "hall_switch")
+    {
+        HVD_HallSwitch(player, GetLocalInt(target,"control"));
+        return;
+    }
     if (operation == "disarm")
     {
         string flag = GetLocalString(target, "flag");
-        if (flag == "hvd_hall_off" && GetLocalInt(module,flag))
-        {
-            SendMessageToPC(player,"Vysílače jsou odpojené. Čočky na obou stěnách zakrývají zavřené clony.");
-            return;
-        }
         if (GetSkillRank(SKILL_DISABLE_TRAP, player) >= GetLocalInt(target, "skill") ||
             GetLocalInt(module, "hvd_notes") || GetTag(GetArea(player)) == "hvd_gate")
         {
@@ -109,12 +131,7 @@ void main()
                 SendMessageToPC(player, "Pojistka odsunula falešné dno ve schránce strážnice.");
             }
             SetLocalInt(module, flag, TRUE);
-            if (flag == "hvd_hall_off")
-            {
-                HVD_UpdateHallLights();
-                HVD_AreaMessage(GetArea(player),"Pojistka zavřela všechny tři clony. Paprsková chodba je bezpečná.");
-            }
-            else SendMessageToPC(player, "Clona přerušila zdroj výboje.");
+            SendMessageToPC(player, "Clona přerušila zdroj výboje.");
         }
         else SendMessageToPC(player,"Západku seřiď se zneškodňováním pastí 15 nebo podle sešitu ze zkušebního stolu v dolní dílně.");
         return;

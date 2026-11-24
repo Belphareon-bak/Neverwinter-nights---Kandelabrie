@@ -6,8 +6,10 @@ from struct import pack
 from architecture import BASALT, LIMESTONE
 from art import GILT, Material, Mesh
 from aurora import bite
+from flights import terrace_view
 from interiors import VIEW_MODELS, shared_view_assets
-from plan import JOINS, LANDING_INSET, PASSAGE_WIDTH, SECRET_LEVEL, THRESHOLD_INSET, ZONES
+from lightart import ADIT_CENTER, service_mouth
+from plan import JOINS, LANDING_INSET, PASSAGE_WIDTH, SECRET_LEVEL, SKY_JOINS, THRESHOLD_INSET, ZONES
 
 
 @dataclass(frozen=True)
@@ -17,6 +19,7 @@ class Threshold:
     facing: int
     width: float
     label: str
+    depth: float
 
     @property
     def bearing(self):
@@ -26,18 +29,25 @@ class Threshold:
     def bounds(self):
         # The transition starts at the front edge of the metal band.
         cross = self.width / 2
-        dx, dy = (cross, .44) if self.facing in (90, 270) else (.44, cross)
+        dx, dy = (cross, self.depth) if self.facing in (90, 270) else (self.depth, cross)
         return self.x - dx, self.y - dy, self.x + dx, self.y + dy
 
 
 # Both markers are inset from the same edge in the master floor plan.
 THRESHOLDS = {
     join.route(source, target): Threshold(*join.point(source, THRESHOLD_INSET),
-                                          join.heading(source), PASSAGE_WIDTH, sign)
+                                          join.heading(source), PASSAGE_WIDTH, sign, 1.08 if join.secret else .44)
     for join in JOINS for source, target, _, sign, _ in join.destinations()
 }
 
 NAMES = {route: f'hvd_sill{index:02}' for index, route in enumerate(THRESHOLDS)}
+SECRET_SILLS = {NAMES[join.route(source, target)]
+                for join in JOINS if join.secret for source, target, _, _, _ in join.destinations()}
+TERRACE_VIEWS = {
+    (join.label,target): (f'hvd_sky{join.label}{index}', join)
+    for join in JOINS if join.label in SKY_JOINS
+    for index,target in enumerate((join.first,join.second))
+}
 
 LETTERS = {
     'A': (14, 17, 17, 31, 17, 17, 17), 'B': (30, 17, 17, 30, 17, 17, 30),
@@ -94,20 +104,33 @@ def route_assets():
     appearances = {NAMES[route]: (f'Práh · {sill.label}', lambda sill=sill: sill_model(sill))
                    for route, sill in THRESHOLDS.items()}
     textures = {f'{resource}.tga': label_texture(label) for label, resource in LABELS.items()}
-    return appearances | shared_view_assets(), textures
+    terraces = {model: ('Podesta za prahem',lambda join=join,target=target:terrace_view(join,target))
+                for (_,target),(model,join) in TERRACE_VIEWS.items()}
+    terraces['hvd_adit_view']=('Zmrzlá římsa za ústím štoly',adit_view)
+    return appearances | shared_view_assets() | terraces, textures
 
 
-def transition(area, name, tag, target, require, minimum_level, view):
+def adit_view():
+    join=next(join for join in JOINS if join.label=='S2')
+    mesh=terrace_view(join,'walks')
+    for material,polygons in service_mouth().faces.items():
+        for points,uv in polygons:
+            mesh.polygon(material,[(-x,ADIT_CENTER[1]+THRESHOLD_INSET-y,z) for x,y,z in points],uv)
+    return mesh
+
+
+def transition(area, name, tag, target, require, minimum_level, secret, view):
     route = tag.removeprefix('hvt_')
     sill = THRESHOLDS[route]
-    area.transition(name, tag, sill.bounds, target, require=require, minimum_level=minimum_level)
+    area.transition(name, tag, sill.bounds, target, require=require, minimum_level=minimum_level, secret=secret)
     asset = NAMES[route]
     if not require:
         area.prop(area.art[asset], name, sill.x, sill.y, bearing=sill.bearing)
     # The waypoint gives the real destination on the map, at the same location as the sill.
     # CreateObject takes a compass facing. The static placeable bearing is offset by 90 degrees.
     area.point('hvd_route', sill.x, sill.y, sill.facing, f'Přechod · {name}',
-               required=require, resource=asset, view=view if minimum_level else "")
+               required=require, resource=asset, view=view if secret else "",
+               target=target, minimum_level=minimum_level, secret=secret)
     if require:
         area.waypoints[-1].fields['MapNoteEnabled'] = bite(0)
 
@@ -121,11 +144,19 @@ def place_transitions(zones):
             areas[target].point(landing, *join.point(target, LANDING_INSET), join.heading(source))
             model = 'hvd_join_hall' if ZONES[target].interior else 'hvd_join_deck'
             model = VIEW_MODELS.get((join.label,target),model)
+            if (join.label,target) in TERRACE_VIEWS:
+                model = TERRACE_VIEWS[join.label,target][0]
             if join.label == 'S1':
                 model = 'hvd_rift_in' if target == 'study' else 'hvd_rift_out'
+            if join.label == 'S2' and target == 'walks':
+                model = 'hvd_adit_view'
             transition(areas[source], name, 'hvt_' + route, landing, require,
-                       SECRET_LEVEL if join.secret else 0, model)
+                       SECRET_LEVEL if join.secret and target == 'study' else 0, int(join.secret), model)
             if not require:
                 area = areas[source]
                 sill = THRESHOLDS[route]
                 area.prop(area.art[model], name, sill.x, sill.y, bearing=sill.bearing)
+                if join.label in SKY_JOINS:
+                    x,y = join.point(source)
+                    area.prop(area.art['hvd_skyport'], 'Sdílené kamenné ostění',
+                              x,y,bearing=sill.bearing)

@@ -8,7 +8,7 @@ Repozitář pro tvorbu dungeonů a dalších rozšíření světa Kandelábrie p
 
 | Dungeon | Doporučené úrovně | Stav |
 | --- | --- | --- |
-| [Hvězdárna druhého nebe](dungeony/hvezdarna-druheho-nebe/README.md) | 35–38 a 38–40 | Samostatný modul NWN:EE |
+| [Hvězdárna druhého nebe](dungeony/hvezdarna-druheho-nebe/README.md) | 34–38 a 37–40 | Samostatný modul NWN:EE |
 
 ## Struktura repozitáře
 

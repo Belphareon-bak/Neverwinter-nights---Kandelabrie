@@ -1,22 +1,22 @@
 # Hvězdárna druhého nebe
 
-Samostatný modul pro **Neverwinter Nights: Enhanced Edition** a postavy na **35.–40. úrovni**. Ve verzi 14 vede horská stezka k jižní bráně a zděné síni ve tvaru T. Dílny a Chodby clon spojují dvě klenuté chodby se společným profilem zdiva a dlažby. Nad Kopulí stoupá jedno rameno po širokých schodištích a druhé po visutých mostech. Obě se setkají v Předbraní. [Původní návrh a příběh](../README.md)
+Samostatný modul pro **Neverwinter Nights: Enhanced Edition** a postavy na **34.–40. úrovni**. Horská stezka vede k jižní bráně a zděné síni ve tvaru T. Dílny a Chodby clon spojují dvě klenuté chodby se společným profilem zdiva a dlažby. Nad Kopulí stoupá jedno rameno po širokých schodištích a druhé po visutých mostech. Obě se setkají v Předbraní. [Původní návrh a příběh](../README.md)
 
 ## Spuštění
 
-1. [Modul](<Hvezdarna druheho nebe.mod>) patří do složky `modules` a [hvd_obs_v14.hak](hvd_obs_v14.hak) do složky `hak` v profilu Neverwinter Nights.
+1. [Modul](<Hvezdarna druheho nebe.mod>) patří do složky `modules` a [hvd_obs_v24.hak](hvd_obs_v24.hak) do složky `hak` v profilu Neverwinter Nights.
 2. Založ novou výpravu přes **New → Local → Hvezdarna druheho nebe → Play**. Použij vlastní postavu nebo [Radana Hvězdáře na 38. úrovni](<Radan Hvezdar.bic>). Soubor `.bic` patří do `localvault`.
 3. V noclehu seber ze stolu **Rozpis nebeské hlídky**. V inventáři ho otevři přes **Prohlédnout** (**Examine**).
 
 ## Mapa průchodů
 
-Všechny oblasti jsou na jednom půdorysu se společným směrem na sever. Jeden čtvereček je **1 × 1 v Toolsetu**, tedy **10 × 10 m**. Čísla 00–09 označují prahy na společných hranách. Průchod 03 je jižní brána. Klenutá spojka 01 vede ze vstupní síně do Chodeb clon a spojka 02 z archivu na horní dvůr. Odstín dlažby na plánu vyznačuje zděné průchody a tlusté čáry obvod dílenského dvora. [Hráčská mapa](../podklady/mapa-hvezdarny.png) · [Úplný půdorys včetně tajných cest](../podklady/mapa-hvezdarny-vsechny-lokace.png) · [Tiskové PDF](../podklady/mapa-hvezdarny.pdf)
+Všechny oblasti jsou na jednom půdorysu se společným směrem na sever. Jeden čtvereček je **1 × 1 v Toolsetu**, tedy **10 × 10 m**. Čísla 00–09 označují prahy na společných hranách. Průchod 03 je jižní brána. Klenutá spojka 01 vede ze vstupní síně do Chodeb clon a spojka 02 z archivu na horní dvůr. Odstín dlažby na plánu vyznačuje zděné průchody a tlusté čáry obvod dílenského dvora. [Hráčská mapa](../podklady/mapa-hvezdarny.png) · [Úplný půdorys včetně tajných cest](../podklady/mapa-hvezdarny-vsechny-lokace.png) · [Tiskové PDF](../podklady/mapa-hvezdarny.pdf) · [Stanoviště hlídek](../podklady/stanoviste-hvezdarny.png)
 
 ## Cesta hvězdárnou
 
-- **Dolní okruh · 35–37.** Za jižní bránou vstoupíš do síně ve tvaru T. Vlevo stojí Zkušebna, kovárna a servisní lávka. Pravé rameno vede přímo do ohlašovny Chodeb clon. Zkušebna má optický stůl pod měděnou střechou a výheň s odtahem stojí při protější stěně dvora. V Chodbách clon přechází ohlašovna do paprskové chodby, filtrovny a archivu. Obě cesty se setkají na horním dvoře dílen u **Pečeti kotvy**. Odtud vede severní vchod do Kopule.
+- **Dolní okruh · 34–38.** Za jižní bránou vstoupíš do síně ve tvaru T. Vlevo stojí Zkušebna, kovárna a servisní lávka. Pravé rameno vede přímo do ohlašovny Chodeb clon. Zkušebna má optický stůl pod měděnou střechou a výheň s odtahem stojí při protější stěně dvora. V Chodbách clon přechází ohlašovna do paprskové chodby, filtrovny a archivu. Obě cesty se setkají na horním dvoře dílen u **Pečeti kotvy**. Odtud vede severní vchod do Kopule.
 - **Kopule.** Seřiď dva podstavce a zkontroluj obraz v refraktoru. Modrý paprsek od objektivu rozsvítí severní průchod ke Schodům do nebe.
-- **Horní okruh · 38–40.** Od paty schodů stoupá západní trasa po třech ramenech širokých 18,2 m. První dvě mezipodesty slouží měření hvězd a bouřné hlídce. Na bouřné podestě je **Pečeť křídla**. Východní trasa vede na dva Visuté ochozy. Tam hlídka drží **Pečeť kopí** a **Pečeť lucerny**. Obě ramena vystoupají o 15 metrů ke svému vstupu do Předbraní a spojí se u optického dvora.
+- **Horní okruh · 37–40.** Od paty schodů stoupá západní trasa po třech ramenech širokých 18,2 m. První dvě mezipodesty slouží měření hvězd a bouřné hlídce. Na bouřné podestě je **Pečeť křídla**. Východní trasa vede na dva Visuté ochozy. Tam hlídka drží **Pečeť kopí** a **Pečeť lucerny**. Obě ramena vystoupají o 15 metrů ke svému vstupu do Předbraní a spojí se u optického dvora.
 - **Předbraní a Poslední stupeň.** Přesuň čtyři pečetě do inventářů sloupů a závory. Páčkami nastav v každém sloupu jiný znak. Rozpis v táboře, zápis na schodech a protokol u písaře určují sestavu. Po otevření brány pokračuj na Poslední stupeň. Po sklopení clony u Ithrenovy lucerny si vyber odměnu a sestup přes Předbraní.
 
 V dolní dílně je u zkušebního stolu příruční schránka s klíčem. Otevře správkynino pouzdro pod stejným přístřeškem. Přenosné zrcadlo ze zkušebny pomůže při závěrečném výboji. Na Posledním stupni je patice vpravo od nástupu, pod úrovní horní podesty.
@@ -43,22 +43,26 @@ Tuto část si rozbal při zkoušení tajných cest.
 
 ## Návrh a sestavení
 
+Pracovní export má stálý název `Hvezdarna druheho nebe.mod`. Po úpravě ulož zdroje i přestavěný export do Gitu. Předchozí stavy najdeš v historii stejného souboru.
+
 Společnou síť, rozměry, půdorysy a směry určuje [plan.py](../zdroje/plan.py). Podle něj vznikají dlaždice a přechody v [layout.py](../zdroje/layout.py), [interiors.py](../zdroje/interiors.py) a [routes.py](../zdroje/routes.py). Zděné části spojek i pohled do navazující oblasti používají stejnou geometrii z [interiors.py](../zdroje/interiors.py). Výzdobu podest a chodeb skládá [dressing.py](../zdroje/dressing.py). [Kreslič mapy](../zdroje/mapa_hvezdarny.py) umí ověřit rozměry, prahy, polohu a natočení příchodů i návaznost výšek v hotovém modulu.
 
 Sestavení spusť z této složky `moduly`.
 
 ```bash
 python3 ../zdroje/build.py --game "/cesta/k/Neverwinter Nights/game" \
-  --compiler /cesta/k/nwn_script_comp --scripts ../skripty --output ./build
-python3 ../zdroje/mapa_hvezdarny.py --module "./build/Hvezdarna druheho nebe.mod" \
-  --output ./build/mapa-hvezdarny.pdf
+  --compiler /cesta/k/nwn_script_comp --output . --test-guide
+python3 ../zdroje/mapa_hvezdarny.py --module "Hvezdarna druheho nebe.mod" \
+  --output ../podklady/mapa-hvezdarny.pdf
 ```
 
 Sestavení čte základní herní prostředky z místní instalace. HAK doplňuje dlaždice do `tcm02.set` a přidává interiérovou sadu `hvd_interior.set`. Kreslič mapy používá ReportLab a písmo DejaVu Sans. Pro PNG potřebuje také Poppler. Přepínač `--player-map` kreslí hráčskou mapu bez tajných cest. [Kompilátor NWScriptu](https://github.com/niv/neverwinter.nim/releases/tag/2.3.2)
 
+Statistiky protivníků upravuj v [content.py](../zdroje/content.py). Samostatný export používá XP Hvězdárny. Při místním sestavení pro zkoušku XP Kandelábrie přidej `--xp-module /cesta/ke/Kandelabrie.mod` a výstup ulož do místní složky sestavení. Skript `pwfxp` z tohoto modulu používá místní hra.
+
 ## Zkušební list
 
-Přepínač `--test-guide` při sestavení přidá schránku **TEST · Pouzdro s řešením brány**. Stojí na jižním dvoře Předbraní u pultu pro výměnu pečetí. Zkušební list se bere do inventáře a čte přes **Prohlédnout** (**Examine**). Obsahuje přesnou sestavu právě rozehrané výpravy. Každá nová výprava doplní nový list. Běžné sestavení vzniká bez tohoto přepínače a navazuje na stejný HAK.
+Pracovní sestava používá přepínač `--test-guide`, který přidá schránku **TEST · Pouzdro s řešením brány**. Stojí u písaře na západní straně optického dvora v Předbraní, poblíž pultu pro výměnu pečetí. Zkušební list se bere do inventáře a čte přes **Prohlédnout** (**Examine**). Obsahuje přesnou sestavu právě rozehrané výpravy. Každá nová výprava doplní nový list.
 
 ## Ověření ve hře
 

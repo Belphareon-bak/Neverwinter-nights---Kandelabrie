@@ -1,29 +1,39 @@
 """Native interior tiles and the stone passages between the two lower wings."""
 
-from math import cos, pi, radians, sin
+from math import copysign, cos, pi, radians, sin, sqrt
 from struct import pack
 
-from architecture import BASALT, LIMESTONE, MASONRY, SLATE, SNOW, surface
-from art import BRASS, CROWN, TRIM, Material, Mesh, arch
-from flights import as_tile
-from plan import DIRECTIONS, JOINS, THRESHOLD_INSET, TILE, WORK_YARD_WALLS, ZONES
+from architecture import BASALT, LIMESTONE, MASONRY, PALE, SLATE, SNOW, surface
+from art import BRASS, CROWN, TRIM, Material, Mesh, arch, star
+from flights import as_tile, parapet
+from navrh_v21 import ACCESS_DOOR, BEAM_HEIGHT, BREACH, OPTICAL_SLOT, R1_FRAME, R1_WIDTH, SLOT_WIDTH
+from plan import (DIRECTIONS, ENTRY_X, JOINS, THRESHOLD_INSET, TILE,
+                  WORK_BRIDGE_LANDING, WORK_SHELF, WORK_YARD_WALLS, ZONES)
 
 
 TILESET = 'hvd_interior'
 WING_HEIGHT = 3.84
-WORK_CELLS = ((4,0),(5,0),(4,1),(5,1),(5,5))
-WORK_OPENINGS = ((40,12.1,17.9),(50,52.2,57.8))
+WORK_CELLS = ((4,0),(5,0),(4,1),(5,1),(5,5),(2,7),(3,7))
+SHELF_COL, SHELF_ROW, SHELF_END_COL, SHELF_END_ROW = WORK_SHELF
+SHELF_CELLS = tuple((x,y) for y in range(SHELF_ROW,SHELF_END_ROW)
+                    for x in range(SHELF_COL,SHELF_END_COL))
+SHELF_RECT = tuple(edge*TILE for edge in WORK_SHELF)
+SHELF_LANDING = (WORK_BRIDGE_LANDING[0],SHELF_RECT[1]-TILE,
+                 WORK_BRIDGE_LANDING[1],SHELF_RECT[1])
+WORK_OPENINGS = ((0,40,12.1,17.9),(0,50,52.2,57.8),(1,70,20,40))
 WORK_FRAMES = (
-    (53,2.85,0,5.75),(53,9.6,0,5.75),
-    (41.55,15,90,5.75),(58.45,15,90,5.75),
-    (51.55,55,90,5.55),(58.45,55,90,5.55),
+    (ENTRY_X,2.85,0,5.75),(ENTRY_X,7.25,0,15.95),(ENTRY_X,11.7,0,15.95),
+    (41.55,15,90,5.75),(59.38,15,90,5.75),
+    (51.55,55,90,5.55),(58.45,55,90,5.55),(30,73.15,0,5.78),
 )
 WORK_ROOFS = {
-    (5,0): ((53,1.9,0,5.8,3.8),),
-    (5,1): ((58.05,15,90,5.8,3.9),),
-    (5,5): ((57.94,55,90,5.6,4.12),),
+    (5,1): ((59.58,15,90,5.8,.84),),
+    (5,5): ((58.55,55,90,5.6,2.9),),
 }
 HALL_ROOFS = {(0,y//10): ((1.95,y,90,width,3.9),) for y,width in ((15,5.8),(55,5.6))}
+DOME_ROOFS = {(3,0): ((30,3.94,0,6.0,7.88),)}
+R1_VAULT = {(4,3): ((*R1_FRAME,0,R1_WIDTH,3.15),)}
+INTERIOR_ROOFS = {'hvd_halls': HALL_ROOFS | R1_VAULT, 'hvd_dome': DOME_ROOFS, 'hvd_service': R1_VAULT}
 YARD_MODELS = {f'hvd_yardw{index}': span for index,span in enumerate(WORK_YARD_WALLS)}
 
 # Frames share the width of an actual corridor and appear on its walkmesh.
@@ -34,15 +44,16 @@ def chamber(code, height, frames):
 
 PLANS = {
     'hvd_halls': chamber('halls', WING_HEIGHT,
-        ((1.55,15,90,5.7),(7,15,90,5.7),(13,20.5,0,5.7),
+        ((1.55,15,90,5.7),(7,15,90,5.7),
          (21,15,90,4.9),(23.6,15,90,4.9),(29.9,15,90,4.9),
          (37.35,15,90,4.9),(44.65,15,90,4.9),(47,15,90,4.9),(49.85,37.15,0,5.6),
-         (24,45,90,5.6),(1.55,55,90,5.5))),
+         (24,45,90,5.6),(1.55,55,90,5.5),(*ACCESS_DOOR,90,2.1),(*R1_FRAME,0,R1_WIDTH))),
     'hvd_study': chamber('study', 3.32,
-        ((8.8,31,0,5.5),(17.9,42.9,0,5.5),(23,58.6,0,5.5))),
+        ((8.8,31,0,5.5),(17.9,42.9,0,5.5),(23,58.6,0,5.5),(15,158.9,0,5.7))),
     'hvd_dome': chamber('dome', 3.85,
         ((30,1.55,0,5.8),(30,17,0,6),(13.2,26.05,90,5.9),
          (46.8,26.1,90,5.8),(30,46,0,6.4))),
+    'hvd_service': chamber('service', WING_HEIGHT, ((*ACCESS_DOOR,90,2.1),(*R1_FRAME,0,R1_WIDTH))),
 }
 
 FLOOR = Material((.65,.65,.64),'hvd_paving')
@@ -58,10 +69,11 @@ def all_cells():
                 for y in range(height) for x in range(width))
 
 
-def grid(size, rooms):
+def grid(size, rooms, *, y_cuts=()):
     width,height=size
     xs=sorted(set(range(0,10*width+1,10)) | {edge for x0,_,x1,_ in rooms for edge in (x0,x1)})
-    ys=sorted(set(range(0,10*height+1,10)) | {edge for _,y0,_,y1 in rooms for edge in (y0,y1)})
+    ys=sorted(set(range(0,10*height+1,10)) | set(y_cuts)
+              | {edge for _,y0,_,y1 in rooms for edge in (y0,y1)})
     occupied={}
     for i,(x0,x1) in enumerate(zip(xs,xs[1:])):
         for j,(y0,y1) in enumerate(zip(ys,ys[1:])):
@@ -95,18 +107,48 @@ def masonry(mesh,a,b,height,*,wing=False):
                    (b[0]-nx*.23,b[1]-ny*.23,.018),.048)
 
 
+def optical_wall(mesh, a, b, height):
+    bottom, top = BEAM_HEIGHT-.35, BEAM_HEIGHT+.35
+    masonry(mesh, a, b, bottom)
+    side = copysign(1, b[1]-a[1])
+    mesh.box(WALL, a[0]+side*.255, (a[1]+b[1])/2, top, .51, abs(b[1]-a[1]),
+             height-top, tile_uv=.31)
+
+
+def broken_lintel(mesh, cx, cy):
+    left,bottom,right,top=BREACH
+    left,right,bottom,top=left-cx,right-cx,bottom-cy,top-cy
+    crown=((bottom-.04,2.29),(bottom+.31,2.58),(bottom+.69,2.72),
+           (top-.61,2.66),(top-.27,2.49),(top+.04,2.24))
+    for (a,za),(b,zb) in zip(crown,crown[1:]):
+        def face(x):
+            return ((x,a,za),(x,b,zb),(x,b,WING_HEIGHT),(x,a,WING_HEIGHT))
+        mesh.polygon(WALL,face(left-.018)[::-1])
+        mesh.polygon(WALL,face(right+.018))
+        mesh.polygon(BASALT,((left,b,zb),(right,b,zb),(right,a,za),(left,a,za)))
+        mesh.box(LIMESTONE,(left+right)/2,(a+b)/2,WING_HEIGHT-.14,right-left+.16,b-a,.14,tile_uv=.32)
+    for side,y in ((1,bottom),(-1,top)):
+        mesh.box(BASALT,(left+right)/2,y+side*.070,0,right-left+.095,.27,.29,tile_uv=.33)
+        mesh.box(MASONRY,(left+right)/2,y+side*.028,.29,right-left+.08,.15,2.11,tile_uv=.29)
+        tip=(left+.42,y+side*.16,.19)
+        mesh.polygon(TRIM,((left-.13,y,0),(right-.13,y,0),tip))
+
+
 def frame(mesh,x,y,angle,width,height):
     details=Mesh()
     radius=width*.5-.025
-    arch(details,radius,2.25,0,.23,.49,TRIM,masonry=True)
+    spring = 3.18 if width > 10 else 2.25
+    arch(details,radius,spring,0,.23,.49,TRIM,masonry=True)
+    if width > 10:
+        arch(details,radius,spring,-.28,.073,.11,LIMESTONE)
     for sign in (-1,1):
         details.box(BASALT,sign*(radius+.105),0,0,.27,.59,.28)
-        details.box(LIMESTONE,sign*(radius+.115),0,2.10,.31,.65,.15)
+        details.box(LIMESTONE,sign*(radius+.115),0,spring-.15,.31,.65,.15)
     a=radians(angle)
     for material,polygons in details.faces.items():
         for verts,uv in polygons:
             mesh.polygon(material,[(x+u*cos(a)-v*sin(a),y+u*sin(a)+v*cos(a),
-                                    z if z <= 2.25 else 2.25 + (z-2.25)*(height-2.25)/(radius+.23))
+                                    z if z <= spring else spring+(z-spring)*(height-spring)/(radius+.23))
                                    for u,v,z in verts],uv)
 
 
@@ -130,7 +172,8 @@ def barrel_strip(mesh,x,y,angle,width,length):
               position(0,length/2,WING_HEIGHT+1.24),.045,sides=7)
 
 
-def chamber_tile(tx,ty,occupied,height,frames,size,*,wing=False,elevated=False,openings=(),roofs=()):
+def chamber_tile(tx,ty,occupied,height,frames,size,*,wing=False,elevated=False,
+                 openings=(),roofs=(),balustrade=False,optical=False):
     mesh=Mesh()
     vertices=[]
     index={}
@@ -157,7 +200,7 @@ def chamber_tile(tx,ty,occupied,height,frames,size,*,wing=False,elevated=False,o
         x0,y0,x1,y1=x0-cx,y0-cy,x1-cx,y1-cy
         room_cells.append((x0,y0,x1,y1))
         if elevated:
-            mesh.box(MASONRY,(x0+x1)/2,(y0+y1)/2,-3.25,x1-x0,y1-y0,3.24,tile_uv=.30)
+            mesh.box(MASONRY,(x0+x1)/2,(y0+y1)/2,-4.40,x1-x0,y1-y0,4.398,tile_uv=.30)
         # Use the same phase of the paving texture on neighboring tiles.
         mesh.polygon(FLOOR,((x0,y0,0),(x1,y0,0),(x1,y1,0),(x0,y1,0)),
                      [((x+cx)*.30,(y+cy)*.30) for x,y in ((x0,y0),(x1,y0),(x1,y1),(x0,y1))])
@@ -170,16 +213,32 @@ def chamber_tile(tx,ty,occupied,height,frames,size,*,wing=False,elevated=False,o
             w,h=size
             on_set_edge = ((a[0]==b[0] and a[0]+cx in (0,10*w))
                            or (a[1]==b[1] and a[1]+cy in (0,10*h)))
-            opening = a[0]==b[0] and any(abs(a[0]+cx-x)<.001 and
-                lo-.001<=min(a[1],b[1])+cy<=max(a[1],b[1])+cy<=hi+.001
-                for x,lo,hi in openings)
+            opening = any(a[axis]==b[axis] and abs(a[axis]+(cx,cy)[axis]-edge)<.001 and
+                lo-.001<=min(a[1-axis],b[1-axis])+(cy,cx)[axis]<=max(a[1-axis],b[1-axis])+(cy,cx)[axis]<=hi+.001
+                for axis,edge,lo,hi in openings)
             if on_set_edge or opening:
                 continue
-            masonry(mesh,a,b,height,wing=wing)
-            quad(((*b,0),(*a,0),(*a,height),(*b,height)),2)
+            if balustrade:
+                direction = (270,0,90,180)[k]
+                across,along = (1,0) if k%2==0 else (0,1)
+                start,end = sorted((a[along],b[along]))
+                parapet(mesh,direction,a[across],start,end,base=0)
+                barrier_height = 1.18
+            else:
+                barrier_height = WING_HEIGHT if wing and min(a[0],b[0])+cx>=59.15 else height
+                passthrough = (optical and a[0] == b[0] and
+                    any(abs(a[0]+cx-edge)<.001 for edge in (31.5,33.0)) and
+                    max(abs(a[1]+cy-OPTICAL_SLOT[1]), abs(b[1]+cy-OPTICAL_SLOT[1])) <= SLOT_WIDTH/2+.001)
+                if passthrough:
+                    optical_wall(mesh,a,b,barrier_height)
+                else:
+                    masonry(mesh,a,b,barrier_height,wing=wing)
+            quad(((*b,0),(*a,0),(*a,barrier_height),(*b,barrier_height)),2)
     for x,y,angle,width in frames:
         if int(x//10)==tx and int(y//10)==ty:
-            frame(mesh,x-cx,y-cy,angle,width,height)
+            frame(mesh,x-cx,y-cy,angle,width,height if width > 10 or not wing else WING_HEIGHT)
+    if optical and (tx,ty)==(3,2):
+        broken_lintel(mesh,cx,cy)
     for x,y,angle,width,length in roofs:
         barrel_strip(mesh,x-cx,y-cy,angle,width,length)
     if not room_cells:
@@ -189,8 +248,47 @@ def chamber_tile(tx,ty,occupied,height,frames,size,*,wing=False,elevated=False,o
 
 def work_tile(x,y):
     zone = ZONES['works']
-    return chamber_tile(x,y,grid(zone.size,zone.enclosed),WING_HEIGHT,WORK_FRAMES,zone.size,
-                        wing=True,elevated=True,openings=WORK_OPENINGS,roofs=WORK_ROOFS.get((x,y),()))
+    if (x,y) in SHELF_CELLS:
+        # Include the bridge landing and adjacent rooms when deciding which edges need a rail.
+        connected = grid(zone.size,(*zone.enclosed,SHELF_RECT,SHELF_LANDING))
+        return chamber_tile(x,y,connected,WING_HEIGHT,(),zone.size,elevated=True,balustrade=True)
+    mesh,floor,cells = chamber_tile(x,y,grid(zone.size,zone.enclosed),6.23 if y<2 else WING_HEIGHT,
+                                   WORK_FRAMES,zone.size,wing=True,elevated=True,openings=WORK_OPENINGS,
+                                   roofs=WORK_ROOFS.get((x,y),()))
+    if (x,y)==(5,1):
+        cx,cy = ENTRY_X-55,14.82-15
+        mesh.disc(SLATE,(cx,cy,.009),(cx,cy,.027),2.72,sides=32)
+        for i in range(24):
+            a,b = i*pi/12,(i+1)*pi/12
+            mesh.trace(BRASS,(cx+2.63*cos(a),cy+2.63*sin(a),.031),
+                       (cx+2.63*cos(b),cy+2.63*sin(b),.031),.083)
+        star(mesh,cx,cy,.033,2.22,PALE,8)
+    if (x,y)==(3,7):
+        dome_crown(mesh,-5,1.50)
+    return mesh,floor,cells
+
+
+def dome_crown(mesh,x,y):
+    """Close the ceremonial drum over the ashlar vestibule."""
+    def point(i,j):
+        theta=i*pi/10
+        phi=j*pi/16
+        u,v=cos(theta),sin(theta)
+        return (x+3.46*copysign(sqrt(abs(u)),u)*cos(phi),
+                y+3.77*copysign(sqrt(abs(v)),v)*cos(phi),3.71+3.12*sin(phi))
+
+    for i in range(20):
+        for j in range(8):
+            a,b,c,d=point(i,j),point(i+1,j),point(i+1,j+1),point(i,j+1)
+            face=(a,b,c) if j==7 else (a,b,c,d)
+            mesh.polygon(CROWN if i%5 else SLATE,face)
+            mesh.polygon(SLATE,face[::-1])
+            if i%4==0:
+                mesh.tube(BRASS,a,d,.050,sides=6)
+        mesh.tube(LIMESTONE,point(i,0),point(i+1,0),.18,sides=8)
+    mesh.disc(BRASS,(x,y,6.68),(x,y,6.92),.48,sides=12)
+    mesh.tube(BRASS,(x,y,6.91),(x,y,7.84),.096,.045,sides=8)
+    mesh.disc(PALE,(x,y,7.62),(x,y,7.84),.19,sides=12)
 
 
 def yard_wall(span):
@@ -208,7 +306,7 @@ def yard_wall_assets():
 
 def workshop_tiles():
     tiles = {}
-    for number,(x,y) in enumerate(WORK_CELLS):
+    for number,(x,y) in enumerate((*WORK_CELLS,*SHELF_CELLS)):
         mesh,(vertices,faces,materials),cells = work_tile(x,y)
         # Castle Exterior places the adjoining decks 5 m above the tile origin.
         shifted = Mesh()
@@ -224,12 +322,17 @@ def workshop_tiles():
 
 
 SHARED_VIEWS = {
-    ('03','works'): ((5,0),(5,1)),
+    ('00','camp'): (),
+    ('00','rim'): (),
+    ('03','works'): ((4,0),(5,0),(4,1),(5,1)),
     ('03','rim'): (),
     ('01','halls'): ((0,1),(1,1),(1,2)),
     ('01','works'): ((5,0),(5,1),(4,1)),
-    ('02','halls'): ((0,5),(1,5),(1,4)),
-    ('02','works'): ((5,5),),
+    ('02','halls'): ((0,5),),
+    ('02','works'): ((5,5),(4,5)),
+    ('04','dome'): ((2,0),(3,0)),
+    ('04','works'): ((2,7),(3,7)),
+    ('S2','study'): ((1,15),),
 }
 VIEW_MODELS = {key: f'hvd_link{i}' for i,key in enumerate(SHARED_VIEWS)}
 
@@ -237,32 +340,35 @@ VIEW_MODELS = {key: f'hvd_link{i}' for i,key in enumerate(SHARED_VIEWS)}
 def link_mesh(join,target,squares):
     """Project the same facing of the next wing beyond the transition edge."""
     output = Mesh()
-    if target == 'rim':
+    if target in ('rim','camp'):
         start = THRESHOLD_INSET
         surface(output,SNOW,-4.5,start,4.5,start+7.9,-.075,.29)
-        surface(output,SLATE,-2.30,start,2.30,start+7.9,.009,.37)
+        surface(output,SLATE,-2.32,start,2.32,start+7.9,.009,.37)
         return output
 
     dx,dy = DIRECTIONS[(join.heading(target)+180)%360]
     ex,ey = join.point(target)
-    if target == 'halls':
-        size,rooms,height,frames = PLANS['hvd_halls']
+    openings=()
+    if target != 'works':
+        size,rooms,height,frames = PLANS['hvd_'+target]
+        if join.label=='02' and target=='halls':
+            neck=next(room for room in rooms if room[0]==0 and room[1]<ey<room[3])
+            rooms=(neck,)
+            openings=((0,neck[2],neck[1],neck[3]),)
         cells = grid(size,rooms)
     for x,y in squares:
         if target == 'works':
             drawn,_,_ = work_tile(x,y)
         else:
-            drawn,_,_ = chamber_tile(x,y,cells,height,frames,size,wing=True,elevated=True,
-                                     roofs=HALL_ROOFS.get((x,y),()))
+            roofs=INTERIOR_ROOFS.get('hvd_'+target,{}).get((x,y),())
+            drawn,_,_ = chamber_tile(x,y,cells,height,frames,size,wing=target=='halls',
+                                     elevated=True,roofs=roofs,openings=openings)
         ox,oy = TILE*(x+.5)-ex,TILE*(y+.5)-ey
         for material,polygons in drawn.faces.items():
             for points,uv in polygons:
                 output.polygon(material,
                     [((a+ox)*dy-(b+oy)*dx,(a+ox)*dx+(b+oy)*dy+THRESHOLD_INSET,c)
                      for a,b,c in points],uv)
-    if (join.label,target)==('02','works'):
-        start = TILE+THRESHOLD_INSET
-        surface(output,SLATE,-3.12,start,3.12,start+5.4,0,.34)
     return output
 
 
@@ -292,14 +398,17 @@ def tileset(game):
                                                               'UnlocalizedName=Observatory interiors')
     indices=list(all_cells())
     settings=[header,f'[TILES]\r\nCount={len(indices)}\r\n']
-    occupied={area:grid(size,rooms) for area,(size,rooms,_,_) in PLANS.items()}
+    slot_edges = tuple(OPTICAL_SLOT[1]+side*SLOT_WIDTH/2 for side in (-1,1))
+    occupied={area:grid(size,rooms,y_cuts=slot_edges if area=='hvd_service' else ())
+              for area,(size,rooms,_,_) in PLANS.items()}
     resources={}
     for i,(area,x,y) in enumerate(indices):
         name=f'hvd_i{i:02d}'
         size,_,height,frames=PLANS[area]
-        is_hall = area=='hvd_halls'
-        model,wok,cells=chamber_tile(x,y,occupied[area],height,frames,size,wing=is_hall,
-                                    roofs=HALL_ROOFS.get((x,y),()) if is_hall else ())
+        optical = area=='hvd_service'
+        model,wok,cells=chamber_tile(x,y,occupied[area],height,frames,size,
+                                    wing=optical or area=='hvd_halls', optical=optical,
+                                    roofs=INTERIOR_ROOFS.get(area,{}).get((x,y),()))
         resources.update(as_tile(name,model,wok))
         resources[f'mi_{name}.tga']=minimap(cells)
         corners=''.join(f'{corner}=stone\r\n{corner}Height=0\r\n' for corner in (

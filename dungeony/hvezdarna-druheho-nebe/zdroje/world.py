@@ -7,6 +7,7 @@ import random
 import re
 
 from aurora import STRUCT, Record, bite, dword, flt, integer, loc, lst, ref, string, word
+from plan import height_at
 
 
 CORNERS = ("BottomLeft", "BottomRight", "TopRight", "TopLeft")
@@ -20,11 +21,12 @@ SURFACES = {
 
 
 def variables(**values):
-    return lst([
-        Record(0, Name=string(name), Type=dword(3 if isinstance(value, str) else 1),
-               Value=string(value) if isinstance(value, str) else integer(value))
-        for name, value in values.items()
-    ])
+    types = {str: (3,string), float: (2,flt)}
+    records = []
+    for name,value in values.items():
+        kind,field = types.get(type(value),(1,integer))
+        records.append(Record(0,Name=string(name),Type=dword(kind),Value=field(value)))
+    return lst(records)
 
 
 def color(red, green, blue):
@@ -123,7 +125,9 @@ class Area:
     waypoints: list = field(default_factory=list)
     triggers: list = field(default_factory=list)
     doors: list = field(default_factory=list)
+    encounter_positions: dict = field(default_factory=dict)
     rises: tuple = ()
+    relief: tuple = ()
     stair_columns: dict = field(default_factory=dict)
     tile_lights: dict = field(default_factory=dict)
     lighting: dict = field(default_factory=dict)
@@ -136,6 +140,8 @@ class Area:
         return sum(y >= row for row in (self.rises or (self.high_row,)))
 
     def z_at(self, y):
+        if self.relief:
+            return height_at(self.relief,y)
         # Castle Exterior places its cobbled surfaces five metres above the tile origin.
         base = 5.0 if self.tileset == "tcm02" else 0.0
         for row in (self.rises or (self.high_row,)):
@@ -185,18 +191,26 @@ class Area:
     def passage(self, name, x, y, to, bearing=0, appearance=28, **settings):
         return self.prop(appearance, name, x, y, action="pass", target=to, bearing=bearing, **settings)
 
-    def mob(self, refname, x, y, *, seal=0, bearing=90, elite=0):
-        return self.point("hvd_spawn", x, y, bearing=bearing, spawn=refname, seal=seal, elite=elite)
+    def encounter(self, group, name, *approaches):
+        for bounds in approaches:
+            self.trigger(name, "hvd_encounter", bounds, "hvd_zone", encounter=group)
+
+    def mob(self, group, refname, x, y, *, seal=0, bearing=90, elite=0, leash=20):
+        index = self.encounter_positions.get(group, 0) + 1
+        self.encounter_positions[group] = index
+        return self.point(f"hvs_{group}_{index}", x, y, bearing=bearing, spawn=refname, encounter=group,
+                          seal=seal, elite=elite, leash=leash)
 
     def trap(self, name, tag, bounds, **settings):
         self.trigger(name, tag, bounds, "hvd_zone", **settings)
         return self
 
-    def transition(self, name, tag, bounds, target, *, require="", minimum_level=0):
+    def transition(self, name, tag, bounds, target, *, require="", minimum_level=0, secret=0):
         if require:
             # Closed paths stay unmarked until their reveal. Walking into them
             # invokes the progression check instead of the engine's default jump.
-            self.trigger(name, tag, bounds, "hvd_travel", target=target, require=require, minimum_level=minimum_level)
+            self.trigger(name, tag, bounds, "hvd_travel", target=target, require=require,
+                         minimum_level=minimum_level, hidden_route=secret)
         else:
             trigger = self.trigger(name, tag, bounds, "hvd_travel", target=target)
             trigger.fields.update(Cursor=bite(1), Type=integer(1), LinkedTo=string(target),
@@ -217,16 +231,17 @@ class Area:
             ScriptHeartbeat=ref(""), ScriptUserDefine=ref(""),
             XPosition=flt(center_x), YPosition=flt(center_y), ZPosition=flt(z),
             XOrientation=flt(1), YOrientation=flt(0), ZOrientation=flt(0),
-            Geometry=lst(vertices), VarTable=variables(x0=int(x0), y0=int(y0), x1=int(x1), y1=int(y1), **settings),
+            Geometry=lst(vertices), VarTable=variables(x0=float(x0),y0=float(y0),
+                                                      x1=float(x1),y1=float(y1),**settings),
         )
         self.triggers.append(record)
         return record
 
-    def door(self, tag, name, x, y, bearing=0, generic=7):
+    def door(self, tag, name, x, y, *, key, bearing=0, generic=7):
         fields = object_fields(tag, name, "Na kameni je vyrytý znak hlídky.")
         fields.update(GenericType=bite(generic), Appearance=dword(0), LinkedTo=string(""),
                       LinkedToFlags=bite(0), LoadScreenID=word(0), Locked=bite(1), Lockable=bite(1),
-                      KeyRequired=bite(1), KeyName=string("hvd_no_key"), OnFailToOpen=ref("hvd_doortxt"),
+                      KeyRequired=bite(1), KeyName=string(key), OnFailToOpen=ref("hvd_doortxt"),
                       OnClick=ref(""))
         self.doors.append(Record(8, **fields, **coordinates(x, y, self.z_at(y), bearing)))
         return self

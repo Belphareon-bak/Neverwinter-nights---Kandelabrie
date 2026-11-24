@@ -4,10 +4,10 @@ int HVD_InBox(object trigger, object player)
 {
     vector position = GetPosition(player);
     return GetArea(player) == GetArea(trigger) &&
-        position.x >= IntToFloat(GetLocalInt(trigger, "x0")) &&
-        position.x <= IntToFloat(GetLocalInt(trigger, "x1")) &&
-        position.y >= IntToFloat(GetLocalInt(trigger, "y0")) &&
-        position.y <= IntToFloat(GetLocalInt(trigger, "y1"));
+        position.x >= GetLocalFloat(trigger, "x0") &&
+        position.x <= GetLocalFloat(trigger, "x1") &&
+        position.y >= GetLocalFloat(trigger, "y0") &&
+        position.y <= GetLocalFloat(trigger, "y1");
 }
 
 void HVD_TrapLine(object trigger, int visual)
@@ -16,19 +16,21 @@ void HVD_TrapLine(object trigger, int visual)
     vector right = left;
     if (GetLocalInt(trigger, "axis"))
     {
-        left.y = IntToFloat(GetLocalInt(trigger, "y0"));
-        right.y = IntToFloat(GetLocalInt(trigger, "y1"));
+        left.y = GetLocalFloat(trigger, "y0");
+        right.y = GetLocalFloat(trigger, "y1");
     }
     else
     {
-        left.x = IntToFloat(GetLocalInt(trigger, "x0"));
-        right.x = IntToFloat(GetLocalInt(trigger, "x1"));
+        left.x = GetLocalFloat(trigger, "x0");
+        right.x = GetLocalFloat(trigger, "x1");
     }
     HVD_MarkLine(GetArea(trigger), left, right, visual);
 }
 
 int HVD_TrapDisabled(object trigger)
 {
+    int branch = GetLocalInt(trigger, "branch");
+    if (branch) return branch == HVD_HallBranch();
     string flag = GetLocalString(trigger, "flag");
     return flag != "" && GetLocalInt(HVD_Module(), flag);
 }
@@ -37,6 +39,7 @@ void HVD_TrapBurst(object trigger, int kind, int run)
 {
     if (HVD_Run() != run || HVD_TrapDisabled(trigger)) return;
     object area = GetArea(trigger);
+    int rayMode = GetLocalInt(trigger, "ray_mode");
     HVD_TrapLine(trigger, VFX_IMP_PULSE_COLD);
     object player = GetFirstPC();
     while (GetIsObjectValid(player))
@@ -45,6 +48,8 @@ void HVD_TrapBurst(object trigger, int kind, int run)
             !HVD_Covered(area, GetPosition(trigger), GetPosition(player)))
         {
             if (kind == 1) HVD_Strike(player, trigger, 26, DAMAGE_TYPE_BLUDGEONING, 27, TRUE);
+            else if (rayMode == 1) HVD_Strike(player, trigger, 31, DAMAGE_TYPE_COLD, 28);
+            else if (rayMode == 2) HVD_Strike(player, trigger, 36, DAMAGE_TYPE_FIRE, 29);
             else HVD_Strike(player, trigger, 34, DAMAGE_TYPE_DIVINE, 29);
         }
         player = GetNextPC();
@@ -59,15 +64,27 @@ void HVD_Trap(object trigger, int kind)
     SetLocalInt(trigger, "hvd_busy", HVD_Run());
     if (kind == 1) HVD_AreaMessage(area, "Praporky se napnuly. Kameny ukryjí družinu před poryvem.");
     else HVD_AreaMessage(area, "Po dlažbě běží bledá čára. Ustup z vyznačeného pruhu.");
-    if (GetLocalString(trigger, "flag") == "hvd_hall_off")
+    if (GetLocalInt(trigger, "branch"))
     {
-        location span = Location(area, GetPosition(trigger), 90.0);
+        float facing = GetLocalInt(trigger, "axis") ? 90.0 : 180.0;
+        location span = Location(area, GetPosition(trigger), facing);
         object warning = CreateObject(OBJECT_TYPE_PLACEABLE, "hvd_rayflash", span);
         if (GetIsObjectValid(warning)) DestroyObject(warning, 2.8);
     }
     HVD_TrapLine(trigger, VFX_IMP_SONIC);
     DelayCommand(2.8, HVD_TrapBurst(trigger, kind, HVD_Run()));
     DelayCommand(8.5, DeleteLocalInt(trigger, "hvd_busy"));
+}
+
+void HVD_HallSwitch(object player, int control)
+{
+    if (control < 1 || control > 3) return;
+    string name = control == 1 ? "Paprsková chodba" : (control == 2 ? "Stará filtrovna" : "Archiv");
+    if (HVD_HallBranch() != control)
+        SetLocalInt(HVD_Module(), "hvd_hall_branch", control);
+    HVD_UpdateHallLights();
+    HVD_RefreshHallPanel();
+    HVD_AreaMessage(GetArea(player), name + " · clony zakryly čočky a výboj převzal kamenný záchyt.");
 }
 
 int HVD_CurrentProjection(int run, int attempt)
@@ -176,7 +193,7 @@ void HVD_Dial(object player, int side)
     int angle = (GetLocalInt(module, variable) + 1) % 3;
     SetLocalInt(module, variable, angle);
     HVD_TurnOptics();
-    SendMessageToPC(player, "Clona stojí na rysce " + IntToString(angle + 1) + ".");
+    SendMessageToPC(player, "Clona stojí na rysce " + HVD_RomanMark(angle + 1) + ".");
 }
 
 void HVD_Optics(object player)
@@ -190,14 +207,14 @@ void HVD_Optics(object player)
         return;
     }
     SendMessageToPC(player, "Stupnice objektivu – západ " + IntToString(left) + ", východ " + IntToString(right) + ".");
-    if (left == 2 && right == 3)
+    if (left == HVD_OpticMark(1) && right == HVD_OpticMark(2))
     {
         HVD_OpenPassage("hvd_aligned");
         HVD_AreaMessage(GetArea(player), "Ve skle se potkaly obě oblohy. Schody do nebe jsou průchodné.");
     }
     else
     {
-        SendMessageToPC(player, "Rysky na podstavci ukazují západ II a východ III.");
+        SendMessageToPC(player, "Obrazy se míjejí. Rysky pro tuhle směnu najdeš v deníku u západní stěny.");
         HVD_Trap(GetObjectByTag("hvd_domeray"), 2);
     }
 }
@@ -248,10 +265,11 @@ void HVD_TestOptics(object player)
     object module = HVD_Module();
     int trial = GetLocalInt(module,"hvd_lab_trial") + 1;
     SetLocalInt(module,"hvd_lab_trial",trial);
-    HVD_PlacePart("hvd_lab_light","hvd_lab_trace","hvd_lab_switch",0.0);
+    string markings = IntToString(HVD_OpticMark(1)) + IntToString(HVD_OpticMark(2));
+    HVD_PlacePart("hvd_lab_light","hvd_lab_trace" + markings,"hvd_lab_switch",0.0);
     DelayCommand(5.0,HVD_EndLabTrial(HVD_Run(),trial));
-    SendMessageToPC(player,"Odraz rozsvítil levou rysku II a pravou III. V kopuli nastav západní clonu na II a východní na III. "
-                   +"Záložní zrcadlo pro Poslední stupeň je v pouzdře u pracovního stolu.");
+    SendMessageToPC(player, "Odraz ukázal nastavení pro Kopuli. " + HVD_OpticsReading() +
+                   " Záložní zrcadlo pro Poslední stupeň je v pouzdře u pracovního stolu.");
 }
 
 object HVD_FindMirror()
@@ -266,21 +284,21 @@ object HVD_FindMirror()
     return OBJECT_INVALID;
 }
 
-void HVD_Mount(object player)
+int HVD_Mount(object player)
 {
     if (GetLocalInt(HVD_Module(), "hvd_mounted"))
     {
         SendMessageToPC(player, "Zrcadlo je bezpečně zasazené.");
-        return;
+        return TRUE;
     }
     object mirror = HVD_FindMirror();
     if (!GetIsObjectValid(mirror))
     {
         SendMessageToPC(player, "Do patice patří přenosné zrcadlo z pouzdra ve zkušebně dolních dílen.");
-        return;
+        return FALSE;
     }
     DestroyObject(mirror);
     SetLocalInt(HVD_Module(), "hvd_mounted", TRUE);
     HVD_PlacePart("hvd_socket_mirror", "hvd_mirror_set", "hvd_mirror_mount", 0.0);
-    HVD_AreaMessage(GetArea(player), "Zrcadlo zacvaklo do patice. Zachytí jeden výboj v závěru střetu s Ithrenem.");
+    return TRUE;
 }

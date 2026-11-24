@@ -12,8 +12,14 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
 
 from aurora import TYPE, erf_index, gff_decode
+from flights import deck_bounds
+from navrh_v21 import REPAIR_PASSAGES
+from scree import terrain
 from plan import (DIRECTIONS, JOINS, LANDING_INSET, LANDMARKS, PASSAGE_WIDTH, SECRET_LEVEL,
-                  SECRET_WALKS, THRESHOLD_INSET, TILE, VERSION, WALKS, WORK_YARD_WALLS, ZONES, check_plan)
+                  SECRET_WALKS, SKY_DECKS, TEMPLE_EAVES, THRESHOLD_INSET, TILE, TOP_COLUMNS,
+                  VERSION, WALKS, WORK_YARD_WALLS, ZONES,
+                  bank_outline, check_plan)
+from temple import PLINTH_WIDTH
 
 PAPER = '#f5f2e9'
 INK = '#211f2e'
@@ -33,6 +39,7 @@ FLOORS = {
     'camp': '#d8e2e3', 'rim': '#d8e2e3', 'halls': '#e4d8bd', 'works': '#d7dbe4', 'dome': '#e4d8bd',
     'steps': '#dcd8ec', 'walks': '#d7dcea', 'gate': '#ded8e8', 'top': '#e2d8e7',
     'study': '#cfdfd3',
+    'service': '#d1e7e2',
 }
 
 SCALE = 3.56
@@ -99,7 +106,8 @@ def validate_module(path):
             width = dimensions[0] if expected_facing[1] else dimensions[1]
             if (area != source or zone != target or settings.get('target') != destination
                     or settings.get('require', '') != required
-                    or settings.get('minimum_level', 0) != (SECRET_LEVEL if join.secret else 0)
+                    or settings.get('minimum_level', 0) != (SECRET_LEVEL if join.secret and target == 'study' else 0)
+                    or bool(settings.get('hidden_route')) != join.secret
                     or not same(coordinates(sill), join.point(source, THRESHOLD_INSET))
                     or not same(coordinates(spawn), join.point(target, LANDING_INSET))
                     or not isclose(width, PASSAGE_WIDTH, abs_tol=.01)
@@ -112,6 +120,25 @@ def validate_module(path):
         level = elevations[join.first] + first[0] - first[1]
         if not isclose(elevations.setdefault(join.second, level), level, abs_tol=.01):
             raise ValueError(f'The two paths to {join.second} finish at different heights')
+    for source,target,_,(x0,y0,x1,y1),(x,y,bearing) in REPAIR_PASSAGES:
+        tag = f'hvt_repair_{source}'
+        destination = f'hvd_land_{target}_r1'
+        area, sill = triggers.pop(tag)
+        zone, spawn = landings.pop(destination)
+        settings = {row.value('Name'): row.value('Value') for row in sill.value('VarTable')}
+        center = ((x0+x1)/2, (y0+y1)/2)
+        outline = tuple((v.value('PointX')+center[0], v.value('PointY')+center[1])
+                        for v in sill.value('Geometry'))
+        if (area != source or zone != target or settings.get('target') != destination
+                or bool(settings.get('repair_entry')) != (source == 'halls')
+                or sill.value('ScriptOnEnter') != 'hvd_travel'
+                or not same(coordinates(sill), center)
+                or not all(same(point, expected) for point,expected in
+                           zip(outline, ((x0,y0),(x1,y0),(x1,y1),(x0,y1)), strict=True))
+                or not same(coordinates(spawn), (x,y))
+                or not same((spawn.value('XOrientation'),spawn.value('YOrientation')),DIRECTIONS[bearing])
+                or not same((sill.value('ZPosition'),spawn.value('ZPosition')), (0.0,0.0))):
+            raise ValueError(f'R1 threshold or arrival disagrees with the map at {source}')
     if triggers or landings:
         raise ValueError('The module contains transitions outside the drawing')
 
@@ -152,12 +179,40 @@ def arrow(c, x, y, dx, dy, color):
 
 def floor(c, code, secrets):
     zone = ZONES[code]
+    if zone.banks:
+        banks=zone.banks if secrets else zone.banks[1:]
+        fill(c,FLOORS[code])
+        ink(c,WALL,.54)
+        for band in banks:
+            outline=[px(*zone.world(*point)) for point in bank_outline(band)]
+            shape=c.beginPath()
+            shape.moveTo(*outline[0])
+            for point in outline[1:]:
+                shape.lineTo(*point)
+            shape.close()
+            c.drawPath(shape,fill=1,stroke=0)
+        boundary=terrain()[1]
+        visible_y=banks[0][0][0]
+        for a,b in sorted(boundary):
+            if min(a[1],b[1])>=visible_y:
+                c.line(*px(*zone.world(*a)),*px(*zone.world(*b)))
+        if not secrets:
+            y,l,r=banks[0][0]
+            c.line(*px(*zone.world(l,y)),*px(*zone.world(r,y)))
+        return
     boxes = zone.floor
+    if code in SKY_DECKS:
+        boxes = []
+        for row in range(zone.size[1]):
+            for col in range(zone.size[0]):
+                bounds = deck_bounds(code,col,row)
+                if bounds:
+                    l,b,r,t = bounds
+                    boxes.append((round(TILE*(col+.5)+l,4),TILE*(row+.5)+b,
+                                  round(TILE*(col+.5)+r,4),TILE*(row+.5)+t))
     if not secrets:
         if code == 'rim':
             boxes = tuple(r for r in boxes if r[0] < 50)
-        if code == 'walks':
-            boxes = tuple(r for r in boxes if r[:2] != (70, 0))
     xs = sorted({v for l, _, r, _ in boxes for v in (l, r)})
     ys = sorted({v for _, lo, _, hi in boxes for v in (lo, hi)})
     cells = {}
@@ -185,10 +240,20 @@ def floor(c, code, secrets):
         ink(c,WALL,1.65)
         for a,b in WORK_YARD_WALLS:
             c.line(*px(*zone.world(*a)),*px(*zone.world(*b)))
+    if code == 'top':
+        l,b,r,t = TEMPLE_EAVES
+        ink(c,FRAME,.85)
+        fill(c,'#eee0c8')
+        c.rect(*px(*zone.world(l,b)),(r-l)*SCALE,(t-b)*SCALE,fill=1,stroke=1)
+        fill(c,WALL)
+        for x,y in TOP_COLUMNS:
+            half = PLINTH_WIDTH/2
+            c.rect(*px(*zone.world(x-half,y-half)),PLINTH_WIDTH*SCALE,PLINTH_WIDTH*SCALE,
+                   fill=1,stroke=0)
     for row in sorted({row for _, row in zone.stairs}):
         left, bottom = px(*zone.world(0, row*TILE))
         step = TILE * SCALE
-        if code != 'steps':
+        if code not in SKY_DECKS:
             fill(c, '#b0adc4')
             c.rect(left, bottom, zone.size[0]*step, step, fill=1, stroke=0)
         for xmin, xmax in zone.flights(row):
@@ -204,7 +269,7 @@ def floor(c, code, secrets):
 
 def grid(c, secrets):
     for code, zone in ZONES.items():
-        if code == 'study' and not secrets:
+        if code == 'service' or (code == 'study' and not secrets):
             continue
         x, y = px(*zone.world(0, 0))
         w, h = zone.size
@@ -234,8 +299,8 @@ def grid(c, secrets):
         c.restoreState()
 
 
-def route(c, secrets):
-    for code, walks in WALKS.items():
+def route(c, secrets, *, routes=WALKS):
+    for code, walks in routes.items():
         if code == 'dome':
             bed, line = DOME_BED, DOME_ROUTE
         elif code in ('camp', 'rim', 'halls', 'works'):
@@ -273,17 +338,17 @@ def route(c, secrets):
         text(c, bx, by-3.1, join.label, 8.3, color=color, bold=True, align='center')
 
 
-def captions(c, secrets):
+def captions(c, secrets, *, descriptions=None, landmarks=LANDMARKS):
     detail = {
         'camp': (1.45, True, 'Zásoby a jediná stezka na římsu'),
-        'rim': (4.1, True, 'Jediná veřejná brána do Zkušebny'),
+        'rim': (4.1, True, 'Jediná veřejná brána do vstupní síně'),
         'halls': (9.4, True, 'Z jižní síně do horní dílny'),
         'works': (11.4, False, 'Zděná síň, dvory a servisní lávka'),
         'dome': (17.7, False, 'Refraktor mezi oběma okruhy'),
         'steps': (25.3, False, 'Tři ramena široká 18,2 m, dvě mezipodesty'),
-        'walks': (25.3, True, 'Dva mosty a horní výstup'),
+        'walks': (25.3, True, 'Zmrzlé římsy, dvě svatyně a horní výstup'),
         'gate': (33.3, True, 'Místo, kde se obě ramena setkají'),
-        'top': (40.6, True, 'Ithren a návratová lucerna'),
+        'top': (40.6, True, 'Dórský chrám a Poslední lucerna'),
         'study': (14.35, True, 'Archiv a služební výstup 38+'),
     }
     for code, (row, east, description) in detail.items():
@@ -302,8 +367,10 @@ def captions(c, secrets):
         text(c,label_x,y+8,zone.title,14.5,bold=True)
         w,h = zone.size
         text(c,label_x,y-10,f'{w} × {h} dlaždic  ·  {w*TILE} × {h*TILE} m',10.7,color=DOOR,bold=True)
+        if descriptions:
+            description = descriptions.get(code, description)
         text(c,label_x,y-26,description,9.6,color=MUTED)
-    for code, markers in LANDMARKS.items():
+    for code, markers in landmarks.items():
         if code == 'study' and not secrets:
             continue
         for x, y, label in markers:
@@ -337,14 +404,14 @@ def draw(target, module, fonts, secrets):
     ink(c, GRID, 1)
     c.line(43, 1712, 1060, 1712)
     for code in ZONES:
-        if code != 'study' or secrets:
+        if code not in ('study', 'service') or secrets:
             floor(c,code,secrets)
     grid(c,secrets)
     route(c,secrets)
     captions(c,secrets)
     for y, color, name, levels, line in (
-        (346, ROUTE, 'Dolní okruh', '35–37', 'Dílny a Chodby clon uvnitř hvězdárny'),
-        (1336, HIGH_ROUTE, 'Horní okruh', '38–40', 'Schody a Ochozy vedou k bráně'),
+        (346, ROUTE, 'Dolní okruh', '34–38', 'Dílny a Chodby clon uvnitř hvězdárny'),
+        (1336, HIGH_ROUTE, 'Horní okruh', '37–40', 'Schody a Ochozy vedou k bráně'),
     ):
         text(c,43,y,name,16,color=color,bold=True)
         text(c,43,y-29,levels,21,color=color,bold=True)

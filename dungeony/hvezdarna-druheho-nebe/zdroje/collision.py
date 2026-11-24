@@ -4,6 +4,10 @@ from math import cos, hypot, sin, tau
 
 from architecture import CHECKPOINT_WALLS
 from interiors import YARD_MODELS
+from navrh_v21 import RUBBLE
+from shrines import footprint as shrine_footprint
+from sunrepair import rubble_origin
+from temple import PLINTH_WIDTH
 
 
 def rectangle(x, y, width, depth):
@@ -24,6 +28,7 @@ def shelter(offset):
 
 
 FOOTPRINTS = {
+    "hvd_doric": (rectangle(0,0,PLINTH_WIDTH,PLINTH_WIDTH),),
     "hvd_octagon": (*arch_feet(3.43,.79,1.04,-6), *arch_feet(3.43,.79,1.04,6),
                     *arch_feet(3.60,.70,8.4), *arch_feet(5.78,.56,5.65,.1)),
     "hvd_plinth": (ring(1.99),),
@@ -36,6 +41,7 @@ FOOTPRINTS = {
     "hvd_rail": (rectangle(0,0,4.88,.36),),
     "hvd_tallpier": (rectangle(0,0,1.76,1.76),),
     "hvd_brokpier": (rectangle(0,0,1.5,1.5),),
+    "hvd_ledgecover": (rectangle(0,0,1.95,1.44),),
     "hvd_wallpanel": (rectangle(0,0,4.96,.63),),
     "hvd_wallfoot": (rectangle(0,0,4.96,.63),),
     "hvd_window": (rectangle(0,0,2.65,.55),),
@@ -43,11 +49,16 @@ FOOTPRINTS = {
     "hvd_shutwin": (rectangle(0,-.25,2.87,.60),),
     "hvd_facade": (rectangle(0,-.04,5.80,.64),),
     "hvd_campshell": shelter(3.74),
+    "hvd_camplodge": (rectangle(0,2.32,9.2,.48),rectangle(-4.36,.18,.50,4.64),
+                      rectangle(4.36,.18,.50,4.64),*arch_feet(3.26,2.66,.44,-2.07),
+                      *arch_feet(3.28,.26,.31,-2.65)),
     "hvd_shoproof": shelter(3.38),
     "hvd_crag": (rectangle(0,0,7.8,6.8),),
     "hvd_sliprock": (rectangle(0,0,5.86,1.90),),
     "hvd_talus": (rectangle(0,0,5.9,2.16),),
     "hvd_serviceslab": (rectangle(0,0,5.94,.55),),
+    "hvd_walks_rock": (rectangle(0,0,5.25,.64),),
+    "hvd_adit_mouth": tuple(rectangle(x,0,.67,5.27) for x in (-2.86,2.86)),
     "hvd_entrywalls": tuple(rectangle(*wall) for wall in CHECKPOINT_WALLS),
     "hvd_bulkhead": arch_feet(2.48,.33,.56),
     "hvd_gateblind": (rectangle(0,-.024,5.69,.49),),
@@ -81,9 +92,29 @@ FOOTPRINTS = {
     "hvd_gatepull": (ring(.73),),
     "hvd_arc_cabinet": (rectangle(0,-.03,5.94,.55),),
     "hvd_lab_source": (ring(.78),),
+    "hvd_dome_mirror": (rectangle(0,.04,1.73,.74),),
+    "hvd_sunstand": (ring(.52),),
+    "hvd_suncatch": (ring(.74),),
+    "hvd_sunshaft": tuple(rectangle(1.67,side*.94,.53,.59) for side in (-1,1)),
+    "hvd_teststop": (ring(.21),),
+    "hvd_irisstand": (ring(.49),),
+    "hvd_green_eye": (ring(.32),),
+    "hvd_green_star": (ring(.32),),
+    "hvd_fixedoptic": (ring(.21),),
+    "hvd_tholos_k": shrine_footprint(),
+    "hvd_tholos_l": shrine_footprint(),
     "hvd_gong": (rectangle(0,.14,2.24,.79),),
+    "hvd_rimbolt": (rectangle(0,.06,.46,.28),),
+    "hvd_stockrack": (rectangle(0,0,3.23,.90),),
+    "hvd_quench": (rectangle(0,0,1.99,.87),),
+    "hvd_lenscrate": (rectangle(0,0,2.89,1.18),),
+    "hvd_lenscheck": (rectangle(0,0,2.36,1.18),),
+    "hvd_polishtray": (rectangle(0,0,2.11,.75),),
+    "hvd_lab_screen": (rectangle(0,.04,1.64,.22),),
     "hvd_workroof": (rectangle(0,1.78,6.9,.48), *arch_feet(3.18,1.03,1.08,-.70),
                      *arch_feet(3.18,.44,1.15,1.32)),
+    "hvd_dispatch": (rectangle(0,1.78,10.21,.48), *arch_feet(4.706,1.524,1.08,-.70),
+                     *arch_feet(4.706,.651,1.15,1.32)),
     "hvd_grinder": (rectangle(0,0,2.60,1.21),),
     "hvd_smithbench": (rectangle(0,0,2.76,1.16),),
     "hvd_capstan": (rectangle(0,0,2.04,1.46),),
@@ -102,9 +133,18 @@ FOOTPRINTS = {
     "hvd_headhouse": (*arch_feet(2.64,.69,2.78,.65),),
     "hvd_optcover": (rectangle(0,.06,5.85,.33),),
     "hvd_signallamp": (ring(.88),),
+    "hvd_letout": (rectangle(0,.05,1.25,1.10),),
+    "hvd_lightdump": (rectangle(0,.06,1.70,.90),),
+    "hvd_lighttower": (ring(3.045),),
     "hvd_flankwalls": arch_feet(5.12,3.13,3.60,.29),
     "hvd_bridgeedge": arch_feet(1.78,.24,18.10),
 }
+
+for index,shape in enumerate(RUBBLE):
+    ox,oy=rubble_origin(shape)
+    polygon=tuple((x-ox,y-oy) for x,y in shape)
+    area=sum(x*v-y*u for (x,y),(u,v) in zip(polygon,polygon[1:]+polygon[:1]))
+    FOOTPRINTS[f'hvd_collapse{index}']=(polygon if area>0 else polygon[::-1],)
 
 for model,((x,y),(xx,yy)) in YARD_MODELS.items():
     dx,dy=xx-x,yy-y
@@ -118,12 +158,16 @@ USE_POINTS = {
     "hvd_sealstand": ((0,-1.18), (0,1.18)),
     "hvd_beacon": ((0,-1.24), (0,1.24)),
     "hvd_wallring": ((0,-.89),),
+    "hvd_rimbolt": ((0,-.79),),
     "hvd_gate_pod": ((0,-1.45),(1.34,.04)),
     "hvd_clamp_pod": ((0,-1.43),(1.40,.05)),
     "hvd_gatepull": ((0,-1.22),),
     "hvd_lab_source": ((0,-1.24),(1.20,0)),
     "hvd_gong": ((0,-1.12),(0,1.08)),
-    "hvd_signallamp": ((.48,-1.10),(1.11,-.48),(-.08,-1.23)),
+    "hvd_signallamp": ((.48,-1.10),(1.11,-.48)),
+    "hvd_letout": ((.42,-1.12),(-.93,-.72)),
+    "hvd_sunstand": ((1.13,0),(-1.13,0)),
+    "hvd_suncatch": ((-1.27,0),(0,-1.28)),
 }
 
 

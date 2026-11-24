@@ -844,6 +844,7 @@ MODELS = {
 }
 
 SKY_MODELS = {
+    "hvd_ledgecover": lambda: rock_mound(219, True, .99, 1.28),
     "hvd_wallchart": wall_chart, "hvd_lining": wall_lining, "hvd_lensrack": lens_rack,
     "hvd_wallring": ring_handle, "hvd_bookpanel": lambda: concealed_panel(True),
     "hvd_stonepanel": concealed_panel, "hvd_skyport": sky_portal,

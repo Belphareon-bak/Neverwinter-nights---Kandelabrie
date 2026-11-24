@@ -1,3 +1,5 @@
+const int HVD_REWARD_CATEGORIES = 6;
+
 void HVD_Stock(object chest, string resource, int quantity = 1)
 {
     if (!GetIsObjectValid(chest)) return;
@@ -68,8 +70,9 @@ void HVD_ResetStores()
     HVD_ClearStock("hvd_mirror_case");
     HVD_ClearStock("hvd_work_cache", TRUE);
     HVD_ClearStock("hvd_guard_cache");
-    HVD_ClearStock("hvd_cloak_reward", TRUE);
-    HVD_ClearStock("hvd_badge_reward", TRUE);
+    int category;
+    for (category = 1; category <= HVD_REWARD_CATEGORIES; ++category)
+        HVD_ClearStock("hvd_reward_" + IntToString(category), TRUE);
     HVD_ClearStock("hvd_walk_cache");
     HVD_ClearStock("hvd_study_cache");
     HVD_ClearStock("hvd_test_case");
@@ -100,14 +103,22 @@ int HVD_RewardCount()
     return pending;
 }
 
+void HVD_FillRewardChest(object chest)
+{
+    int pending = HVD_RewardCount();
+    int count = GetLocalInt(chest, "reward_count");
+    int index;
+    for (index = 1; index <= count; ++index)
+        HVD_FillReward(chest, GetLocalString(chest, "reward_" + IntToString(index)), pending);
+}
+
 void HVD_OpenRewardStores()
 {
-    object cloaks = GetObjectByTag("hvd_cloak_reward");
-    object badges = GetObjectByTag("hvd_badge_reward");
-    int pending = HVD_RewardCount();
-    HVD_FillReward(cloaks, "hvd_cloak", pending);
-    HVD_FillReward(badges, "hvd_badge", pending);
-    HVD_Stock(cloaks, "hvd_glass", pending);
-    SetLocked(cloaks, FALSE);
-    SetLocked(badges, FALSE);
+    int category;
+    for (category = 1; category <= HVD_REWARD_CATEGORIES; ++category)
+    {
+        object chest = GetObjectByTag("hvd_reward_" + IntToString(category));
+        HVD_FillRewardChest(chest);
+        SetLocked(chest, FALSE);
+    }
 }

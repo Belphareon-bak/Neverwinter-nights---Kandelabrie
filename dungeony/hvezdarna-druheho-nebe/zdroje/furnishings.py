@@ -3,7 +3,7 @@
 from math import cos, pi, sin
 from struct import pack
 
-from architecture import BASALT, ICE, LIMESTONE, MASONRY, OLDWOOD, PALE, PARCHMENT, WOOD
+from architecture import BASALT, ICE, LIMESTONE, MASONRY, OLDWOOD, PALE, PARCHMENT, SLATE, SNOW, WOOD, rosette, surface
 from art import BRASS, DARK, GILT, TRIM, Material, Mesh, arch
 
 
@@ -38,6 +38,66 @@ def service_roof():
         m.polygon(WOOD, tuple(reversed(sheet)))
         m.tube(BRASS, sheet[0], sheet[-1], .026, sides=5)
     return m
+
+
+def dispatch_shed():
+    mesh = Mesh()
+    for material,polygons in service_roof().faces.items():
+        for points,uv in polygons:
+            mesh.polygon(material,[(x*1.48,y,z) for x,y,z in points],uv)
+    # The lifting beam joins the two posts and takes the pulley load.
+    mesh.box(OLDWOOD,0,-.70,2.60,9.61,.40,.31)
+    for x in (-4.55,4.55):
+        mesh.tube(WOOD,(x,-.70,2.0),(x*.78,-.70,2.63),.126,sides=7)
+    return mesh
+
+
+def camp_lodge():
+    mesh = Mesh()
+    mesh.box(MASONRY,0,2.32,0,9.20,.48,2.96,tile_uv=.34)
+    mesh.box(SLATE,0,0,2.89,9.67,5.21,.19)
+    surface(mesh,WOOD,-4.30,-2.05,4.30,2.14,.023,.54)
+    surface(mesh,SLATE,-1.92,-2.81,1.92,-2.04,.019,.42)
+    for side in (-1,1):
+        x = 4.36*side
+        mesh.box(BASALT,x,.18,0,.50,4.64,.44)
+        mesh.box(MASONRY,x,.18,.44,.44,4.64,2.57,tile_uv=.35)
+        mesh.box(MASONRY,3.26*side,-2.07,0,2.66,.44,3.03,tile_uv=.34)
+        mesh.box(OLDWOOD,3.28*side,-2.65,0,.26,.31,2.67)
+        mesh.box(BRASS,3.28*side,-2.65,2.58,.41,.38,.11)
+        roof = ((-4.86,.18,4.34),(4.86,.18,4.34),(4.86,.18+side*3.32,3.05),
+                (-4.86,.18+side*3.32,3.05))
+        top = roof if side>0 else roof[::-1]
+        mesh.polygon(SNOW,top,[(x*.3,y*.4) for x,y,_ in top])
+        mesh.polygon(WOOD,top[::-1])
+        mesh.box(OLDWOOD,0,.18+side*3.30,2.97,9.85,.19,.15)
+        mesh.tube(OLDWOOD,(4.78*side,.18,4.28),(4.78*side,-3.14,3.0),.102,sides=6)
+    mesh.box(OLDWOOD,0,-2.65,2.64,7.18,.31,.28)
+    mesh.box(SLATE,0,-2.07,2.83,4.05,.48,.20)
+    for x in (-3.22,3.22):
+        mesh.box(LEATHER,x,-2.305,1.10,1.48,.032,.92)
+        for z in (1.19,1.92):
+            mesh.box(OLDWOOD,x,-2.34,z,1.54,.084,.13)
+        rosette(mesh,x,-2.344,1.57,.29,PALE,4)
+    mesh.box(MASONRY,2.9,1.95,2.70,1.03,1.05,1.85,tile_uv=.33)
+    mesh.box(BASALT,2.9,1.95,4.49,1.24,1.24,.21)
+    return mesh
+
+
+def entry_emblem():
+    mesh = Mesh()
+    mesh.box(BASALT,0,.08,.50,4.36,.43,4.74)
+    mesh.box(LIMESTONE,0,.026,.40,4.52,.58,.18)
+    mesh.box(LIMESTONE,0,.026,5.22,4.52,.58,.18)
+    for x in (-2.00,2.00):
+        mesh.box(LIMESTONE,x,.014,.57,.22,.49,4.67)
+    for radius in (.93,1.43):
+        mesh.disc(BRASS,(0,-.145,3.61),(0,-.24,3.61),radius,sides=24)
+        mesh.disc(SLATE,(0,-.24,3.61),(0,-.265,3.61),radius-.067,sides=24)
+    rosette(mesh,0,-.292,3.61,1.23,PALE)
+    for x,z in ((-1.55,2.06),(1.55,2.06),(0,1.56),(-1.66,4.53),(1.66,4.53)):
+        rosette(mesh,x,-.191,z,.16,GILT,4)
+    return mesh
 
 
 def lab_eaves():
@@ -288,6 +348,9 @@ def stair_headhouse():
 
 SCENERY = {
     'hvd_workroof': ('Měděná střecha servisní dílny', service_roof),
+    'hvd_dispatch': ('Trámový zdvih expedice', dispatch_shed),
+    'hvd_camplodge': ('Kamenný horský nocleh', camp_lodge),
+    'hvd_entry_arm': ('Znak hvězdárny v severní stěně', entry_emblem),
     'hvd_lab_eaves': ('Měděná střecha nad zkušebním stolem', lab_eaves),
     'hvd_forge_flue': ('Kamenný komín s odtahem nad výhní', forge_flue),
     'hvd_filterbench': ('Kontrolní stolec pro osazené filtry', filter_table),
@@ -312,6 +375,25 @@ BOOK_COLORS = (
     (95, 79, 101), (102, 84, 50), (67, 105, 91), (119, 87, 57),
 )
 BOOK_MODELS = {stock: 244 + stock for stock in range(2, 11)}
+
+
+def star_cloak_assets(game):
+    # Keep the native fit on all playable races. Give the embroidery its own
+    # palette texture so the stars remain legible under the observatory's light.
+    table = game.read('cloakmodel','2da').decode('latin-1').rstrip()
+    model = max(int(line.split()[0]) for line in table.splitlines()[3:] if line.strip()) + 1
+    assets = {'cloakmodel.2da':
+              (table+f'\n{model}  DruhaObloha  5  {model}  {model}  1  0  1  1  default\n').encode('latin-1')}
+    for prefix in ('cloak_','icloak_m_'):
+        target = f'{prefix}{model:03d}'
+        if (target,6) in game.index:
+            raise ValueError(f'The cloak palette resource {target} is already used')
+        layer = bytearray(game.read(f'{prefix}015','plt'))
+        for pixel in range(24,len(layer),2):
+            if layer[pixel+1] in (2,3):
+                layer[pixel] = 180 + layer[pixel] * 75 // 255
+        assets[f'{target}.plt'] = bytes(layer)
+    return model, assets
 
 
 def book_assets():

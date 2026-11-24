@@ -8,15 +8,15 @@ void RespawnWhenEmpty(object area, int visit, int run)
         if (!GetLocalInt(HVD_Module(), "hvd_won")) HVD_ResetBoss();
         return;
     }
-    HVD_DestroyMobs(area);
-    DeleteLocalInt(area, "hvd_armed");
-    DeleteLocalInt(area, "hvd_push");
+    HVD_ResetEncounters(area);
 }
 
 void main()
 {
-    if (!GetIsPC(GetExitingObject())) return;
-    float delay = 105.0;
+    object player = GetExitingObject();
+    if (!GetIsPC(player)) return;
+    if (HVD_WindyArea(OBJECT_SELF)) HVD_RemoveUpperWind(player);
+    float delay = 450.0;
     if (GetTag(OBJECT_SELF) == "hvd_top") delay = 1.0;
     DelayCommand(delay, RespawnWhenEmpty(OBJECT_SELF, GetLocalInt(OBJECT_SELF, "hvd_visit"), HVD_Run()));
 }
