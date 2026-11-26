@@ -81,7 +81,10 @@ void HVD_HallSwitch(object player, int control)
     if (control < 1 || control > 3) return;
     string name = control == 1 ? "Paprsková chodba" : (control == 2 ? "Stará filtrovna" : "Archiv");
     if (HVD_HallBranch() != control)
+    {
         SetLocalInt(HVD_Module(), "hvd_hall_branch", control);
+        PlaySound("as_sw_lever1");
+    }
     HVD_UpdateHallLights();
     HVD_RefreshHallPanel();
     HVD_AreaMessage(GetArea(player), name + " · clony zakryly čočky a výboj převzal kamenný záchyt.");
@@ -193,6 +196,7 @@ void HVD_Dial(object player, int side)
     int angle = (GetLocalInt(module, variable) + 1) % 3;
     SetLocalInt(module, variable, angle);
     HVD_TurnOptics();
+    PlaySound("as_sw_lever1");
     SendMessageToPC(player, "Clona stojí na rysce " + HVD_RomanMark(angle + 1) + ".");
 }
 

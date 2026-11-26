@@ -125,6 +125,7 @@ class Area:
     waypoints: list = field(default_factory=list)
     triggers: list = field(default_factory=list)
     doors: list = field(default_factory=list)
+    sounds: list = field(default_factory=list)
     encounter_positions: dict = field(default_factory=dict)
     rises: tuple = ()
     relief: tuple = ()
@@ -246,6 +247,20 @@ class Area:
         self.doors.append(Record(8, **fields, **coordinates(x, y, self.z_at(y), bearing)))
         return self
 
+    def sound(self, tag, name, wave, x, y, *, radius, volume, elevation=1.0, min_distance=1.5,
+              active=True, loop=True, interval=0, variation=0):
+        self.sounds.append(Record(
+            6, Tag=string(tag), LocName=loc(name), Active=bite(active),
+            Continuous=bite(bool(interval)), Looping=bite(loop and not interval),
+            Positional=bite(1), RandomPosition=bite(0), Random=bite(0),
+            Elevation=flt(elevation), MaxDistance=flt(radius), MinDistance=flt(min_distance),
+            RandomRangeX=flt(0.0), RandomRangeY=flt(0.0),
+            Interval=dword(interval), IntervalVrtn=dword(variation), PitchVariation=flt(0.0),
+            Priority=bite(3 if not interval else 12), Hours=dword(0), Times=bite(3),
+            Volume=bite(volume), VolumeVrtn=bite(0), Sounds=lst([Record(0, Sound=ref(wave))]),
+            GeneratedType=dword(0), XPosition=flt(x), YPosition=flt(y), ZPosition=flt(self.z_at(y)),
+        ))
+
     def records(self, tileset):
         indoor = self.tileset in ("tni02", "hvd_interior")
         mountain = self.tileset == "tts02"
@@ -278,7 +293,7 @@ class Area:
         ambient.fields.update(self.soundscape)
         lists = {
             "Creature List": [], "Door List": self.doors, "Encounter List": [], "List": [],
-            "SoundList": [], "StoreList": [], "TriggerList": self.triggers,
+            "SoundList": self.sounds, "StoreList": [], "TriggerList": self.triggers,
             "WaypointList": self.waypoints, "Placeable List": self.places,
         }
         git = Record(AreaProperties=(STRUCT, ambient), **{k: lst(v) for k, v in lists.items()})

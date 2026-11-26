@@ -7,7 +7,7 @@ from gateart import GATE, SHUTTER, SOCKETS
 from interiors import TILESET, tile_assignments
 from lightart import (ADIT_CENTER, LAST_LANTERN, LAST_TOWER, LANTERN_SINK, LANTERN_TURN,
                       REFRACTOR, STAIR_PORTAL)
-from navrh_v21 import ACCESS_DOOR, ACCESS_SIGN, R1_SAFE_RETURN, REPAIR_PASSAGES, SHRINES, SOURCE
+from navrh_v21 import ACCESS_DOOR, ACCESS_SIGN, OUTLET, PRISM, R1_SAFE_RETURN, REPAIR_PASSAGES, SHRINES, SOURCE
 from plan import (ENTRY_X, GATE_CLERK, GATE_REST, GATE_WEST_BAY, RIM_ENTRY_X, STORM_CABINET,
                   TOP_COLUMNS, TOP_GUARDS, TOP_MIRROR, WING_POST, WORK_STATIONS, ZONES,
                   check_plan)
@@ -18,7 +18,8 @@ from world import Area, color, variables
 
 
 def scene(art, key, title, tileset, purpose, *,
-          ambient, diffuse, fog, sky=0, music=49, battle=71, wind=67, flight=None, tiles=None):
+          ambient, diffuse, fog, sky=0, music=49, battle=71, wind=67, wind_volume=57,
+          flight=None, tiles=None):
     plan = ZONES[key[4:]]
     special_tiles = dict(tiles or {})
     for x in plan.bridges:
@@ -39,7 +40,8 @@ def scene(art, key, title, tileset, purpose, *,
                          ShadowOpacity=bite(38),
                          ChanceSnow=integer(48 if key in ("hvd_camp", "hvd_rim") else 0))
     area.soundscape.update(MusicNight=integer(music), MusicDay=integer(music), MusicBattle=integer(battle),
-                           AmbientSndNight=integer(wind), AmbientSndDay=integer(wind))
+                           AmbientSndNight=integer(wind), AmbientSndDay=integer(wind),
+                           AmbientSndDayVol=integer(wind_volume), AmbientSndNitVol=integer(wind_volume))
     return area
 
 
@@ -85,16 +87,24 @@ def cloudbed(area, x, y):
     feature(area, "hvd_cloudbed", "Mraky pod římsou", x, y, z=1.3)
 
 
+def chasm_gust(area, name, x, y, interval):
+    area.sound("hvd_sfx_gust", name, "as_wt_gustchasm1", x, y, radius=11.0,
+               volume=59, elevation=0.8, interval=interval, variation=9000)
+
+
 def camp(art):
     a = scene(art, "hvd_camp", "Horský tábor", "tts02",
               "Kamenný nocleh, společné ohniště, zásobárna a jediná horská cesta.",
-              ambient=(95,111,148), diffuse=(199,209,233), fog=2, sky=4, music=92, wind=31,
+              ambient=(95,111,148), diffuse=(199,209,233), fog=2, sky=4, music=92, wind=30, wind_volume=27,
               tiles={(2, row): (116, 0) for row in (1,2,3)})
     a.point("hvd_start",27,16,82,"Tábor · počátek výpravy")
     a.find("hvd_book_camp",17.57,24.32,height=.88,clue=1)
     a.stash(7,"Výpravní bedna",37.67,24.14,"hvd_supply",
             text="Společná výstroj a zásoby pro výpravu z horského noclehu.")
-    a.prop(58,"Ohniště v závětří",20.9,15.36,action="rest",tag="hvd_campfire")
+    fire = (20.9, 15.36)
+    a.prop(58, "Ohniště v závětří", *fire, action="rest", tag="hvd_campfire")
+    a.sound("hvd_sfx_fire", "Praskání táborového ohně", "al_cv_firecamp1", *fire,
+            radius=10.0, volume=70, elevation=0.45)
     feature(a,"hvd_dial","Pult nové výpravy",22.78,23.68,action="reset",tag="hvd_reset",
             text="Družina se musí sejít u noclehu. Druhé použití vypraví novou hlídku.")
     fixture(a, [
@@ -104,7 +114,7 @@ def camp(art):
         (97,"Stůl výpravy pod zadní stěnou",17.58,24.34,0),
         (49,"Zásobní sud",40.95,23.09,0),
     ])
-    light(a,20.9,15.36,15109,1.3)
+    light(a,*fire,15109,1.3)
     return a
 
 
@@ -176,13 +186,17 @@ def light_service(art):
               tiles=tile_assignments("hvd_service"))
     furnish_solar_service(a)
     light(a,*SOURCE,15113,height=3.15)
+    a.sound("hvd_sfx_prism", "Hučení napájeného hranolu", "al_mg_ballmagic1", *PRISM,
+            radius=8.0, volume=34, elevation=1.5, active=False)
+    a.sound("hvd_sfx_outbell", "Tón potvrzeného světla u výstupu", "as_cv_bell1", *OUTLET,
+            radius=34.0, volume=127, elevation=1.5, min_distance=9.0, active=False, loop=False)
     return a
 
 
 def workshops(art, tiles):
     a = scene(art, "hvd_works", "Dílny a servisní lávka", "tcm02",
               "Klenutá vstupní síň, dvůr zkušebny a kovárny, servisní lávka a horní přijímací dvůr.",
-              ambient=(94, 103, 133), diffuse=(183, 184, 205), fog=1, sky=4, music=49, wind=202,
+              ambient=(94, 103, 133), diffuse=(183, 184, 205), fog=1, sky=4, music=49, wind=30, wind_volume=27,
               tiles=tiles)
     a.fixed_tiles = True
     a.point("hvd_entry",ENTRY_X,15.0,90,"Vstupní síň · Zkušebna vlevo, Chodby clon vpravo")
@@ -193,6 +207,10 @@ def workshops(art, tiles):
     a.point("hvd_work_flow", 35.75, 17.55, 90, "Příjem materiálu a kovárna objímek")
     dispatch_x, dispatch_y = WORK_STATIONS['dispatch']
     a.point("hvd_work_ship", dispatch_x, dispatch_y-2.4, 90, "Přejímka a expedice ke Kopuli")
+    a.sound("hvd_sfx_hoist", "Zavrzání navijáku pod napnutým lanem", "as_cv_woodframe1",
+            dispatch_x, dispatch_y, radius=8.0, volume=83, elevation=1.3, min_distance=2.5,
+            interval=17000, variation=6000)
+    chasm_gust(a, "Poryv pod servisní lávkou", 25.0, 35.2, 21000)
     cloudbed(a, 29, 34)
     a.trap("Poryv při vstupu na dvůr","hvd_wind",(40,12.9,49,17.8),hazard=1)
     wind_pack(a,"dvur","Vítr mezi dvěma dílnami",((37.2,12.1,39.8,17.9),(22.31,17.4,27.66,19.55)),
@@ -236,6 +254,8 @@ def dome(art):
     feature(a,"hvd_starmap","Mosazná mapa dvojí oblohy",*REFRACTOR)
     feature(a,"hvd_plinth","Prasklý refraktor",*REFRACTOR,tag="hvd_refractor",action="optics",
             text="V deníku u západní stěny je poslední měření. Nastav podle něj obě clony a vrať se k objektivu.")
+    a.sound("hvd_sfx_dome", "Hučení seřízeného refraktoru", "al_mg_ballmagic1", *REFRACTOR,
+            radius=9.0, volume=39, elevation=2.2, active=False)
     feature(a,"hvd_console","Západní clona",21,29,action="dial",dial=1,tag="hvd_dial_w")
     feature(a,"hvd_console","Východní clona",39,29,action="dial",dial=2,tag="hvd_dial_e")
     feature(a,"hvd_logstand","Pozorovací stolec s deníkem",14.02,32.31,bearing=90)
@@ -249,10 +269,13 @@ def dome(art):
 def steps(art, terrain):
     a = scene(art, "hvd_steps", "Schody do nebe", "tcm02",
               "Tři osmnáctimetrová ramena nesou podestu pozorovatelů a bouřnou podestu. Východní lávka vede na Ochozy.",
-              ambient=(100,115,159), diffuse=(206,209,242), fog=1, sky=4, music=128, wind=202,
+              ambient=(100,115,159), diffuse=(206,209,242), fog=1, sky=4, music=128, wind=30, wind_volume=35,
               flight=terrain.flight)
     a.fixed_tiles = True
     a.special_tiles = terrain.decks['steps']
+    chasm_gust(a, "Poryv na okraji dolního ramene", 38.55, 18.6, 23000)
+    chasm_gust(a, "Poryv u měřicí podesty", 48.72, 38.6, 29000)
+    chasm_gust(a, "Poryv nad třetím ramenem", 41.8, 79.8, 25000)
     cloudbed(a,34,48)
     feature(a,"hvd_storm_inlay","Rozeta bouřné komory",33,54.65)
     feature(a,"hvd_sealstand","Hnízdo Pečeti křídla",*WING_POST,action="seal",seal=2,tag="hvd_wing_seal")
@@ -282,9 +305,15 @@ def steps(art, terrain):
 def walks(art, terrain):
     a = scene(art, "hvd_walks", "Visuté ochozy", "tcm02",
               "Dvě zmrzlé stezky stoupají ke kruhovým svatyním Kopí a Lucerny.",
-              ambient=(111,121,151), diffuse=(196,210,240), fog=2, sky=4, music=103, wind=202)
+              ambient=(111,121,151), diffuse=(196,210,240), fog=2, sky=4, music=103, wind=30, wind_volume=36)
     a.fixed_tiles = True
     a.special_tiles = terrain.decks['walks']
+    chasm_gust(a, "Poryv pod západním ochozem", 22.73, 40.55, 25000)
+    chasm_gust(a, "Poryv ve východní zatáčce", 61.65, 57.02, 31000)
+    chasm_gust(a, "Poryv u horního hřebene", 14.75, 94.95, 28000)
+    for x, y, interval in ((29.33, 23.4, 19000), (64.37, 48.3, 26000)):
+        a.sound("hvd_sfx_ice", "Praskání ledu na kraji ochozu", "as_na_x2iccrak1", x, y,
+                radius=8.5, volume=75, elevation=0.2, min_distance=2.0, interval=interval, variation=7000)
     a.stash(7,"Kožený kufřík staré hlídky",60.1,69.34,"hvd_walk_cache",bearing=0)
     guards = (
         (3,"kopi","hvd_kopi","hvd_elit_vrhac",(11.75,74.75),(14.62,74.52),"hvd_elit_strh",(9.35,73.35)),
@@ -400,6 +429,8 @@ def summit(art, terrain, reward_items):
     feature(a, "hvd_sealstand", "Patice zkušebního zrcadla", *TOP_MIRROR, action="mount", tag="hvd_mirror_mount")
     feature(a,"hvd_lighttower","Věž návratového objektivu",*LAST_TOWER[:2],z=LAST_TOWER[2])
     feature(a,"hvd_signallamp","Poslední lucerna",*LAST_LANTERN,action="lantern",tag="hvd_final_lamp")
+    a.sound("hvd_sfx_topbell", "Tón opravené ochranné lucerny", "as_cv_bell1", *LAST_LANTERN,
+            radius=17.0, volume=127, elevation=1.7, min_distance=4.0, active=False, loop=False)
     feature(a,"hvd_letout","Páka odkláněcího zrcadla",*LANTERN_TURN,action="divert",tag="hvd_lamp_turn",
             text="Páka stáhne lucernu z dráhy paprsku a pošle jeho světlo do kamenného záchytu.")
     feature(a,"hvd_lightdump","Kamenný záchyt odkloněného světla",*LANTERN_SINK[:2])

@@ -311,6 +311,27 @@ void HVD_RefreshSecretCovers()
     HVD_SecretCover("hvd_walks_cover", "hvd_secret_exit", "hvd_walks_rock");
 }
 
+void HVD_OpticHum(string tag, int powered)
+{
+    object emitter = GetObjectByTag(tag);
+    if (!GetIsObjectValid(emitter) || powered == GetLocalInt(emitter, "hvd_humming")) return;
+    SetLocalInt(emitter, "hvd_humming", powered);
+    if (powered) SoundObjectPlay(emitter);
+    else SoundObjectStop(emitter);
+}
+
+void HVD_SetGustSounds(int active)
+{
+    int index = 0;
+    object emitter = GetObjectByTag("hvd_sfx_gust", index);
+    while (GetIsObjectValid(emitter))
+    {
+        if (active) SoundObjectPlay(emitter);
+        else SoundObjectStop(emitter);
+        emitter = GetObjectByTag("hvd_sfx_gust", ++index);
+    }
+}
+
 void HVD_OpenPassage(string flag)
 {
     if (GetLocalInt(HVD_Module(), flag)) return;
@@ -321,6 +342,7 @@ void HVD_OpenPassage(string flag)
         HVD_Extinguish("hvd_opt_lock");
         HVD_PlacePart("hvd_dome_ray", "hvd_domelight", "hvd_refractor", 0.0);
         HVD_Reveal("hvd_optic_gate");
+        HVD_OpticHum("hvd_sfx_dome", TRUE);
     }
     if (GetStringLeft(flag, 11) == "hvd_secret_") HVD_RefreshSecretCovers();
     if (flag == "hvd_gate_open") HVD_Extinguish("hvd_gate_cover");
@@ -912,6 +934,7 @@ void HVD_ResetEncounters(object area)
 
 void HVD_QuietExpedition()
 {
+    HVD_SetGustSounds(FALSE);
     object area = GetFirstArea();
     while (GetIsObjectValid(area))
     {
@@ -985,6 +1008,8 @@ void HVD_NewRun()
     DeleteLocalInt(module, "hvd_guard_state");
     DeleteLocalInt(module, "hvd_lamp_diverted");
     HVD_ResetRepair();
+    HVD_OpticHum("hvd_sfx_dome", FALSE);
+    HVD_SetGustSounds(TRUE);
     int index;
     for (index = 1; index <= 4; ++index)
     {

@@ -111,6 +111,21 @@ void HVD_RepairRay(int index, int live, int color = 0, int sealed = FALSE)
     HVD_PlacePart(part, resource, "hvd_rep_m" + slot, 0.0);
 }
 
+void HVD_StopRepairBells(int run)
+{
+    if (HVD_Run() != run) return;
+    SoundObjectStop(GetObjectByTag("hvd_sfx_outbell"));
+    SoundObjectStop(GetObjectByTag("hvd_sfx_topbell"));
+}
+
+void HVD_RingRepairBells(int run)
+{
+    if (HVD_Run() != run || !GetLocalInt(HVD_Module(), "hvd_repair_done")) return;
+    SoundObjectPlay(GetObjectByTag("hvd_sfx_outbell"));
+    SoundObjectPlay(GetObjectByTag("hvd_sfx_topbell"));
+    DelayCommand(2.6, HVD_StopRepairBells(run));
+}
+
 void HVD_TraceRepair(object player = OBJECT_INVALID)
 {
     int live = HVD_GuardState() == HVD_GUARD_REPAIR;
@@ -127,6 +142,7 @@ void HVD_TraceRepair(object player = OBJECT_INVALID)
     HVD_RepairRay(2, detour);
     int fed = detour && HVD_RepairMode(2) == 1;
     HVD_RepairRay(3, fed);
+    HVD_OpticHum("hvd_sfx_prism", fed);
 
     int prism = fed ? HVD_RepairMode(3) : 0;
     int spectrum = prism == 1;
@@ -157,6 +173,9 @@ void HVD_TraceRepair(object player = OBJECT_INVALID)
         HVD_RepairJournals();
         HVD_UpdateLastLight();
         HVD_RepairSignals();
+        // Let the click of the mirror's latch precede the completion tone.
+        int run = HVD_Run();
+        DelayCommand(0.55, HVD_RingRepairBells(run));
         if (GetIsObjectValid(player))
             HVD_AreaMessage(GetArea(player),
                 "Purpurový paprsek vstoupil do světlovodu. Vítr utichl a hlídky se rozešly. Ohlaste opravu Ithrenovi.");
@@ -169,6 +188,7 @@ void HVD_ResetRepair()
 {
     object module = HVD_Module();
     DeleteLocalInt(module, "hvd_repair_done");
+    HVD_StopRepairBells(HVD_Run());
     int index;
     for (index = 1; index <= HVD_REPAIR_OPTICS; ++index)
     {
@@ -200,6 +220,7 @@ void HVD_TurnRepair(object player, int index)
     int mark = (HVD_RepairMark(index) + 1) % 3;
     SetLocalInt(module, "hvd_rep_mark" + slot, mark);
     object mount = GetWaypointByTag("hvd_rep_m" + slot);
+    PlaySound("as_sw_lever1");
     SendMessageToPC(player, HVD_RomanMark(mark + 1) + " · " + GetLocalString(mount, "aim" + IntToString(mark)) + ".");
     HVD_TraceRepair(player);
 }

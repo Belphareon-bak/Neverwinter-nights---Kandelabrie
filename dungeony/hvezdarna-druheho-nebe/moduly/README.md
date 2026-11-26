@@ -41,6 +41,12 @@ Tuto část si rozbal při zkoušení tajných cest.
 - **Spoušť zkušební optiky** u pracovního stolu vyšle paprsek přes pevné zrcadlo. Odraz na měřicí stupnici na chvíli rozsvítí polohy západní a východní clony pro seřízení v kopuli.
 - **Ozvučnice servisní lávky** stojí na horní podestě u výstupu z mostu. Jednou za vlnu zasáhne nejbližšího viditelného větrného elementála v dosahu 18 metrů za 64 bodů zvukového poškození před úpravou odolností. Úder naprázdno ji nevyčerpá.
 
+### Zvuky prostředí
+
+- U ohniště praská dřevo v dosahu 10 metrů. Na servisní lávce a odkrytých hranách Schodů a Ochozů se ozývají jednotlivé poryvy. Na Ochozech místy zapraská led a u expedice zavrže napnutý naviják.
+- Rozvaděč, clony Kopule a opravárenská zrcadla cvaknou při změně polohy. Seřízený refraktor a hranol osvětlený přívodním paprskem slabě hučí.
+- Když správně složené světlo projde pojistkou, v Sále skládání a u Poslední lucerny současně zazní jediný tón. Poryvy ustanou do obnovení výpravy.
+
 ## Návrh a sestavení
 
 Pracovní export má stálý název `Hvezdarna druheho nebe.mod`. Po úpravě ulož zdroje i přestavěný export do Gitu. Předchozí stavy najdeš v historii stejného souboru.

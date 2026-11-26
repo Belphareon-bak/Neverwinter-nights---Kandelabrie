@@ -177,15 +177,16 @@ def build(game_path, compiler, directory, scripts, *, test_guide=False, reward_f
         resources[f"{name}.uti"] = gff_encode("UTI", item, TEXT_ENCODING)
 
     for index, zone in enumerate(zones):
-        for type_name, placed, position in [
+        for type_name, placed, instance_fields in [
             ("utp", zone.places, ("X", "Y", "Z", "Bearing")),
             ("utd", zone.doors, ("X", "Y", "Z", "Bearing")),
             ("utt", zone.triggers, ("XPosition", "YPosition", "ZPosition", "XOrientation", "YOrientation", "ZOrientation")),
+            ("uts", zone.sounds, ("XPosition", "YPosition", "ZPosition", "GeneratedType")),
         ]:
             for number, obj in enumerate(placed):
                 key = f"hvd_{type_name}{index}{number:02d}"
                 obj.fields["TemplateResRef"] = ref(key)
-                fields = {name: data for name, data in obj.fields.items() if name not in position}
+                fields = {name: data for name, data in obj.fields.items() if name not in instance_fields}
                 resources[f"{key}.{type_name}"] = gff_encode(
                     type_name, Record(PaletteID=bite(0), Comment=string(zone.title), **fields), TEXT_ENCODING,
                 )
